@@ -52,9 +52,14 @@ namespace Eddi
             if (FromVA)
             {
                 // Start with the MainWindow hidden
-                app.MainWindow = new MainWindow();
+                //app.MainWindow = new MainWindow();
+                //vaStartup?.Invoke();
+                //app.Run();
+                
+                //Start with the MainWindow visible. Why would you want to always hide this?
+                app.Run(new MainWindow());
                 vaStartup?.Invoke();
-                app.Run();
+
             }
             else
             {
