@@ -75,6 +75,14 @@
                         </Style>
                     </DataGridComboBoxColumn.EditingElementStyle>
                 </DataGridComboBoxColumn>
+                <utility:DataGridNumericColumn Header="Distance" IsReadOnly="True" Binding="{Binding Path=distance, StringFormat=\{0:N0\}}">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="TextAlignment" Value="Right" />
+                            <Setter Property="Margin" Value="5, 0" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </utility:DataGridNumericColumn>
                 <DataGridTextColumn Header="{x:Static resx:ShipMonitor.header_spoken_name}" Width="*">
                     <DataGridTextColumn.Binding>
                         <Binding Path="phoneticName" NotifyOnTargetUpdated="True" UpdateSourceTrigger="PropertyChanged" Mode="TwoWay" TargetNullValue="{x:Static System:String.Empty}">
