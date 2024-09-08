@@ -428,6 +428,7 @@ namespace UnitTests
             Assert.AreEqual(27.15625M, system.z);
             Assert.IsTrue(system.requirespermit);
             Assert.AreEqual("Founders World", system.permitname);
+            Assert.IsTrue(system.Faction != null);
             Assert.AreEqual("Pilots Federation", system.Faction.Allegiance.invariantName);
             Assert.AreEqual("Democracy", system.Faction.Government.invariantName);
             Assert.AreEqual("Pilots Federation Local Branch", system.Faction.name);
