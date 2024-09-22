@@ -219,54 +219,41 @@ namespace EddiSpeechService
             }
         }
 
-        public void Say(Ship ship, string message, int priority = 3, string voice = null, bool radio = false, string eventType = null, bool invokedFromVA = false)
+        public void Say(Ship ship, string message, int priority = 3, string voice = null, bool radio = false, string eventType = null, bool invokedFromVA = false )
         {
             // Skip empty speech and speech containing nothing except one or more pauses / breaks.
             message = SpeechFormatter.TrimSpeech(message);
             if (string.IsNullOrEmpty(message)) { return; }
 
-            Thread speechQueueHandler = new Thread(() =>
-            {
-                // Queue the current speech
-                EddiSpeech queuingSpeech = new EddiSpeech(message, ship, priority, voice, radio, eventType);
-                speechQueue.Enqueue(queuingSpeech);
+            // Queue the current speech
+            var queuingSpeech = new EddiSpeech(message, ship, priority, voice, radio, eventType);
+            speechQueue.Enqueue( queuingSpeech );
 
-                // Check the first item in the speech queue
-                if (speechQueue.TryPeek(out EddiSpeech peekedSpeech))
+            // Check the first item in the speech queue
+            if ( speechQueue.TryPeek( out var peekedSpeech ) )
+            {
+                // Interrupt current speech when appropriate
+                if ( checkSpeechInterrupt( peekedSpeech.priority ) )
                 {
-                    // Interrupt current speech when appropriate
-                    if (checkSpeechInterrupt(peekedSpeech.priority))
-                    {
-                        Logging.Debug("Interrupting current speech");
-                        StopCurrentSpeech();
-                    }
+                    Logging.Debug( "Interrupting current speech" );
+                    StopCurrentSpeech();
                 }
-
-                // Start or continue speaking from the speech queue
-                Instance.StartOrContinueSpeaking();
-            })
-            {
-                Name = "SpeechQueueHandler",
-                IsBackground = true
-            };
-            speechQueueHandler.Start();
-            if (invokedFromVA)
-            {
-                // If invoked from VA, thread should terminate only after speech completes
-                speechQueueHandler.Join();
             }
+
+            // Start or continue speaking from the speech queue
+            Instance.StartOrContinueSpeaking( invokedFromVA );
         }
 
-        private void StartOrContinueSpeaking ()
+        private void StartOrContinueSpeaking ( bool invokedFromVA )
         {
             if ( !eddiSpeaking )
             {
                 // Put everything in a thread
-                Thread speechThread = new Thread(() =>
+                var speechThread = new Thread(() =>
                 {
                     while (speechQueue.hasSpeech)
                     {
-                        if (speechQueue.TryDequeue(out EddiSpeech speech))
+                        if (speechQueue.TryDequeue(out var speech))
                         {
                             try
                             {
@@ -287,7 +274,10 @@ namespace EddiSpeechService
                 try
                 {
                     speechThread.Start();
-                    speechThread.Join();
+                    if ( invokedFromVA )
+                    {
+                        speechThread.Join();
+                    }
                 }
                 catch ( ThreadAbortException tax )
                 {
