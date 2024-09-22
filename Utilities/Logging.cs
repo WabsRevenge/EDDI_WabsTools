@@ -52,7 +52,7 @@ namespace Utilities
                 {
                     Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
                     Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-                    var timestamp = DateTime.UtcNow.ToString("s", CultureInfo.InvariantCulture);
+                    var timestamp = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
                     message = PrepareMessage( message, memberName, filePath );
                     var preppedData = await PrepareData( data );
 
