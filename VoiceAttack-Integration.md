@@ -457,7 +457,7 @@ To use this function in your own commands set the 'Volume' parameter then use th
 
 ## Information functions
 
-### coriolis, edshipyard, inaracarrier, inaraprofile, inarasystem, or inarastation
+### coriolis, coriolisbeta, edshipyard, inaracarrier, inaraprofile, inarasystem, or inarastation
 
 Looks up the current ship, the current starsystem, or the current station (as applicable). A web uri is written to '\{TXT: EDDI uri\}' and, unless '\{BOOL:EDDI open uri in browser\}' has been set to false, the uri is opened in the default browser.
 

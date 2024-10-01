@@ -202,7 +202,10 @@ namespace EddiVoiceAttackResponder
                 switch (((string)vaProxy.Context)?.ToLowerInvariant())
                 {
                     case "coriolis":
-                        InvokeCoriolis(ref vaProxy);
+                        InvokeCoriolis( ref vaProxy );
+                        break;
+                    case "coriolisbeta":
+                        InvokeCoriolis( ref vaProxy, true );
                         break;
                     case "inaracarrier":
                         InvokeInaraFleetCarrier( ref vaProxy );
@@ -528,7 +531,7 @@ namespace EddiVoiceAttackResponder
             Logging.Debug( "Leaving" );
         }
 
-        public static void InvokeCoriolis(ref dynamic vaProxy)
+        public static void InvokeCoriolis(ref dynamic vaProxy, bool beta = false)
         {
             Logging.Debug("Entered");
             try
@@ -539,7 +542,7 @@ namespace EddiVoiceAttackResponder
                     return;
                 }
 
-                string shipUri = EDDI.Instance.CurrentShip.CoriolisUri();
+                var shipUri = EDDI.Instance.CurrentShip.CoriolisUri(beta);
                 OpenOrStoreURI(ref vaProxy, shipUri);
                 setStatus(ref vaProxy, "Operational");
             }

@@ -599,12 +599,12 @@ namespace EddiDataDefinitions
             return Functions.StellarDistanceLy(x, y, z, fromX, fromY, fromZ);
         }
 
-        public string CoriolisUri()
+        public string CoriolisUri(bool beta = false)
         {
             if (raw != null)
             {
                 // Generate a Coriolis import URI to retain as much information as possible
-                string uri = "https://coriolis.io/import?";
+                var uri = beta ? "https://beta.coriolis.io/import?" : "https://coriolis.io/import?";
 
                 // Take the ship's JSON, gzip it, then turn it in to base64 and attach it to the base uri
                 var bytes = Encoding.UTF8.GetBytes(raw);
@@ -619,7 +619,7 @@ namespace EddiDataDefinitions
                 }
 
                 // Add the ship's name
-                string bn = name ?? $"{Role.localizedName} {model}";
+                var bn = name ?? $"{Role.localizedName} {model}";
                 uri += "&bn=" + Uri.EscapeDataString(bn);
 
                 return uri;
