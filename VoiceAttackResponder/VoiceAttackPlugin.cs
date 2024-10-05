@@ -583,7 +583,18 @@ namespace EddiVoiceAttackResponder
             bool? useClipboard = vaProxy.GetBoolean("EDDI use clipboard");
             if (useClipboard != null && useClipboard == true)
             {
-                Thread thread = new Thread(() => Clipboard.SetText(uri));
+                Thread thread = new Thread(() =>
+                {
+                    try
+                    {
+                        Clipboard.Clear();
+                        Clipboard.SetData( DataFormats.Text, uri );
+                    }
+                    catch ( Exception ex )
+                    {
+                        Logging.Warn( "Failed to set clipboard", ex );
+                    }
+                } );
                 thread.SetApartmentState(ApartmentState.STA);
                 thread.Start();
                 thread.Join();
