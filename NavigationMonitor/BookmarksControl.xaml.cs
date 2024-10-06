@@ -17,7 +17,6 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using Utilities;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace EddiNavigationMonitor
 {
