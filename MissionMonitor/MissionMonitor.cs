@@ -473,6 +473,7 @@ namespace EddiMissionMonitor
                 {
                     if (missionEntry.expiry is null)
                     {
+                        RemoveMissionWithMissionId( missionEntry.missionid );
                         communityGoalHolder.Add(missionEntry);
                     }
                     else
@@ -560,7 +561,7 @@ namespace EddiMissionMonitor
                 if (mission != null)
                 {
                     communityGoalHolder.Remove(mission);
-                    missions.Add(mission);
+                    AddMission(mission);
                 }
                 else
                 {
