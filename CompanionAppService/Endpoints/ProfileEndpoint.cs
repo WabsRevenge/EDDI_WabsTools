@@ -40,7 +40,7 @@ namespace EddiCompanionAppService.Endpoints
                 {
                     return null;
                 }
-                if (!result.DeepEquals(cachedProfileJson))
+                if (!JToken.DeepEquals(result, cachedProfileJson))
                 {
                     cachedProfileJson = result;
                     cachedProfileTimeStamp = result["timestamp"]?.ToObject<DateTime?>() ?? DateTime.MinValue;

@@ -113,9 +113,9 @@ namespace Utilities
                 keysPath.Add(key);
 
                 // We ignore any key paths that we have already set elsewhere
-                if (Results.FirstOrDefault(v => v.keysPath.DeepEquals(keysPath)) != null)
+                if ( Results.FirstOrDefault( v => keysPath.SequenceEqual( v.keysPath) ) != null )
                 {
-                    Logging.Debug("Skipping already-set key " + string.Join("/", keysPath));
+                    Logging.Debug( "Skipping already-set key " + string.Join( "/", keysPath ) );
                     return;
                 }
 
