@@ -115,11 +115,29 @@ namespace EddiDataDefinitions.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Jerome Archer.
+        /// </summary>
+        internal static string JeromeArcher {
+            get {
+                return ResourceManager.GetString("JeromeArcher", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Li Yong-Rui.
         /// </summary>
         internal static string LiYongRui {
             get {
                 return ResourceManager.GetString("LiYongRui", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nakato Kaine.
+        /// </summary>
+        internal static string NakatoKaine {
+            get {
+                return ResourceManager.GetString("NakatoKaine", resourceCulture);
             }
         }
         

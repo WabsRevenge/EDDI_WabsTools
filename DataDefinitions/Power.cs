@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace EddiDataDefinitions
 {
@@ -11,33 +12,24 @@ namespace EddiDataDefinitions
         {
             resourceManager = Properties.Powers.ResourceManager;
             resourceManager.IgnoreCase = false;
-
-            None = new Power("None", Superpower.None, "None");
-            ALavignyDuval = new Power("ALavignyDuval", Superpower.Empire, "Kamadhenu");
-            AislingDuval = new Power("AislingDuval", Superpower.Empire, "Cubeo");
-            ArchonDelaine = new Power("ArchonDelaine", Superpower.Independent, "Harma");
-            DentonPatreus = new Power("DentonPatreus", Superpower.Empire, "Eotienses");
-            EdmundMahon = new Power("EdmundMahon", Superpower.Alliance, "Gateway");
-            FeliciaWinters = new Power("FeliciaWinters", Superpower.Federation, "Rhea");
-            LiYongRui = new Power("LiYongRui", Superpower.Independent, "Lembava");
-            PranavAntal = new Power("PranavAntal", Superpower.Independent, "Polevnic");
-            YuriGrom = new Power("YuriGrom", Superpower.Alliance, "Clayakarma");
-            ZacharyHudson = new Power("ZacharyHudson", Superpower.Federation, "Nanomam");
-            ZeminaTorval = new Power("ZeminaTorval", Superpower.Empire, "Synteini");
         }
 
-        public static readonly Power None;
-        public static readonly Power ALavignyDuval;
-        public static readonly Power AislingDuval;
-        public static readonly Power ArchonDelaine;
-        public static readonly Power DentonPatreus;
-        public static readonly Power EdmundMahon;
-        public static readonly Power FeliciaWinters;
-        public static readonly Power LiYongRui;
-        public static readonly Power PranavAntal;
-        public static readonly Power YuriGrom;
-        public static readonly Power ZacharyHudson;
-        public static readonly Power ZeminaTorval;
+        public static readonly Power None = new Power ("None", Superpower.None, null);
+        public static readonly Power ALavignyDuval = new Power("ALavignyDuval", Superpower.Empire, "Kamadhenu");
+        public static readonly Power AislingDuval = new Power("AislingDuval", Superpower.Empire, "Cubeo");
+        public static readonly Power ArchonDelaine = new Power("ArchonDelaine", Superpower.Independent, "Harma");
+        public static readonly Power DentonPatreus = new Power("DentonPatreus", Superpower.Empire, "Eotienses");
+        public static readonly Power EdmundMahon = new Power("EdmundMahon", Superpower.Alliance, "Gateway"); 
+        public static readonly Power FeliciaWinters = new Power("FeliciaWinters", Superpower.Federation, "Rhea");
+        public static readonly Power LiYongRui = new Power("LiYongRui", Superpower.Independent, "Lembava");
+        public static readonly Power PranavAntal = new Power("PranavAntal", Superpower.Independent, "Polevnic");
+        public static readonly Power YuriGrom = new Power("YuriGrom", Superpower.Alliance, "Clayakarma");
+        public static readonly Power ZeminaTorval = new Power("ZeminaTorval", Superpower.Empire, "Synteini");
+        public static readonly Power NakatoKaine = new Power("NakatoKaine", Superpower.Alliance, "Tionisla");
+        public static readonly Power JeromeArcher = new Power("JeromeArcher", Superpower.Federation, "Nanomam");
+
+        [Obsolete]
+        public static readonly Power ZacharyHudson = new Power("ZacharyHudson", Superpower.Federation, "Nanomam");
 
         public Superpower Allegiance { get; private set; }
         public string headquarters { get; private set; }
