@@ -35,12 +35,12 @@ namespace EddiEvents
         
         public TimeSpan timePledged { get; private set; }
 
-        public PowerplayEvent(DateTime timestamp, Power Power, int rank, int merits, int votes, TimeSpan timePledged) : base(timestamp, NAME)
+        public PowerplayEvent(DateTime timestamp, Power Power, int rank, int merits, int? votes, TimeSpan timePledged) : base(timestamp, NAME)
         {
             this.Power = Power;
             this.rank = rank;
             this.merits = merits;
-            this.votes = votes;
+            this.votes = votes ?? 0;
             this.timePledged = timePledged;
         }
     }

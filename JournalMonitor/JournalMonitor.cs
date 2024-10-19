@@ -4346,11 +4346,11 @@ namespace EddiJournalMonitor
                                 break;
                             case "Powerplay":
                                 {
-                                    Power power = Power.FromEDName(JsonParsing.getString(data, "Power"));
-                                    int rank = JsonParsing.getInt(data, "Rank") + 1; // This is zero based in the journal but not in the Frontier API. Adding +1 here synchronizes the two.
-                                    int merits = JsonParsing.getInt(data, "Merits");
-                                    int votes = JsonParsing.getInt(data, "Votes");
-                                    TimeSpan timePledged = TimeSpan.FromSeconds(JsonParsing.getLong(data, "TimePledged"));
+                                    var power = Power.FromEDName(JsonParsing.getString(data, "Power"));
+                                    var rank = JsonParsing.getInt(data, "Rank") + 1; // This is zero based in the journal but not in the Frontier API. Adding +1 here synchronizes the two.
+                                    var merits = JsonParsing.getInt(data, "Merits");
+                                    var votes = JsonParsing.getOptionalInt(data, "Votes");
+                                    var timePledged = TimeSpan.FromSeconds(JsonParsing.getLong(data, "TimePledged"));
                                     events.Add(new PowerplayEvent(timestamp, power, rank, merits, votes, timePledged) { raw = line, fromLoad = fromLogLoad });
                                 }
                                 handled = true;
