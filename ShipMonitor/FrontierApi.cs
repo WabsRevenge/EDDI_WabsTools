@@ -219,16 +219,14 @@ namespace EddiShipMonitor
             long id = (long)json["module"]["id"];
             string edName = (string)json["module"]["name"];
 
-            Module module = new Module(Module.FromEliteID(id, json["module"]) 
-                                       ?? Module.FromEDName(edName, json["module"]) 
-                                       ?? new Module());
+            Module module = new Module(Module.FromEDName(edName, json["module"]) ?? new Module());
             if (module.invariantName == null)
             {
                 // Unknown module; report the full object so that we can update the definitions
                 Logging.Info("Module definition error: " + edName, JsonConvert.SerializeObject(json["module"]));
 
                 // Create a basic module & supplement from the info available
-                module = new Module(id, edName, edName, -1, "", (long)json["module"]["value"]);
+                module = new Module( edName, edName, -1, "", (long)json["module"]["value"]);
             }
 
             module.fallbackLocalizedName = (string)json["module"]["locName"];

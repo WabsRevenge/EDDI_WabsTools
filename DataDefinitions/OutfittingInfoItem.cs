@@ -6,9 +6,6 @@ namespace EddiDataDefinitions
     /// <summary> This class is designed to be deserialized from either shipyard.json or the Frontier API. </summary>
     public class OutfittingInfoItem
     {
-        [JsonProperty("id")]
-        public long EliteID { get; set; }
-
         [JsonProperty("name")]
         public string edName { get; set; }
 
@@ -26,16 +23,14 @@ namespace EddiDataDefinitions
         public OutfittingInfoItem()
         { }
 
-        public OutfittingInfoItem(long eliteId, string edName, int BuyPrice)
+        public OutfittingInfoItem ( string edName, int BuyPrice )
         {
-            this.EliteID = eliteId;
             this.edName = edName;
             this.buyPrice = BuyPrice;
         }
 
-        public OutfittingInfoItem(long eliteId, string edName, string edCategory, int BuyPrice)
+        public OutfittingInfoItem ( string edName, string edCategory, int BuyPrice )
         {
-            this.EliteID = eliteId;
             this.edName = edName;
             this.edCategory = edCategory;
             this.buyPrice = BuyPrice;
@@ -43,16 +38,14 @@ namespace EddiDataDefinitions
 
         public Module ToModule()
         {
-            var module = new Module(Module.FromEliteID(EliteID, this)
-                ?? Module.FromEDName(edName, this)
-                ?? new Module());
+            var module = new Module(Module.FromEDName(edName, this) ?? new Module());
             if (module.invariantName == null)
             {
                 // Unknown module; report the full object so that we can update the definitions
                 Logging.Info("Module definition error: " + edName, JsonConvert.SerializeObject(this));
 
                 // Create a basic module & supplement from the info available
-                module = new Module(EliteID, edName, edName, -1, "", buyPrice);
+                module = new Module( edName, edName, -1, "", buyPrice);
             }
             else
             {

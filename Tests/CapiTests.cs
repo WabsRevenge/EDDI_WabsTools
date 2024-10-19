@@ -19,11 +19,11 @@ namespace UnitTests
             // Test outfitting data
             var incompleteExpectedModules = new List<OutfittingInfoItem>()
             {
-                new OutfittingInfoItem(128788700, "Hpt_ATDumbfireMissile_Fixed_Large", "weapon", 1352250),
-                new OutfittingInfoItem(128788702, "Hpt_ATMultiCannon_Fixed_Large", "weapon", 1181500),
-                new OutfittingInfoItem(128793060, "Hpt_ATMultiCannon_Turret_Large", "weapon", 3821600),
-                new OutfittingInfoItem(128785626, "Hpt_FlakMortar_Fixed_Medium", "weapon", 261800),
-                new OutfittingInfoItem(128788699, "Hpt_ATDumbfireMissile_Fixed_Medium", "weapon", 540900)
+                new OutfittingInfoItem( "Hpt_ATDumbfireMissile_Fixed_Large", "weapon", 1352250),
+                new OutfittingInfoItem( "Hpt_ATMultiCannon_Fixed_Large", "weapon", 1181500),
+                new OutfittingInfoItem( "Hpt_ATMultiCannon_Turret_Large", "weapon", 3821600),
+                new OutfittingInfoItem( "Hpt_FlakMortar_Fixed_Medium", "weapon", 261800),
+                new OutfittingInfoItem( "Hpt_ATDumbfireMissile_Fixed_Medium", "weapon", 540900)
             };
 
             JObject json = DeserializeJsonResource<JObject>(Resources.capi_shipyard_Abasheli_Barracks)?.ToObject<JObject>();
@@ -37,7 +37,7 @@ namespace UnitTests
             {
                 foreach (var actualModule in actualModules)
                 {
-                    if (expectedModule.EliteID == actualModule.EliteID)
+                    if (expectedModule.edName == actualModule.edName)
                     {
                         Assert.IsTrue(expectedModule.DeepEquals(actualModule));
                     }

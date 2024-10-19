@@ -75,9 +75,6 @@ namespace EddiDataDefinitions
         public string modification => localizedModification;
 
         // Not intended to be user facing
-        
-        [JsonProperty]
-        public long EDID { get; set; } // The ID in Elite: Dangerous' database
 
         [JsonProperty("mount")]
         public ModuleMount Mount { get; set; } // Only for weapons
@@ -130,7 +127,6 @@ namespace EddiDataDefinitions
             this.power = Module.power;
             this.priority = Module.priority;
             this.position = Module.position;
-            this.EDID = Module.EDID;
             this.modified = Module.modified;
             this.engineermodification = Module.engineermodification;
             this.engineerlevel = Module.engineerlevel;
@@ -139,20 +135,18 @@ namespace EddiDataDefinitions
             this.modifiers = Module.modifiers;
         }
 
-        public Module(long EDID, string edname, string basename, int Class, string Grade, long Value) : base(edname, basename)
+        public Module ( string edname, string basename, int Class, string Grade, long Value ) : base(edname, basename)
         {
-            this.EDID = EDID;
             this.@class = Class;
             this.grade = Grade;
             this.value = Value;
             this.modified = false;
-            ModulesByEliteID[EDID] = this;
         }
 
         // Module definition for a weapon - requires mount and optional ammo
-        public Module(long EDID, string edname, string basename, int Class, string Grade, long Value, ModuleMount Mount, int? AmmoClipCapacity = null, int? AmmoHopperCapacity = null) : base(edname, basename)
+        public Module ( string edname, string basename, int Class, string Grade, long Value, ModuleMount Mount,
+            int? AmmoClipCapacity = null, int? AmmoHopperCapacity = null ) : base(edname, basename)
         {
-            this.EDID = EDID;
             this.@class = Class;
             this.grade = Grade;
             this.value = Value;
@@ -160,14 +154,12 @@ namespace EddiDataDefinitions
             this.clipcapacity = AmmoClipCapacity;
             this.hoppercapacity = AmmoHopperCapacity;
             this.modified = false;
-            ModulesByEliteID[EDID] = this;
         }
 
         public void UpdateFromFrontierAPIModule(Module frontierAPIModule)
         {
             if (edname == frontierAPIModule.edname)
             {
-                EDID = frontierAPIModule.EDID;
                 fallbackLocalizedName = frontierAPIModule.fallbackLocalizedName;
                 price = frontierAPIModule.price;
                 enabled = frontierAPIModule.enabled;
