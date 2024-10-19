@@ -267,7 +267,7 @@ namespace EddiDataDefinitions
 
         // Blueprints for the material; 
         [PublicAPI]
-        public List<Blueprint> blueprints => Blueprint.AllOfThem
+        public List<Blueprint> blueprints => Blueprint.AllOfThem.ToList().Distinct()
             .Where(bp => bp.materials?.Any(ma => ma.edname == this.edname) ?? false)
             .ToList();
 
