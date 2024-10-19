@@ -324,6 +324,15 @@ namespace EddiDataDefinitions.Properties {
         /// <summary>
         ///   Looks up a localized string similar to your.
         /// </summary>
+        public static string yourMandalay {
+            get {
+                return ResourceManager.GetString("yourMandalay", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to your.
+        /// </summary>
         public static string yourOrca {
             get {
                 return ResourceManager.GetString("yourOrca", resourceCulture);

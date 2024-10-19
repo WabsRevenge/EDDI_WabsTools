@@ -48,6 +48,7 @@ namespace EddiDataDefinitions
             new Ship( "Mamba", ShipManufacturer.ZorgonPeterson, "Mamba", nameof(Properties.Ship.yourMamba), null, LandingPadSize.Medium, null, 0.5M),
             new Ship( "Python_NX", ShipManufacturer.FaulconDeLacy, "Python Mk. II", nameof(Properties.Ship.yourPython), new List<Translation>{new Translation("Python", "ˈpaɪθən" ), new Translation("Mark", "mɑːk"), new Translation("2", "ˈtuː") }, LandingPadSize.Medium, null, 0.83M),
             new Ship( "type8", ShipManufacturer.LakonSpaceways, "Type-8 Transporter", nameof(Properties.Ship.yourType8), null, LandingPadSize.Medium, null, 0.52M),
+            new Ship( "mandalay", ShipManufacturer.ZorgonPeterson, "Mandalay", nameof(Properties.Ship.yourMandalay), null, LandingPadSize.Medium, null, 0.50M),
         };
 
         public static readonly SortedSet<string> ShipModels = new SortedSet<string>(AllOfThem.Select(ship => ship.model));

@@ -9,7 +9,6 @@ namespace EddiDataDefinitions
         {
             resourceManager = Properties.Modules.ResourceManager;
             resourceManager.IgnoreCase = false;
-            ModulesByEliteID = new Dictionary<long, Module>();
 
             var _ = new List<Module>
             {
@@ -1134,6 +1133,11 @@ namespace EddiDataDefinitions
                 new Module( "int_hyperdrive_overcharge_size7_class2", "FrameShiftDrive_SCO", 7, "D", 20515645 ),
                 new Module( "int_hyperdrive_overcharge_size7_class4", "FrameShiftDrive_SCO", 7, "B", 20515645 ),
                 new Module( "int_hyperdrive_overcharge_size7_class5", "FrameShiftDrive_SCO", 7, "A", 61546935 ),
+                new Module( "mandalay_armour_grade1", "LightweightAlloy", 1, "I", 0 ),
+                new Module( "mandalay_armour_grade2", "ReinforcedAlloy", 1, "I", 0 ),
+                new Module( "mandalay_armour_grade3", "MilitaryGradeComposite", 1, "I", 0 ),
+                new Module( "mandalay_armour_mirrored", "MirroredSurfaceComposite", 1, "I", 0 ),
+                new Module( "mandalay_armour_reactive", "ReactiveSurfaceComposite", 1, "I", 0 ),
 
                 // Various free modules that show up in SRVs, fighters and training; not used anywhere but note them here so that they do not throw errors when encountered
                 new Module( "Hpt_PulseLaser_Fixed_SmallFree", "PulseLaser", 1, "F", 0, ModuleMount.Fixed),
@@ -1246,8 +1250,6 @@ namespace EddiDataDefinitions
                 // Need pricing confirmed
             };
         }
-
-        private static readonly Dictionary<long, Module> ModulesByEliteID;
 
         public static HashSet<string> PowerPlayModules = new HashSet<string>()
         {
