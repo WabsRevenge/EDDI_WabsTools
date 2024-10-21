@@ -1974,7 +1974,7 @@ namespace EddiJournalMonitor
                                     string target = JsonParsing.getString(data, "JumpType");
                                     string stellarclass = JsonParsing.getString(data, "StarClass");
                                     string system = JsonParsing.getString(data, "StarSystem");
-                                    var systemAddress = JsonParsing.getOptionalULong(data, "SystemAddress");
+                                    var systemAddress = JsonParsing.getOptionalULong(data, "SystemAddress"); // Present when the FSD target is hyperspace
                                     var isTaxi = JsonParsing.getOptionalBool( data, "Taxi" ) ?? false;
                                     events.Add(new FSDEngagedEvent(timestamp, target, system, systemAddress, stellarclass, isTaxi) { raw = line, fromLoad = fromLogLoad });
                                     handled = true;
@@ -4056,7 +4056,7 @@ namespace EddiJournalMonitor
                             case "FSSAllBodiesFound":
                                 {
                                     string systemName = JsonParsing.getString(data, "SystemName");
-                                    long systemAddress = JsonParsing.getLong(data, "SystemAddress");
+                                    ulong systemAddress = JsonParsing.getULong(data, "SystemAddress");
                                     int count = JsonParsing.getInt(data, "Count");
                                     events.Add(new SystemScanComplete(timestamp, systemName, systemAddress, count) { raw = line, fromLoad = fromLogLoad });
 
