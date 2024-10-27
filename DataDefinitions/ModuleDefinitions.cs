@@ -1138,6 +1138,7 @@ namespace EddiDataDefinitions
                 new Module( "mandalay_armour_grade3", "MilitaryGradeComposite", 1, "I", 0 ),
                 new Module( "mandalay_armour_mirrored", "MirroredSurfaceComposite", 1, "I", 0 ),
                 new Module( "mandalay_armour_reactive", "ReactiveSurfaceComposite", 1, "I", 0 ),
+                new Module("hpt_cannon_gimbal_medium_burst", "ConcordCannon", 2, "D", 337600), // Concord Cannon powerplay module
 
                 // Various free modules that show up in SRVs, fighters and training; not used anywhere but note them here so that they do not throw errors when encountered
                 new Module( "Hpt_PulseLaser_Fixed_SmallFree", "PulseLaser", 1, "F", 0, ModuleMount.Fixed),
@@ -1271,6 +1272,7 @@ namespace EddiDataDefinitions
             "Hpt_BeamLaser_Fixed_Small_Heat", // Retributor beam laser
             "Hpt_MultiCannon_Fixed_Small_Strong", // Enforcer cannon 
             "Hpt_PulseLaser_Fixed_Medium_Disruptor", // Disruptor
+            "Hpt_Cannon_Gimbal_Medium_Burst", // Concord Cannon
         };
         public static bool IsPowerPlay(string edname)
         {

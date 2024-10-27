@@ -286,6 +286,15 @@ namespace EddiDataDefinitions.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Concord Cannon.
+        /// </summary>
+        public static string ConcordCannon {
+            get {
+                return ResourceManager.GetString("ConcordCannon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Corrosion Resistant Cargo Rack.
         /// </summary>
         public static string CorrosionResistantCargoRack {
