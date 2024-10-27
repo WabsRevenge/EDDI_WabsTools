@@ -9,7 +9,12 @@ namespace EddiEvents
     {
         public const string NAME = "Signal detected";
         public const string DESCRIPTION = "Triggered when a signal source is detected";
-        public const string SAMPLE = @"{ ""timestamp"":""2018-11-22T06:21:00Z"", ""event"":""FSSSignalDiscovered"", ""SystemAddress"":58132919110424, ""SignalName"":""$USS;"", ""SignalName_Localised"":""Unidentified signal source"", ""USSType"":""$USS_Type_Salvage;"", ""USSType_Localised"":""Degraded emissions"", ""SpawningState"":""$FactionState_None;"", ""SpawningState_Localised"":""None"", ""SpawningFaction"":""$faction_none;"", ""SpawningFaction_Localised"":""None"", ""ThreatLevel"":0, ""TimeRemaining"":1519.981689 }";
+
+        public static readonly string[] SAMPLES =
+        {
+            @"{ ""timestamp"":""2018-11-22T06:21:00Z"", ""event"":""FSSSignalDiscovered"", ""SystemAddress"":58132919110424, ""SignalName"":""$USS;"", ""SignalName_Localised"":""Unidentified signal source"", ""USSType"":""$USS_Type_Salvage;"", ""USSType_Localised"":""Degraded emissions"", ""SpawningState"":""$FactionState_None;"", ""SpawningState_Localised"":""None"", ""SpawningFaction"":""$faction_none;"", ""SpawningFaction_Localised"":""None"", ""ThreatLevel"":0, ""TimeRemaining"":1519.981689 }",
+            @"{ ""timestamp"":""2024-10-22T19:57:06Z"", ""event"":""FSSSignalDiscovered"", ""SystemAddress"":2557686551258, ""SignalName"":""$USS_PowerEmissions;"", ""SignalName_Localised"":""Unidentified signal source"", ""SignalType"":""USS"", ""USSType"":""$USS_Type_PowerEmissions;"", ""USSType_Localised"":""Power Wreckage Signature"", ""SpawningPower"":""Archon Delaine"", ""ThreatLevel"":3, ""TimeRemaining"":2549.222656 }"
+        };
 
         [PublicAPI("The signal source")]
         public string source => signalSource.localizedName;
@@ -20,8 +25,11 @@ namespace EddiEvents
         [PublicAPI("The faction state that triggered the signal source, if any")]
         public string factionstate => signalSource.spawningState.localizedName ?? signalSource.spawningState.fallbackLocalizedName ?? signalSource.spawningState.edname;
 
-        [PublicAPI("The faction affected by the signal source, if any")]
+        [PublicAPI("The faction originating the signal source, if any")]
         public string faction => signalSource.spawningFaction;
+
+        [PublicAPI( "The powerplay power originating the signal source, if any" )]
+        public string power => signalSource.spawningPower;
 
         [PublicAPI("The time before the signal expires, in seconds")]
         public decimal? secondsremaining => signalSource.expiry is null ? null : (decimal?)((DateTime)signalSource.expiry - timestamp).TotalSeconds;

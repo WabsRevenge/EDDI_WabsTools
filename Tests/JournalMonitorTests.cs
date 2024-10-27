@@ -1233,7 +1233,7 @@ namespace UnitTests
             Assert.IsNotNull(@event);
             Assert.IsInstanceOfType(@event, typeof(SystemScanComplete));
             Assert.AreEqual("Dumbae DN-I d10-6057", @event.systemname);
-            Assert.AreEqual(208127228285531, @event.systemAddress);
+            Assert.AreEqual(208127228285531U, @event.systemAddress);
             Assert.AreEqual(19, @event.count);
         }
 
@@ -1307,6 +1307,23 @@ namespace UnitTests
             var testSystem = new StarSystem() { systemname = "Test System" };
             testSystem.AddOrUpdateSignalSource(@event.signalSource);
             Assert.AreEqual(1, testSystem.carriersignalsources.Count);
+        }
+
+        [ TestMethod ]
+        public void TestSignalDetectedEvent5 ()
+        {
+            // Test a powerplay wreckage signal source
+            var line = @"{""timestamp"":""2024-10-22T19:57:06Z"",""event"":""FSSSignalDiscovered"",""SystemAddress"":2557686551258,""SignalName"":""$USS_PowerEmissions;"",""SignalName_Localised"":""Unidentified signal source"",""SignalType"":""USS"",""USSType"":""$USS_Type_PowerEmissions;"",""USSType_Localised"":""Power Wreckage Signature"",""SpawningPower"":""Archon Delaine"",""ThreatLevel"":3,""TimeRemaining"":2549.222656}";
+            List<Event> events = JournalMonitor.ParseJournalEntry(line);
+            SignalDetectedEvent @event = (SignalDetectedEvent)events[0];
+            Assert.IsNotNull( @event );
+            Assert.IsInstanceOfType( @event, typeof( SignalDetectedEvent ) );
+            Assert.AreEqual( 2557686551258U, @event.systemAddress );
+            Assert.AreEqual( "USS_Type_PowerEmissions", @event.signalSource.edname );
+            Assert.AreEqual( "Power Wreckage Signature", @event.signalSource.invariantName );
+            Assert.AreEqual( "Archon Delaine", @event.signalSource.spawningPower );
+            Assert.AreEqual( 3, @event.signalSource.threatLevel );
+            Assert.AreEqual( 2549.223, (double)(@event.secondsremaining ?? 0), .001 );
         }
 
         [TestMethod, DoNotParallelize]

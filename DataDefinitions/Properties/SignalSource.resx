@@ -425,4 +425,7 @@
     <value>Ancient Probe</value>
     <comment>Ancient Probe</comment>
   </data>
+  <data name="USS_Type_PowerEmissions" xml:space="preserve">
+    <value>Power Wreckage Signature</value>
+  </data>
 </root>

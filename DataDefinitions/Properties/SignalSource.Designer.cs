@@ -574,6 +574,15 @@ namespace EddiDataDefinitions.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Power Wreckage Signature.
+        /// </summary>
+        public static string USS_Type_PowerEmissions {
+            get {
+                return ResourceManager.GetString("USS_Type_PowerEmissions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Degraded Emissions.
         /// </summary>
         public static string USS_Type_Salvage {

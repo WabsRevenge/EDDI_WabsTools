@@ -47,6 +47,7 @@ namespace EddiDataDefinitions
             var NonHuman = new SignalSource("USS_Type_NonHuman", "USS_NonHumanSignalSource");
             var TradingBeacon = new SignalSource("USS_Type_TradingBeacon", "USS_TradingBeacon");
             var WeaponsFire = new SignalSource("USS_Type_WeaponsFire", "USS_WeaponsFire");
+            var PowerEmmissions = new SignalSource( "USS_Type_PowerEmissions", "USS_PowerEmissions" );
 
             var UnregisteredCommsBeacon = new SignalSource("NumberStation");
             var ListeningPost = new SignalSource("ListeningPost");
@@ -110,6 +111,7 @@ namespace EddiDataDefinitions
         public SignalType signalType { get; set; }
         public int index;
         public string spawningFaction { get; set; }
+        public string spawningPower { get; set; }
         public DateTime? expiry { get; set; }
         public int? threatLevel { get; set; }
         public bool? isStation { get; set; }
