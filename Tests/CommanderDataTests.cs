@@ -5259,7 +5259,7 @@ namespace UnitTests
       ""Slot07_Size3"": {
         ""module"": {
           ""id"": 128064340,
-          ""name"": ""Int_CargoRack_Size1_Class3"",
+          ""name"": ""Int_CargoRack_Size3_Class1"",
           ""value"": 84000,
           ""unloaned"": 0,
           ""free"": false,
