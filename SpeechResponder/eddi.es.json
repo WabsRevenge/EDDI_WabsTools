@@ -1163,6 +1163,15 @@
       "name": "Heat warning",
       "description": "Se activa cuando el calor de su nave supera el 100%"
     },
+    "Holoscreen hacked": {
+      "enabled": true,
+      "priority": 3,
+      "responder": true,
+      "script": "{Occasionally(2, cat(F('Honorific'), ', '))}\r\n{OneOf(\"The {Occasionally(2, P(event.before, 'power'))} holo-screen {OneOf('hack', 'override')} is complete\", \r\n       \"{Occasionally(2, cat(Occasionally(2, P(event.before, 'power')), 'Holo-screen'))} {OneOf('Hack', 'Override')} completed\"\r\n       )}. \r\nYou have strengthened {P(event.after, \"power\")}'s influence \r\n{Occasionally(2, \"in this system\")}.",
+      "default": true,
+      "name": "Holoscreen hacked",
+      "description": "Triggered when you hack a power's holoscreen."
+    },
     "Honorific": {
       "enabled": true,
       "priority": 3,

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using JetBrains.Annotations;
+using System;
 using System.Linq;
 
 namespace EddiDataDefinitions
@@ -31,7 +32,10 @@ namespace EddiDataDefinitions
         [Obsolete]
         public static readonly Power ZacharyHudson = new Power("ZacharyHudson", Superpower.Federation, "Nanomam");
 
+        [PublicAPI]
         public Superpower Allegiance { get; private set; }
+
+        [PublicAPI]
         public string headquarters { get; private set; }
 
         // dummy used to ensure that the static constructor has run

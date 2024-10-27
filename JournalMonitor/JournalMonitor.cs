@@ -5077,6 +5077,16 @@ namespace EddiJournalMonitor
                                 }
                                 handled = true;
                                 break;
+                            case "HoloscreenHacked":
+                                {
+                                    // {"timestamp":"2024-10-22T20:40:06Z","event":"HoloscreenHacked","PowerBefore":"Aisling Duval","PowerAfter":"Yuri Grom"}
+                                    var powerBefore = Power.FromEDName( JsonParsing.getString( data, "PowerBefore" ) );
+                                    var powerAfter = Power.FromEDName( JsonParsing.getString( data, "PowerAfter" ) );
+                                    events.Add(new HoloscreenHackedEvent(timestamp, powerBefore, powerAfter) { raw = line, fromLoad = fromLogLoad });
+                                }
+                                handled = true;
+                                break;
+                                break;
 
                             // we silently ignore these, but forward them to the responders
                             case "CodexDiscovery":

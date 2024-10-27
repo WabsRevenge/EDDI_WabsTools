@@ -8,7 +8,7 @@
       "responder": true,
       "script": "{event.item} \r\n{if event.repairedfully:\r\n    修理完成\r\n|else:\r\n    被部分修理 \r\n    {Occasionally(2, cat(\r\n        OneOf(\"至 \", \"到 \"),\r\n        \"百分之\"\r\n        event.health * 100,\r\n        \" 功能完整性\"\r\n    ))}\r\n}\r\n\r\n{Occasionally(2, \r\n    cat(OneOf(\", \"), \" 已经可以再次启用\")\r\n)}.",
       "default": true,
-	"name": "AFMU repairs",
+      "name": "AFMU repairs",
       "description": "Triggered when repairing modules using the Auto Field Maintenance Unit (AFMU)"
     },
     "Asteroid cracked": {
@@ -51,7 +51,8 @@
       "enabled": true,
       "priority": 3,
       "responder": false,
-      "script": "{_ Fetch from context / state _}\r\n{set blueprintname to state.blueprint}\r\n{set blueprintgrade to state.blueprintgrade}\r\n\r\n{if blueprintname && blueprintgrade:\r\n    {_ Fetch full blueprint details }\r\n    {set blueprint to BlueprintDetails(blueprintname, blueprintgrade)}\r\n\r\n    {_ Context }\r\n    {SetState('eddi_context_last_subject', 'blueprint')}\r\n    {SetState('eddi_context_blueprint_name', blueprintname)}\r\n    {SetState('eddi_context_blueprint_grade', blueprintgrade)}\r\n}\r\n\r\n{if !blueprint:\r\n    {_ Fetch from context }\r\n    {set blueprint to BlueprintDetails(state.eddi_context_blueprint_name, state.eddi_context_blueprint_grade)}\r\n}\r\n\r\n{_ Function to obtain current inventory of a material}\r\n{set _inventory(required) to:\r\n    {for material in materials:\r\n        {if material.material = required:\r\n            {return material}\r\n        }\r\n    }\r\n}\r\n\r\n{set canbemade to 999}\r\n\r\n{if blueprint:\r\n    {_ Find the smallest number of this blueprint that can be made }\r\n    \r\n    {set cur to 0}\r\n    {while cur < len(blueprint.materials):\r\n        {set inventory to _inventory(blueprint.materials[cur].material)}\r\n        {if !inventory:\r\n            {set canbemade to 0}\r\n        |else:\r\n            {if inventory.amount < canbemade:\r\n                {set canbemade to inventory.amount}\r\n            }\r\n        }\r\n        {set cur to cur + 1}\r\n    }\r\n\r\n    {if canbemade = 0:\r\n        您无法制作任何 {blueprintgrade} 级 {blueprintname}\r\n    |elif canbemade = 1:\r\n        您可以制作一个 {blueprintgrade} 级 {blueprintname}\r\n    |else:\r\n        您可以制作 {blueprintgrade} 级 {blueprintname} {canbemade} 次.\r\n    }\r\n    \r\n|else:\r\n    没有关于{blueprintgrade} 级 {blueprintname}所需材料的信息\r\n}.\r\n",       "default": true,
+      "script": "{_ Fetch from context / state _}\r\n{set blueprintname to state.blueprint}\r\n{set blueprintgrade to state.blueprintgrade}\r\n\r\n{if blueprintname && blueprintgrade:\r\n    {_ Fetch full blueprint details }\r\n    {set blueprint to BlueprintDetails(blueprintname, blueprintgrade)}\r\n\r\n    {_ Context }\r\n    {SetState('eddi_context_last_subject', 'blueprint')}\r\n    {SetState('eddi_context_blueprint_name', blueprintname)}\r\n    {SetState('eddi_context_blueprint_grade', blueprintgrade)}\r\n}\r\n\r\n{if !blueprint:\r\n    {_ Fetch from context }\r\n    {set blueprint to BlueprintDetails(state.eddi_context_blueprint_name, state.eddi_context_blueprint_grade)}\r\n}\r\n\r\n{_ Function to obtain current inventory of a material}\r\n{set _inventory(required) to:\r\n    {for material in materials:\r\n        {if material.material = required:\r\n            {return material}\r\n        }\r\n    }\r\n}\r\n\r\n{set canbemade to 999}\r\n\r\n{if blueprint:\r\n    {_ Find the smallest number of this blueprint that can be made }\r\n    \r\n    {set cur to 0}\r\n    {while cur < len(blueprint.materials):\r\n        {set inventory to _inventory(blueprint.materials[cur].material)}\r\n        {if !inventory:\r\n            {set canbemade to 0}\r\n        |else:\r\n            {if inventory.amount < canbemade:\r\n                {set canbemade to inventory.amount}\r\n            }\r\n        }\r\n        {set cur to cur + 1}\r\n    }\r\n\r\n    {if canbemade = 0:\r\n        您无法制作任何 {blueprintgrade} 级 {blueprintname}\r\n    |elif canbemade = 1:\r\n        您可以制作一个 {blueprintgrade} 级 {blueprintname}\r\n    |else:\r\n        您可以制作 {blueprintgrade} 级 {blueprintname} {canbemade} 次.\r\n    }\r\n    \r\n|else:\r\n    没有关于{blueprintgrade} 级 {blueprintname}所需材料的信息\r\n}.\r\n",
+      "default": true,
       "name": "Blueprint make report",
       "description": "Report on how many of a particular blueprint we can make"
     },
@@ -61,7 +62,7 @@
       "responder": false,
       "script": "{_ Fetch from context / state _}\r\n{set blueprintname to state.blueprint}\r\n{set blueprintgrade to state.blueprintgrade}\r\n\r\n{if blueprintname && blueprintgrade:\r\n    {_ Fetch full blueprint details }\r\n    {set blueprint to BlueprintDetails(blueprintname, blueprintgrade)}\r\n\r\n    {_ Context }\r\n    {SetState('eddi_context_last_subject', 'blueprint')}\r\n    {SetState('eddi_context_blueprint_name', blueprintname)}\r\n    {SetState('eddi_context_blueprint_grade', blueprintgrade)}\r\n}\r\n\r\n{if blueprintname:\r\n    {_ Fetch full blueprint details }\r\n    {set blueprint to BlueprintDetails(blueprintname, blueprintgrade)}\r\n\r\n    {_ Context }\r\n    {SetState('eddi_context_last_subject', 'blueprint')}\r\n    {SetState('eddi_context_blueprint_name', blueprintname)}\r\n    {SetState('eddi_context_blueprint_grade', blueprintgrade)}\r\n}\r\n\r\n{if !blueprint || !blueprintgrade:\r\n    {_ Fetch from context }\r\n    {set blueprint to BlueprintDetails(state.eddi_context_blueprint_name, state.eddi_context_blueprint_grade)}\r\n}\r\n\r\n{if blueprint && blueprintgrade:\r\n    {set materials to len(blueprint.materials)}\r\n    {blueprintname} 级 {blueprintgrade} 需要 \r\n    {if materials = 1:\r\n        {blueprint.materials[0].material}\r\n    |elif materials = 2:\r\n        {blueprint.materials[0].material} 和 {blueprint.materials[1].material}\r\n    |else:\r\n        {set cur to 0}\r\n        {while cur < len(blueprint.materials):\r\n            {if cur = 0:\r\n                {blueprint.materials[cur].material}\r\n            |elif cur < len(blueprint.materials) - 1:\r\n                , {blueprint.materials[cur].material}\r\n            |else:\r\n                , and {blueprint.materials[cur].material}\r\n            }\r\n            {set cur to cur + 1}\r\n        }\r\n    }\r\n|else:\r\n    没有关于 {blueprintgrade}级{blueprintname}所需材料的信息\r\n}.\r\n",
       "default": true,
-	  "name": "Blueprint material report",
+      "name": "Blueprint material report",
       "description": "Report on the material requirements for a blueprint"
     },
     "Bodies mapped": {
@@ -806,7 +807,7 @@
       "priority": 3,
       "responder": true,
       "script": "{_ Fetch from Context, if a context is set _}\r\n{if state.eddi_context_system_name:\r\n    {set reportSystem to SystemDetails(state.eddi_context_system_name)}\r\n|else:\r\n    {set reportSystem to SystemDetails(system.systemname)}\r\n}\r\n\r\n{if !reportSystem.name || reportSystem.name = \"\":\r\n    我不太清楚您在寻问哪个星系.\r\n|else:\r\n    {if ship.Role.edname = \"Exploration\" || \r\n        (ship.Role.edname = \"Multipurpose\" && len(reportSystem.factions) = 0):\r\n\r\n        {if reportSystem:\r\n        \t{set reportedBodies to len(reportSystem.bodies)}\r\n            {if 0 < reportedBodies && reportedBodies < event.totalbodies:\r\n                {Pause(1000)}\r\n\r\n                {set scannedBodies to 0}\r\n                {for body in reportSystem.bodies:\r\n                    {if body.scanned:\r\n                        {set scannedBodies to scannedBodies + 1}\r\n                    }\r\n                }\r\n                {set bodiesToScan to (event.totalbodies- scannedBodies)}\r\n\r\n                {if bodiesToScan = 1:\r\n                \t还有一个天体未被扫描\r\n                |elif scannedBodies < event.totalbodies: \r\n                \t{Occasionally(3, OneOf(\"这里\", \"在本星系\"))}.\r\n                    {OneOf(\r\n                        \"{event.totalbodies}个中的{scannedBodies}个天体已被扫描\", \r\n                        \"还有{bodiesToScan}个天体未被扫描\"\r\n                    )}\r\n                   \r\n                }\r\n            |else:\r\n                {set bodiesToMap to F(\"Bodies to map\")}\r\n                {if bodiesToMap:\r\n                    {bodiesToMap}\r\n                }\r\n            }\r\n        }\r\n    }\r\n}",
-	  "name": "Discovery scan",
+      "name": "Discovery scan",
       "description": "Triggered when performing a full system scan (honk)"
     },
     "Disembark": {
@@ -884,7 +885,7 @@
       "priority": 3,
       "responder": true,
       "script": "{if !event.tosrv && state.eddi_context_srv_deployed_id:\r\n    您的 {Spacialise(\"SRV\")} 还没上船, {F('Honorific')}, 如果被抛弃则会被摧毁.\r\n}",
-	  "name": "Embark",
+      "name": "Embark",
       "description": "Triggered when you transition from on foot to a ship or SRV"
     },
     "Empire honorific": {
@@ -1147,6 +1148,15 @@
       "default": true,
       "name": "Heat warning",
       "description": "Triggered when your ship's heat exceeds 100% and you begin to take module damage."
+    },
+    "Holoscreen hacked": {
+      "enabled": true,
+      "priority": 3,
+      "responder": true,
+      "script": "{Occasionally(2, cat(F('Honorific'), ', '))}\r\n{OneOf(\"The {Occasionally(2, P(event.before, 'power'))} holo-screen {OneOf('hack', 'override')} is complete\", \r\n       \"{Occasionally(2, cat(Occasionally(2, P(event.before, 'power')), 'Holo-screen'))} {OneOf('Hack', 'Override')} completed\"\r\n       )}. \r\nYou have strengthened {P(event.after, \"power\")}'s influence \r\n{Occasionally(2, \"in this system\")}.",
+      "default": true,
+      "name": "Holoscreen hacked",
+      "description": "Triggered when you hack a power's holoscreen."
     },
     "Honorific": {
       "enabled": true,
@@ -1547,7 +1557,8 @@
       "enabled": true,
       "priority": null,
       "responder": false,
-      "script": "{_ Mission faction state _}\r\n{_ Report the faction state _}\r\n\r\n\r\n{set opening to cat(OneOf(\"正在\",\"正处于\"))}\r\n{set endinging to cat(\"的\", OneOf(\"时期\",\"阶段\"))}\r\n{set state to mission.FactionState.invariantName}\r\n\r\n{if state = \"Boom\":\r\n    {opening} {OneOf(\"商业成功\",\"经济繁荣\")}{endinging}.\r\n|elif state = \"Bust\":\r\n    {opening} {OneOf(\"经济衰退\",\"大萧条\",\"经济下行\")}{endinging}.\r\n|elif state = \"CivilLiberty\":\r\n    {opening} 高公民自由度{endinging}.\r\n|elif state = \"CivilUnrest\":\r\n    {opening} {OneOf(\"内乱\",\"内部斗争\")}{endinging}.\r\n|elif state = \"CivilWar\":\r\n    {opening} {OneOf(\"内战\",\"内部武装斗争\")}{endinging}.\r\n|elif state = \"Election\":\r\n    {opening} {OneOf(\"选举\",\"票选\")} 新 {OneOf(\"领袖\",\"领导人\")}{endinging}.\r\n|elif state = \"Expansion\":\r\n    {opening} 尝试向相邻 {OneOf(\"星系\",\"主权领空\")}武装扩张{endinging}.\r\n|elif state = \"Famine\":\r\n    {opening} {OneOf(\"饥荒\",\"食物短缺\")}{endinging}.\r\n|elif state = \"Incursion\":\r\n    {opening} 八角 {OneOf(\"入侵\",\"暴力接触\")}{endinging}.\r\n|elif state = \"Investment\":\r\n    {opening} 大基建{endinging}.\r\n|elif state = \"Lockdown\":\r\n    {opening} {OneOf(\"封锁\",\"致力于提升安全度\")}{endinging}.\r\n|elif state = \"Outbreak\":\r\n    {opening} {OneOf(\"疫情爆发\",\"医学紧急情况\")}{endinging}.\r\n|elif state = \"Retreat\":\r\n    {opening} 从邻近 {OneOf(\"星系\",\"主权领空\")}撤离{endinging}.\r\n|elif state = \"War\":\r\n    {opening} {OneOf(\"战争\",\"武力冲突\")}{endinging}.\r\n}","default": true,
+      "script": "{_ Mission faction state _}\r\n{_ Report the faction state _}\r\n\r\n\r\n{set opening to cat(OneOf(\"正在\",\"正处于\"))}\r\n{set endinging to cat(\"的\", OneOf(\"时期\",\"阶段\"))}\r\n{set state to mission.FactionState.invariantName}\r\n\r\n{if state = \"Boom\":\r\n    {opening} {OneOf(\"商业成功\",\"经济繁荣\")}{endinging}.\r\n|elif state = \"Bust\":\r\n    {opening} {OneOf(\"经济衰退\",\"大萧条\",\"经济下行\")}{endinging}.\r\n|elif state = \"CivilLiberty\":\r\n    {opening} 高公民自由度{endinging}.\r\n|elif state = \"CivilUnrest\":\r\n    {opening} {OneOf(\"内乱\",\"内部斗争\")}{endinging}.\r\n|elif state = \"CivilWar\":\r\n    {opening} {OneOf(\"内战\",\"内部武装斗争\")}{endinging}.\r\n|elif state = \"Election\":\r\n    {opening} {OneOf(\"选举\",\"票选\")} 新 {OneOf(\"领袖\",\"领导人\")}{endinging}.\r\n|elif state = \"Expansion\":\r\n    {opening} 尝试向相邻 {OneOf(\"星系\",\"主权领空\")}武装扩张{endinging}.\r\n|elif state = \"Famine\":\r\n    {opening} {OneOf(\"饥荒\",\"食物短缺\")}{endinging}.\r\n|elif state = \"Incursion\":\r\n    {opening} 八角 {OneOf(\"入侵\",\"暴力接触\")}{endinging}.\r\n|elif state = \"Investment\":\r\n    {opening} 大基建{endinging}.\r\n|elif state = \"Lockdown\":\r\n    {opening} {OneOf(\"封锁\",\"致力于提升安全度\")}{endinging}.\r\n|elif state = \"Outbreak\":\r\n    {opening} {OneOf(\"疫情爆发\",\"医学紧急情况\")}{endinging}.\r\n|elif state = \"Retreat\":\r\n    {opening} 从邻近 {OneOf(\"星系\",\"主权领空\")}撤离{endinging}.\r\n|elif state = \"War\":\r\n    {opening} {OneOf(\"战争\",\"武力冲突\")}{endinging}.\r\n}",
+      "default": true,
       "name": "Mission faction state",
       "description": "Report the faction state"
     },

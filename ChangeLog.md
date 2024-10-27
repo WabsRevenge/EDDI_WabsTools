@@ -10,6 +10,7 @@ Full details of the variables available for each noted event, and VoiceAttack in
   * Fixed missing `systemname` property in the `Star scanned` event.
   * Fixed a null reference exception which could occur when deleting scripts.
   * Speech Responder
+      * `Holoscreen hacked` event added. 
       * `Signal detected` script updated to incorporate power spawned signal sources. 
       
 ## 4.1.0-b3
