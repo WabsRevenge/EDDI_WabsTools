@@ -11,14 +11,13 @@ namespace EddiStarMapService
 {
     public partial class StarMapService
     {
-        public List<Body> GetStarMapBodies(string system, long? edsmId = null)
+        public List<Body> GetStarMapBodies(ulong systemAddress)
         {
-            if (system == null) { return new List<Body>(); }
+            if ( systemAddress == 0 ) { return new List<Body>(); }
             if (currentGameVersion != null && currentGameVersion < minGameVersion) { return new List<Body>(); }
 
             var request = new RestRequest("api-system-v1/bodies", Method.POST);
-            request.AddParameter("systemName", system);
-            if (edsmId != null) { request.AddParameter("systemId", edsmId); }
+            request.AddParameter("systemId64", systemAddress );
             var clientResponse = restClient.Execute<Dictionary<string, object>>(request);
             if (clientResponse.IsSuccessful)
             { 

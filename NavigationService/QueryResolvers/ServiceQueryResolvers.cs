@@ -203,11 +203,11 @@ namespace EddiNavigationService.QueryResolvers
                 // Update the navRouteList
                 var navRouteList = new NavWaypointCollection(Convert.ToDecimal(startSystem.x), Convert.ToDecimal(startSystem.y), Convert.ToDecimal(startSystem.z));
                 navRouteList.Waypoints.Add( new NavWaypoint( startSystem ) { visited = true } );
-                if ( startSystem.systemname != serviceStarSystem.systemname )
+                if ( startSystem.systemAddress != serviceStarSystem.systemAddress )
                 {
                     navRouteList.Waypoints.Add( new NavWaypoint( serviceStarSystem )
                     {
-                        visited = serviceStarSystem.systemname == startSystem.systemname,
+                        visited = serviceStarSystem.systemAddress == startSystem.systemAddress,
                         stationName = searchStation
                     } );
                 }

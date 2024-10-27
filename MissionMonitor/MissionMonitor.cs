@@ -350,7 +350,7 @@ namespace EddiMissionMonitor
                     // A `MissionRedirected` journal event isn't written for each waypoint in multi-destination passenger missions, so we handle those here.
                     if ( mission.tagsList.Contains(MissionType.SightSeeing) )
                     {
-                        var system = mission.destinationsystems.FirstOrDefault(s => s.systemName == EDDI.Instance?.CurrentStarSystem?.systemname);
+                        var system = mission.destinationsystems.FirstOrDefault(s => s.systemAddress == EDDI.Instance?.CurrentStarSystem?.systemAddress);
                         if ( system != null )
                         {
                             system.visited = true;

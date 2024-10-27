@@ -10,14 +10,13 @@ namespace EddiStarMapService
 {
     public partial class StarMapService
     {
-        public List<Faction> GetStarMapFactions(string systemName, long? edsmId = null)
+        public List<Faction> GetStarMapFactions(ulong systemAddress )
         {
-            if (systemName == null) { return new List<Faction>(); }
+            if ( systemAddress == 0) { return new List<Faction>(); }
             if (currentGameVersion != null && currentGameVersion < minGameVersion) { return new List<Faction>(); }
 
             var request = new RestRequest("api-system-v1/factions", Method.POST);
-            request.AddParameter("systemName", systemName);
-            if (edsmId != null) { request.AddParameter("systemId", edsmId); }
+            request.AddParameter( "systemId64", systemAddress );
             var clientResponse = restClient.Execute<JObject>(request);
             if (clientResponse.IsSuccessful)
             {
@@ -25,7 +24,7 @@ namespace EddiStarMapService
                 var token = JToken.Parse(clientResponse.Content);
                 if (token is JObject response)
                 {
-                    return ParseStarMapFactionsParallel(response, systemName);
+                    return ParseStarMapFactionsParallel(response, systemAddress );
                 }
             }
             else
@@ -35,23 +34,24 @@ namespace EddiStarMapService
             return new List<Faction>();
         }
 
-        public List<Faction> ParseStarMapFactionsParallel(JObject response, string systemName)
+        public List<Faction> ParseStarMapFactionsParallel(JObject response, ulong systemAddress )
         {
-            List<Faction> Factions = new List<Faction>();
-            JArray factions = (JArray)response?["factions"];
+            var Factions = new List<Faction>();
+            var systemName = (string)response?[ "name" ];
+            var factions = (JArray)response?["factions"];
 
             if (factions != null)
             {
                 Factions = factions
                     .AsParallel()
-                    .Select(f => ParseStarMapFaction(f.ToObject<JObject>(), systemName))
+                    .Select(f => ParseStarMapFaction(f.ToObject<JObject>(), systemName, systemAddress ) )
                     .Where(f => f != null)
                     .ToList();
             }
             return Factions;
         }
 
-        private Faction ParseStarMapFaction(JObject faction, string systemName)
+        private Faction ParseStarMapFaction(JObject faction, string systemName, ulong systemAddress )
         {
             try
             {
@@ -71,6 +71,7 @@ namespace EddiStarMapService
                 Faction.presences.Add(new FactionPresence()
                 {
                     systemName = systemName,
+                    systemAddress = systemAddress,
                     influence = (decimal?)faction["influence"] * 100, // Convert from a 0-1 range to a percentage
                     FactionState = FactionState.FromName((string)faction["state"]) ?? FactionState.None,
                 });
@@ -85,7 +86,7 @@ namespace EddiStarMapService
                     foreach (var activeStateToken in activeStatesList)
                     {
                         var activeState = activeStateToken.ToObject<IDictionary<string, object>>();
-                        Faction.presences.FirstOrDefault(p => p.systemName == systemName)?
+                        Faction.presences.FirstOrDefault(p => p.systemAddress == systemAddress )?
                             .ActiveStates.Add(FactionState.FromName(JsonParsing.getString(activeState, "state")) ?? FactionState.None);
                     }
                 }
@@ -102,7 +103,7 @@ namespace EddiStarMapService
                             FactionState.FromName(JsonParsing.getString(pendingState, "state")) ?? FactionState.None,
                             JsonParsing.getOptionalInt(pendingState, "trend")
                         );
-                        Faction.presences.FirstOrDefault(p => p.systemName == systemName)?
+                        Faction.presences.FirstOrDefault(p => p.systemAddress == systemAddress )?
                             .PendingStates.Add(pTrendingState);
                     }
                 }
@@ -119,7 +120,7 @@ namespace EddiStarMapService
                             FactionState.FromName(JsonParsing.getString(recoveringState, "state")) ?? FactionState.None,
                             JsonParsing.getOptionalInt(recoveringState, "trend")
                         );
-                        Faction.presences.FirstOrDefault(p => p.systemName == systemName)?
+                        Faction.presences.FirstOrDefault(p => p.systemAddress == systemAddress )?
                             .RecoveringStates.Add(rTrendingState);
                     }
                 }

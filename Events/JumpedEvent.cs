@@ -67,7 +67,7 @@ namespace EddiEvents
         public string faction => controllingfaction?.name;
 
         [PublicAPI("The state of the faction controlling the system to which the commander has jumped")]
-        public string factionstate => (controllingfaction?.presences.FirstOrDefault(p => p.systemName == system)?.FactionState ?? FactionState.None).localizedName;
+        public string factionstate => (controllingfaction?.presences.FirstOrDefault(p => p.systemAddress == systemAddress )?.FactionState ?? FactionState.None).localizedName;
         
         [PublicAPI("The allegiance of the system to which the commander has jumped")]
         public string allegiance => (controllingfaction?.Allegiance ?? Superpower.None).localizedName;

@@ -177,7 +177,7 @@ namespace EddiJournalMonitor
                                     long? marketId = JsonParsing.getOptionalLong(data, "MarketID");
                                     string stationName = JsonParsing.getString(data, "StationName");
                                     StationModel stationModel = StationModel.FromEDName(JsonParsing.getString(data, "StationType")) ?? StationModel.None;
-                                    Faction controllingfaction = GetFaction(data, "Station", systemName);
+                                    Faction controllingfaction = GetFaction(data, "Station", systemName, systemAddress);
                                     decimal? distancefromstar = JsonParsing.getOptionalDecimal(data, "DistFromStarLS");
 
                                     // Get station services data
@@ -323,7 +323,7 @@ namespace EddiJournalMonitor
                                     decimal fuelRemaining = JsonParsing.getDecimal(data, "FuelLevel");
                                     int? boostUsed = JsonParsing.getOptionalInt(data, "BoostUsed"); // 1-3 are synthesis, 4 is any supercharge (white dwarf or neutron star)
                                     decimal distance = JsonParsing.getDecimal(data, "JumpDist");
-                                    Faction controllingfaction = GetFaction(data, "System", systemName);
+                                    Faction controllingfaction = GetFaction(data, "System", systemName, systemAddress);
                                     Economy economy = Economy.FromEDName(JsonParsing.getString(data, "SystemEconomy")) ?? Economy.None;
                                     Economy economy2 = Economy.FromEDName(JsonParsing.getString(data, "SystemSecondEconomy")) ?? Economy.None;
                                     SecurityLevel security = SecurityLevel.FromEDName(JsonParsing.getString(data, "SystemSecurity")) ?? SecurityLevel.None;
@@ -334,7 +334,7 @@ namespace EddiJournalMonitor
                                     data.TryGetValue("Factions", out object factionsVal);
                                     if (factionsVal != null)
                                     {
-                                        factions = GetFactions(factionsVal, systemName);
+                                        factions = GetFactions(factionsVal, systemName, systemAddress);
                                     }
 
                                     // Parse conflicts array data
@@ -387,8 +387,8 @@ namespace EddiJournalMonitor
                                     }
 
                                     bool docked = JsonParsing.getBool(data, "Docked");
-                                    Faction systemfaction = GetFaction(data, "System", systemName);
-                                    Faction stationfaction = GetFaction(data, "Station", systemName);
+                                    Faction systemfaction = GetFaction(data, "System", systemName, systemAddress);
+                                    Faction stationfaction = GetFaction(data, "Station", systemName, systemAddress);
                                     Economy economy = Economy.FromEDName(JsonParsing.getString(data, "SystemEconomy"));
                                     Economy economy2 = Economy.FromEDName(JsonParsing.getString(data, "SystemSecondEconomy"));
                                     SecurityLevel security = SecurityLevel.FromEDName(JsonParsing.getString(data, "SystemSecurity"));
@@ -432,7 +432,7 @@ namespace EddiJournalMonitor
                                     data.TryGetValue("Factions", out object factionsVal);
                                     if (factionsVal != null)
                                     {
-                                        factions = GetFactions(factionsVal, systemName);
+                                        factions = GetFactions(factionsVal, systemName, systemAddress );
                                     }
 
                                     // Parse conflicts array data
@@ -931,7 +931,7 @@ namespace EddiJournalMonitor
                                     var latitude = JsonParsing.getOptionalDecimal(data, "Latitude");
                                     var longitude = JsonParsing.getOptionalDecimal(data, "Longitude");
 
-                                    var controllingFaction = GetFaction(data, "Station", EDDI.Instance.CurrentStarSystem?.systemname);
+                                    var controllingFaction = GetFaction(data, "Station", EDDI.Instance.CurrentStarSystem?.systemname, systemAddress);
 
                                     // Get station services data
                                     var stationServices = new List<StationService>();
@@ -4384,7 +4384,7 @@ namespace EddiJournalMonitor
                                         Economy.FromEDName( JsonParsing.getString( data, "SystemEconomy" ) );
                                     var systemEconomy2 =
                                         Economy.FromEDName( JsonParsing.getString( data, "SystemSecondEconomy" ) );
-                                    var systemfaction = GetFaction( data, "System", systemName );
+                                    var systemfaction = GetFaction( data, "System", systemName, systemAddress );
                                     var systemSecurity =
                                         SecurityLevel.FromEDName( JsonParsing.getString( data, "SystemSecurity" ) );
                                     systemSecurity.fallbackLocalizedName =
@@ -4410,7 +4410,7 @@ namespace EddiJournalMonitor
                                     var carrierName = JsonParsing.getString( data, "StationName" );
                                     var carrierType =
                                         StationModel.FromEDName( JsonParsing.getString( data, "StationType" ) );
-                                    var stationFaction = GetFaction( data, "Station", systemName );
+                                    var stationFaction = GetFaction( data, "Station", systemName, systemAddress );
 
                                     // Get carrier services data (may not be present when on-foot at a fleet carrier but not docked)
                                     var stationServices = new List<StationService>();
@@ -4448,7 +4448,7 @@ namespace EddiJournalMonitor
                                     data.TryGetValue( "Factions", out object factionsVal );
                                     if ( factionsVal != null )
                                     {
-                                        factions = GetFactions( factionsVal, systemName );
+                                        factions = GetFactions( factionsVal, systemName, systemAddress );
                                     }
 
                                     // Parse conflicts array data
@@ -5300,7 +5300,7 @@ namespace EddiJournalMonitor
             return superpowerFaction?.invariantName ?? faction;
         }
 
-        private static Faction GetFaction(IDictionary<string, object> data, string type, string systemName)
+        private static Faction GetFaction(IDictionary<string, object> data, string type, string systemName, ulong systemAddress)
         {
             Faction faction = null;
 
@@ -5330,12 +5330,13 @@ namespace EddiJournalMonitor
                           new Faction { name = factionName };
 
                 // Get the faction information specific to the star system
-                var factionPresense = faction.presences.FirstOrDefault( p => p.systemName == systemName );
-                if ( factionPresense is null && !string.IsNullOrEmpty( systemName ) )
+                var factionPresense = faction.presences.FirstOrDefault( p => p.systemAddress == systemAddress );
+                if ( factionPresense is null && systemAddress > 0 )
                 {
                     factionPresense = new FactionPresence()
                     {
                         systemName = systemName,
+                        systemAddress = systemAddress,
                         FactionState = factionState
                     };
                     faction.presences.Add( factionPresense );
@@ -5398,7 +5399,7 @@ namespace EddiJournalMonitor
             return faction;
         }
 
-        private static List<Faction> GetFactions(object factionsVal, string systemName)
+        private static List<Faction> GetFactions(object factionsVal, string systemName, ulong systemAddress)
         {
             List<Faction> factions = new List<Faction>();
             if ( factionsVal is List<object> factionsList )
@@ -5427,7 +5428,7 @@ namespace EddiJournalMonitor
 
                     FactionPresence factionPresense = new FactionPresence()
                     {
-                        systemName = systemName, FactionState = fState, influence = influence, Happiness = happiness,
+                        systemName = systemName, systemAddress = systemAddress, FactionState = fState, influence = influence, Happiness = happiness,
                     };
 
                     // Active states

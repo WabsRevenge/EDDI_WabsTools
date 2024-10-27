@@ -385,7 +385,7 @@ namespace EddiStarMapService
             return vals;
         }
 
-        public List<StarMapResponseLogEntry> getStarMapLog(DateTime? since = null, string[] systemNames = null)
+        public List<StarMapResponseLogEntry> getStarMapLog(DateTime? since = null, ulong[] systemAddresses = null)
         {
             if (!EdsmCredentialsSet()) { return new List<StarMapResponseLogEntry>(); }
 
@@ -393,11 +393,11 @@ namespace EddiStarMapService
             request.AddParameter("apiKey", apiKey);
             request.AddParameter("commanderName", commanderName);
             request.AddParameter("showId", 1); // Obtain EDSM IDs
-            if (systemNames?.Length == 1)
+            if ( systemAddresses?.Length == 1)
             {
                 // When a single system name is provided, the api responds with 
                 // the complete flight logs for that star system
-                request.AddParameter("systemName", systemNames[0]);
+                request.AddParameter("systemId64", systemAddresses[ 0]);
             }
             else
             {
@@ -426,9 +426,9 @@ namespace EddiStarMapService
                 }
                 if (response.logs == null) { return null; }
 
-                if (systemNames?.Length > 0)
+                if ( systemAddresses?.Length > 0)
                 {
-                    response.logs.RemoveAll(s => !systemNames.Contains(s.system));
+                    response.logs.RemoveAll(s => !systemAddresses.Contains(s.systemId64));
                 }
                 return response.logs;
             }

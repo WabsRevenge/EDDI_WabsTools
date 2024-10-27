@@ -18,6 +18,13 @@ namespace EddiStarMapService
             return GetStarMapSystems(new[] { system }, showCoordinates)?.FirstOrDefault();
         }
 
+        /// <summary> Exactly one system address is required. </summary>
+        public StarSystem GetStarMapSystem ( ulong systemAddress, bool showCoordinates = true )
+        {
+            if ( systemAddress == 0 ) { return null; }
+            return GetStarMapSystems( new[] { systemAddress }, showCoordinates )?.FirstOrDefault();
+        }
+
         /// <summary> At least one system name is required. </summary>
         public List<StarSystem> GetStarMapSystems(string[] systems, bool showCoordinates = true)
         {
@@ -51,6 +58,43 @@ namespace EddiStarMapService
             else
             {
                 Logging.Debug("EDSM responded with " + clientResponse.ErrorMessage, clientResponse.ErrorException);
+            }
+            return new List<StarSystem>();
+        }
+
+        /// <summary> At least one system address is required. </summary>
+        public List<StarSystem> GetStarMapSystems ( ulong[] systemAddresses, bool showCoordinates = true )
+        {
+            if ( systemAddresses == null ) { return new List<StarSystem>(); }
+            if ( currentGameVersion != null && currentGameVersion < minGameVersion ) { return new List<StarSystem>(); }
+
+            var request = new RestRequest("api-v1/systems", Method.POST);
+            foreach ( var systemAddress in systemAddresses )
+            {
+                request.AddParameter( "systemId64[]", systemAddress );
+            }
+            request.AddParameter( "showId", 1 );
+            request.AddParameter( "showCoordinates", showCoordinates ? 1 : 0 );
+            request.AddParameter( "showInformation", 1 );
+            request.AddParameter( "showPermit", 1 );
+            var clientResponse = restClient.Execute<List<JObject>>(request);
+            if ( clientResponse.IsSuccessful )
+            {
+                Logging.Debug( "EDSM responded with " + clientResponse.Content );
+                var token = JToken.Parse(clientResponse.Content);
+                if ( token is JArray responses )
+                {
+                    List<StarSystem> starSystems = responses
+                        .AsParallel()
+                        .Select(s => ParseStarMapSystem(s.ToObject<JObject>()))
+                        .Where(s => s != null)
+                        .ToList();
+                    return starSystems;
+                }
+            }
+            else
+            {
+                Logging.Debug( "EDSM responded with " + clientResponse.ErrorMessage, clientResponse.ErrorException );
             }
             return new List<StarSystem>();
         }
@@ -201,6 +245,7 @@ namespace EddiStarMapService
                         controllingFaction.presences.Add( new FactionPresence()
                         {
                             systemName = starSystem.systemname,
+                            systemAddress = starSystem.systemAddress,
                             FactionState = FactionState.FromName( (string)information[ "factionState" ] ) ??
                                            FactionState.None,
                         } );

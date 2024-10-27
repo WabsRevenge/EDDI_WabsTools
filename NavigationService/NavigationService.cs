@@ -300,7 +300,7 @@ namespace EddiNavigationService
                 //Ignore null & empty systems
                 if (system != null)
                 {
-                    if (system.systemname != SearchStarSystem?.systemname)
+                    if (system.systemAddress != SearchStarSystem?.systemAddress)
                     {
                         Logging.Debug("Search star system is " + system.systemname);
                         SearchStarSystem = system;

@@ -70,7 +70,7 @@ namespace EddiEvents
         public string systemfaction => controllingsystemfaction?.name;
 
         [PublicAPI("The state of the faction controlling the system in which the commander is located")]
-        public string systemstate => (controllingsystemfaction?.presences.FirstOrDefault(p => p.systemName == systemname)?.FactionState ?? FactionState.None).localizedName;
+        public string systemstate => (controllingsystemfaction?.presences.FirstOrDefault(p => p.systemAddress == systemAddress )?.FactionState ?? FactionState.None).localizedName;
 
         [PublicAPI("The government of the system in which the commander is located")]
         public string systemgovernment => (controllingsystemfaction?.Government ?? Government.None).localizedName;
@@ -82,7 +82,7 @@ namespace EddiEvents
         public string stationfaction => controllingstationfaction?.name;
 
         [PublicAPI("The state of the faction controlling the station, if the commander is docked")]
-        public string stationstate => (controllingstationfaction?.presences.FirstOrDefault(p => p.systemName == systemname)?.FactionState ?? FactionState.None).localizedName;
+        public string stationstate => (controllingstationfaction?.presences.FirstOrDefault(p => p.systemAddress == systemAddress )?.FactionState ?? FactionState.None).localizedName;
 
         [PublicAPI("The government of the station, if the commander is docked")]
         public string stationgovernment => (controllingstationfaction?.Government ?? Government.None).localizedName;
@@ -115,7 +115,7 @@ namespace EddiEvents
         public string faction => controllingsystemfaction?.name;
 
         [Obsolete("Use systemstate instead")]
-        public string factionstate => (controllingsystemfaction?.presences.FirstOrDefault(p => p.systemName == systemname)?.FactionState ?? FactionState.None).localizedName;
+        public string factionstate => (controllingsystemfaction?.presences.FirstOrDefault(p => p.systemAddress == systemAddress )?.FactionState ?? FactionState.None).localizedName;
 
         [Obsolete("Use systemgovernment instead")]
         public string government => (controllingsystemfaction?.Government ?? Government.None).localizedName;

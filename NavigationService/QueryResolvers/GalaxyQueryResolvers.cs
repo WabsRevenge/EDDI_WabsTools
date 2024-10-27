@@ -67,9 +67,9 @@ namespace EddiNavigationService.QueryResolvers
 
                         // Update the navRouteList
                         navRouteList.Waypoints.Add ( new NavWaypoint ( startSystem ) { visited = true } );
-                        if ( startSystem.systemname != nearestList.Values.FirstOrDefault ()?.systemname )
+                        if ( startSystem.systemAddress != nearestList.Values.FirstOrDefault ()?.systemAddress )
                         {
-                            navRouteList.Waypoints.Add ( new NavWaypoint ( nearestList.Values.FirstOrDefault () ) { visited = nearestList.Values.FirstOrDefault ()?.systemname == startSystem.systemname } );
+                            navRouteList.Waypoints.Add ( new NavWaypoint ( nearestList.Values.FirstOrDefault () ) { visited = nearestList.Values.FirstOrDefault ()?.systemAddress == startSystem.systemAddress } );
                         }
 
                         break;

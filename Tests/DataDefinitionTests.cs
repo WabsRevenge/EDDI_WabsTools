@@ -551,6 +551,7 @@ namespace UnitTests
                     new FactionPresence 
                     { 
                         systemName = "HIP 19072", 
+                        systemAddress = 525873416523U,
                         FactionState = FactionState.Boom
                     } 
                 },

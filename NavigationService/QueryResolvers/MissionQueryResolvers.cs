@@ -52,9 +52,9 @@ namespace EddiNavigationService.QueryResolvers
 
             // Update the navRouteList
             navRouteList.Waypoints.Add ( new NavWaypoint ( currentSystem ) { visited = true } );
-            if ( ( searchSystem != null ) && ( currentSystem.systemname != searchSystem.systemname ) )
+            if ( ( searchSystem != null ) && ( currentSystem.systemAddress != searchSystem.systemAddress ) )
             {
-                navRouteList.Waypoints.Add ( new NavWaypoint ( searchSystem ) { visited = searchSystem.systemname == currentSystem.systemname } );
+                navRouteList.Waypoints.Add ( new NavWaypoint ( searchSystem ) { visited = searchSystem.systemAddress == currentSystem.systemAddress } );
             }
             return new RouteDetailsEvent( DateTime.UtcNow, QueryType.source.ToString(), searchSystem?.systemname, null, navRouteList, sortedSourceSystems.Count, haulageMissionIds.ToList() );
         }
@@ -91,9 +91,9 @@ namespace EddiNavigationService.QueryResolvers
             {
                 var dest = StarSystemSqLiteRepository.Instance.GetOrFetchStarSystem(searchSystem, true, false, true, false, false); // Destination star system
                 navRouteList.Waypoints.Add ( new NavWaypoint ( startSystem ) { visited = true } );
-                if ( startSystem.systemname != dest?.systemname )
+                if ( startSystem.systemAddress != dest?.systemAddress )
                 {
-                    navRouteList.Waypoints.Add ( new NavWaypoint ( dest ) { visited = dest?.systemname == startSystem.systemname } );
+                    navRouteList.Waypoints.Add ( new NavWaypoint ( dest ) { visited = dest?.systemAddress == startSystem.systemAddress } );
                 }
             }
 
@@ -130,7 +130,7 @@ namespace EddiNavigationService.QueryResolvers
                 else if ( !string.IsNullOrEmpty( mission.destinationsystem ) )
                 {
                     var dest = StarSystemSqLiteRepository.Instance.GetOrFetchStarSystem( mission.destinationsystem, true, false, true, false, false ); // Destination star system
-                    SortSystemByDistance( dest, new NavWaypoint( dest ) { visited = dest.systemname == startSystem.systemname } );
+                    SortSystemByDistance( dest, new NavWaypoint( dest ) { visited = dest.systemAddress == startSystem.systemAddress } );
                 }
                 continue;
 
@@ -148,7 +148,7 @@ namespace EddiNavigationService.QueryResolvers
             var searchSystemName = farthestList.Values.LastOrDefault ()?.systemName;
 
             navRouteList.Waypoints.Add ( new NavWaypoint ( startSystem ) { visited = true } );
-            if ( startSystem.systemname != farthestList.Values.LastOrDefault ()?.systemName )
+            if ( startSystem.systemAddress != farthestList.Values.LastOrDefault ()?.systemAddress )
             {
                 navRouteList.Waypoints.Add ( farthestList.Values.LastOrDefault () );
             }
@@ -232,9 +232,9 @@ namespace EddiNavigationService.QueryResolvers
             var searchSystem = mostList.Values.FirstOrDefault ()?.systemname;
 
             navRouteList.Waypoints.Add ( new NavWaypoint ( curr ) { visited = true } );
-            if ( curr?.systemname != mostList.Values.FirstOrDefault ()?.systemname )
+            if ( curr?.systemAddress != mostList.Values.FirstOrDefault ()?.systemAddress )
             {
-                navRouteList.Waypoints.Add ( new NavWaypoint ( mostList.Values.FirstOrDefault () ) { visited = mostList.Values.FirstOrDefault ()?.systemname == curr?.systemname } );
+                navRouteList.Waypoints.Add ( new NavWaypoint ( mostList.Values.FirstOrDefault () ) { visited = mostList.Values.FirstOrDefault ()?.systemAddress == curr?.systemAddress } );
             }
 
             // Get mission IDs for 'most' system
@@ -287,9 +287,9 @@ namespace EddiNavigationService.QueryResolvers
             var searchSystem = nearestList.Values.FirstOrDefault ()?.systemname;
 
             navRouteList.Waypoints.Add ( new NavWaypoint ( startSystem ) { visited = true } );
-            if ( startSystem.systemname != nearestList.Values.FirstOrDefault ()?.systemname )
+            if ( startSystem.systemAddress != nearestList.Values.FirstOrDefault ()?.systemAddress )
             {
-                navRouteList.Waypoints.Add ( new NavWaypoint ( nearestList.Values.FirstOrDefault () ) { visited = nearestList.Values.FirstOrDefault ()?.systemname == startSystem?.systemname } );
+                navRouteList.Waypoints.Add ( new NavWaypoint ( nearestList.Values.FirstOrDefault () ) { visited = nearestList.Values.FirstOrDefault ()?.systemAddress == startSystem?.systemAddress } );
             }
 
             // Get mission IDs for 'farthest' system

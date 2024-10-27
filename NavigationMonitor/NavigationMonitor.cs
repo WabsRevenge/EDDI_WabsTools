@@ -407,7 +407,7 @@ namespace EddiNavigationMonitor
                 var routeList = @event.route?.Select(r => new NavWaypoint(r)).ToList();
                 if (routeList != null)
                 {
-                    if (routeList.Count > 1 && routeList[0].systemName == EDDI.Instance?.CurrentStarSystem?.systemname)
+                    if (routeList.Count > 1 && routeList[0].systemAddress == EDDI.Instance?.CurrentStarSystem?.systemAddress)
                     {
                         // Update the Nav Route
                         routeList[0].visited = true;

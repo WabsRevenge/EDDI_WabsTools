@@ -43,7 +43,7 @@ namespace EddiEvents
         public string systemfaction => controllingsystemfaction?.name;
 
         [PublicAPI("The state of the faction controlling the system into which the carrier has jumped, if any")]
-        public string systemstate => (controllingsystemfaction?.presences.FirstOrDefault(p => p.systemName == systemname)?.FactionState ?? FactionState.None).localizedName;
+        public string systemstate => (controllingsystemfaction?.presences.FirstOrDefault(p => p.systemAddress == systemAddress )?.FactionState ?? FactionState.None).localizedName;
 
         [PublicAPI("The government of the system into which the carrier has jumped, if any")]
         public string systemgovernment => (controllingsystemfaction?.Government ?? Government.None).localizedName;

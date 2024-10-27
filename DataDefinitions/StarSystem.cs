@@ -246,7 +246,7 @@ namespace EddiDataDefinitions
         public string powerstate => (powerState ?? PowerplayState.None).localizedName;
 
         [Utilities.PublicAPI, JsonIgnore]
-        public string state => (Faction?.presences.FirstOrDefault(p => p.systemName == systemname)?.FactionState ?? FactionState.None).localizedName;
+        public string state => (Faction?.presences.FirstOrDefault(p => p.systemAddress == systemAddress )?.FactionState ?? FactionState.None).localizedName;
 
         // Faction details
         [CanBeNull	]
@@ -450,7 +450,7 @@ namespace EddiDataDefinitions
         private void OnFactionDeserialized()
         {
             if (Faction == null) { Faction = new Faction(); }
-            FactionPresence factionPresence = Faction.presences.FirstOrDefault(p => p.systemName == systemname) ?? new FactionPresence();
+            var factionPresence = Faction.presences.FirstOrDefault(p => p.systemAddress == systemAddress) ?? new FactionPresence();
             if (factionPresence.FactionState == null)
             {
                 // Convert legacy data
@@ -467,7 +467,7 @@ namespace EddiDataDefinitions
             {
                 // get the canonical FactionState object for the given EDName
                 factionPresence.FactionState =
-                    FactionState.FromEDName(Faction.presences.FirstOrDefault(p => p.systemName == systemname)?.FactionState.edname) ?? FactionState.None;
+                    FactionState.FromEDName(Faction.presences.FirstOrDefault(p => p.systemAddress == systemAddress)?.FactionState.edname) ?? FactionState.None;
             }
         }
 

@@ -174,7 +174,7 @@ namespace EddiVoiceAttackResponder
             vaProxy.SetText(prefix + " allegiance", (station?.Faction?.Allegiance ?? Superpower.None).localizedName);
             vaProxy.SetText(prefix + " faction", station?.Faction?.name);
             vaProxy.SetText(prefix + " state", (station?.Faction?.presences
-                .FirstOrDefault(p => p.systemName == station.systemname)?.FactionState ?? FactionState.None).localizedName);
+                .FirstOrDefault(p => p.systemAddress == station.systemAddress)?.FactionState ?? FactionState.None).localizedName);
             vaProxy.SetText(prefix + " primary economy", station?.primaryeconomy);
             vaProxy.SetText(prefix + " secondary economy", station?.secondaryeconomy);
             // Services
@@ -452,7 +452,7 @@ namespace EddiVoiceAttackResponder
                 vaProxy.SetText(prefix + " faction", system?.Faction?.name);
                 vaProxy.SetText(prefix + " primary economy", system?.primaryeconomy);
                 vaProxy.SetText(prefix + " state", (system?.Faction?.presences
-                    .FirstOrDefault(p => p.systemName == system.systemname)?.FactionState ?? FactionState.None).localizedName);
+                    .FirstOrDefault(p => p.systemAddress == system.systemAddress)?.FactionState ?? FactionState.None).localizedName);
                 vaProxy.SetText(prefix + " security", system?.security);
                 vaProxy.SetText(prefix + " power", system?.power);
                 vaProxy.SetText(prefix + " power (spoken)", Translations.getPhoneticPower(EDDI.Instance.CurrentStarSystem?.power));

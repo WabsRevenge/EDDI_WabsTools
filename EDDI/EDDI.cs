@@ -1482,7 +1482,7 @@ namespace EddiCore
                 {
                     carrier.systemname = @event.systemname;
                     carrier.systemAddress = @event.systemAddress;
-                    if (@event.systemname == CurrentStarSystem?.systemname)
+                    if (@event.systemAddress == CurrentStarSystem?.systemAddress)
                     {
                         CurrentStarSystem?.stations.Add(carrier);
                         StarSystemSqLiteRepository.Instance.SaveStarSystem(starSystem);
@@ -1609,12 +1609,12 @@ namespace EddiCore
                         Faction squadronFaction = @event.factions.FirstOrDefault(f =>
                         {
                             var squadronhomesystem = f.presences
-                                .FirstOrDefault(p => p.systemName == CurrentStarSystem.systemname)?.squadronhomesystem;
+                                .FirstOrDefault(p => p.systemAddress == CurrentStarSystem.systemAddress)?.squadronhomesystem;
                             return squadronhomesystem != null && ((bool)squadronhomesystem || f.squadronfaction);
                         });
                         if (squadronFaction != null)
                         {
-                            updateSquadronData(squadronFaction, CurrentStarSystem.systemname);
+                            updateSquadronData(squadronFaction, CurrentStarSystem.systemAddress );
                         }
                     }
 
@@ -1997,11 +1997,11 @@ namespace EddiCore
 
                     // Check if current system is inhabited by or HQ for squadron faction
                     var squadronFaction = theEvent.factions.FirstOrDefault( f => ( f.presences
-                        ?.FirstOrDefault( p => p.systemName == CurrentStarSystem?.systemname )
+                        ?.FirstOrDefault( p => p.systemAddress == CurrentStarSystem?.systemAddress )
                         ?.squadronhomesystem ?? false ) || f.squadronfaction );
                     if ( squadronFaction != null )
                     {
-                        updateSquadronData( squadronFaction, CurrentStarSystem.systemname );
+                        updateSquadronData( squadronFaction, CurrentStarSystem.systemAddress );
                     }
                 }
 
@@ -2402,7 +2402,7 @@ namespace EddiCore
 
         internal void updateCurrentSystem(string systemName, ulong systemAddress)
         {
-            if ( string.IsNullOrEmpty(systemName) || CurrentStarSystem?.systemname == systemName )
+            if ( string.IsNullOrEmpty(systemName) || CurrentStarSystem?.systemAddress == systemAddress )
             {
                 return;
             }
@@ -2431,7 +2431,7 @@ namespace EddiCore
             }
 
             // If we've arrived at our destination system then clear it
-            if (destinationStarSystem?.systemname == currentStarSystem.systemname)
+            if (destinationStarSystem?.systemAddress == currentStarSystem.systemAddress)
             {
                 updateDestinationSystem(null);
             }
@@ -2442,7 +2442,7 @@ namespace EddiCore
         private void updateCurrentStellarBody(string bodyName, string systemName, ulong systemAddress)
         {
             // Make sure our system information is up to date
-            if (CurrentStarSystem == null || CurrentStarSystem.systemname != systemName)
+            if (CurrentStarSystem == null || CurrentStarSystem.systemAddress != systemAddress)
             {
                 updateCurrentSystem(systemName, systemAddress);
             }
@@ -2600,11 +2600,11 @@ namespace EddiCore
 
                         // Check if current system is inhabited by or HQ for squadron faction
                         var squadronFaction = theEvent.factions.Find(f =>
-                        (f.presences?.Find(p => p.systemName == CurrentStarSystem?.systemname)?.squadronhomesystem ?? false) ||
+                        (f.presences?.Find(p => p.systemAddress == CurrentStarSystem?.systemAddress)?.squadronhomesystem ?? false) ||
                         f.squadronfaction);
                         if ( squadronFaction != null )
                         {
-                            updateSquadronData( squadronFaction, CurrentStarSystem.systemname );
+                            updateSquadronData( squadronFaction, CurrentStarSystem.systemAddress );
                         }
                     }
 
@@ -3392,7 +3392,7 @@ namespace EddiCore
                 try
                 {
                     // Make sure we know where we are
-                    if (CurrentStarSystem is null || string.IsNullOrEmpty(CurrentStarSystem.systemname))
+                    if (CurrentStarSystem is null || CurrentStarSystem.systemAddress == 0)
                     {
                         Logging.Debug( "Skipping conditional station profile fetch - current location data is incomplete" );
                         return;
@@ -3489,7 +3489,7 @@ namespace EddiCore
                 //Ignore null & empty systems
                 if (system != null)
                 {
-                    if (system.systemname != DestinationStarSystem?.systemname)
+                    if (system.systemAddress != DestinationStarSystem?.systemAddress )
                     {
                         Logging.Debug("Destination star system is " + system.systemname);
                         DestinationStarSystem = system;
@@ -3521,7 +3521,7 @@ namespace EddiCore
                 //Ignore null & empty systems
                 if (system != null && system.bodies?.Count > 0)
                 {
-                    if (system.systemname != HomeStarSystem?.systemname)
+                    if (system.systemAddress != HomeStarSystem?.systemAddress )
                     {
                         HomeStarSystem = system;
                         Logging.Debug("Home star system is " + HomeStarSystem.systemname);
@@ -3564,7 +3564,7 @@ namespace EddiCore
                 //Ignore null & empty systems
                 if (system != null && system?.bodies.Count > 0)
                 {
-                    if (system.systemname != SquadronStarSystem?.systemname)
+                    if (system.systemAddress != SquadronStarSystem?.systemAddress )
                     {
                         SquadronStarSystem = system;
                         if (SquadronStarSystem?.factions != null)
@@ -3582,7 +3582,7 @@ namespace EddiCore
             return configuration;
         }
 
-        public void updateSquadronData(Faction faction, string systemName)
+        public void updateSquadronData(Faction faction, ulong systemAddress )
         {
             if (faction != null)
             {
@@ -3608,7 +3608,7 @@ namespace EddiCore
                 }
 
                 // Update system, allegiance, & power when in squadron home system
-                if ((faction.presences.FirstOrDefault(p => p.systemName == systemName)?.squadronhomesystem ?? false))
+                if ((faction.presences.FirstOrDefault(p => p.systemAddress == systemAddress )?.squadronhomesystem ?? false))
                 {
                     // Update the squadron system data, if changed
                     string system = CurrentStarSystem?.systemname;
