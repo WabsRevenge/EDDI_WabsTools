@@ -32,10 +32,10 @@ namespace EddiDataDefinitions
         [Obsolete]
         public static readonly Power ZacharyHudson = new Power("ZacharyHudson", Superpower.Federation, "Nanomam");
 
-        [PublicAPI]
+        [PublicAPI("The power's superpower allegiance")]
         public Superpower Allegiance { get; private set; }
 
-        [PublicAPI]
+        [PublicAPI("The power's star system headquarters")]
         public string headquarters { get; private set; }
 
         // dummy used to ensure that the static constructor has run
