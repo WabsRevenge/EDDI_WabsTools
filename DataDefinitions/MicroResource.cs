@@ -13,7 +13,6 @@ namespace EddiDataDefinitions
         {
             resourceManager = Properties.MicroResources.ResourceManager;
             resourceManager.IgnoreCase = true;
-            missingEDNameHandler = (edname) => new MicroResource(edname, MicroResourceCategory.Unknown);
         }
 
         // Components
@@ -249,6 +248,13 @@ namespace EddiDataDefinitions
                 .Replace("$", "")
                 .Replace("_name;", "");
             var result = ResourceBasedLocalizedEDName<MicroResource>.FromEDName(normalizedEDName);
+            if ( result is null )
+            {
+                Logging.Error( $"Unknown micro-resource: '{edname}'" +
+                               ( !string.IsNullOrEmpty( fallbackName ) ? $" - Localized Name: '{fallbackName}'" : "" ) +
+                               ( !string.IsNullOrEmpty( categoryEdName ) ? $" - Category: '{categoryEdName}'" : "" ) );
+                result = new MicroResource( normalizedEDName, MicroResourceCategory.Unknown );
+            }
             result.fallbackLocalizedName = fallbackName;
             if (!string.IsNullOrEmpty(categoryEdName)) { result.Category = MicroResourceCategory.FromEDName(categoryEdName); }
             return result;
