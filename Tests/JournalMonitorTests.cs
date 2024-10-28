@@ -1491,7 +1491,7 @@ namespace UnitTests
             Assert.AreEqual(0, @event.bodyId);
             Assert.AreEqual("Star", @event.bodyType.invariantName);
             Assert.AreEqual("Yuri Grom", @event.Power.invariantName);
-            Assert.AreEqual("Exploited", @event.powerState.invariantName);
+            Assert.AreEqual("Exploited", @event.PowerState.invariantName);
             Assert.AreEqual(7, @event.factions.Count);
             Assert.AreEqual("EG Union", @event.controllingsystemfaction.name);
             Assert.AreEqual("War", @event.controllingsystemfaction.presences.FirstOrDefault(p => p.systemName == "Aparctias")?.FactionState.invariantName);
@@ -1530,7 +1530,7 @@ namespace UnitTests
             Assert.AreEqual(2, @event.bodyId);
             Assert.AreEqual("Star", @event.bodyType.invariantName);
             Assert.AreEqual(null, @event.Power?.invariantName);
-            Assert.AreEqual("None", @event.powerState.invariantName);
+            Assert.AreEqual("None", @event.PowerState.invariantName);
             Assert.AreEqual(0, @event.factions.Count);
             Assert.AreEqual(null, @event.controllingsystemfaction?.name);
             Assert.AreEqual(0, @event.conflicts.Count);

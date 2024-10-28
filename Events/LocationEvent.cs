@@ -98,11 +98,25 @@ namespace EddiEvents
 
         // Powerplay properties (only when pledged)
 
-        [PublicAPI("(Only when pledged) The powerplay power exerting influence over the star system. If the star system is `Contested`, this will be empty")]
+        [PublicAPI( "(Only when pledged) The localized powerplay power controlling the star system, if any. If the star system is `Contested`, this will be empty" )]
         public string power => ( Power ?? Power.None ).localizedName;
 
+        [PublicAPI( "(Only when pledged) The localized names of powerplay powers contesting control of the star system, if any" )]
+        public List<string> contestingpowers => ContestingPowers?
+            .Select( p => p.localizedName )
+            .ToList();
+
         [PublicAPI("(Only when pledged) The state of powerplay efforts within the star system")]
-        public string powerstate => ( powerState ?? PowerplayState.None ).localizedName;
+        public string powerstate => ( PowerState ?? PowerplayState.None ).localizedName;
+
+        [PublicAPI( "(Only when pledged) The powerplay power controlling the star system, if any, as an object. If the star system is `Contested`, this will be empty" )]
+        public Power Power { get; private set; }
+
+        [PublicAPI( "(Only when pledged) Powerplay powers contesting control of the star system, if any, as objects" )]
+        public List<Power> ContestingPowers { get; set; }
+
+        [PublicAPI( "(Only when pledged) The state of powerplay efforts within the star system, as an object" )]
+        public PowerplayState PowerState { get; private set; }
 
         // Deprecated, maintained for compatibility with user scripts
         [Obsolete("Use systemname instead")]
@@ -151,12 +165,6 @@ namespace EddiEvents
 
         public long? bodyId { get; private set; }
 
-        public Power Power => Powers.Count > 1 ? null : Powers.FirstOrDefault();
-
-        public List<Power> Powers { get; set; }
-
-        public PowerplayState powerState { get; private set; }
-
         public bool taxi { get; private set; }
         
         public bool multicrew { get; private set; }
@@ -165,12 +173,17 @@ namespace EddiEvents
         
         public bool onFoot { get; private set; }
         
-        public LocationEvent (DateTime timestamp, string systemName, ulong systemAddress, decimal x, decimal y, decimal z, 
-            decimal? distancefromstar, string bodyName, long? bodyId, BodyType bodytype, decimal? longitude, decimal? latitude, 
+        public LocationEvent ( DateTime timestamp, string systemName, ulong systemAddress, decimal x, decimal y,
+            decimal z,
+            decimal? distancefromstar, string bodyName, long? bodyId, BodyType bodytype, decimal? longitude,
+            decimal? latitude,
             bool docked, string station, StationModel stationtype, long? marketId, List<StationService> stationServices,
             Faction systemFaction, Faction stationFaction, List<Faction> factions, List<Conflict> conflicts,
-            List<EconomyShare> stationEconomies, Economy economy, Economy economy2, SecurityLevel security, long? population, 
-            List<Power> powerplayPowers, PowerplayState powerplayState, bool taxi, bool multicrew, bool inSRV, bool onFoot, ThargoidWar thargoidWar) : base(timestamp, NAME)
+            List<EconomyShare> stationEconomies, Economy economy, Economy economy2, SecurityLevel security,
+            long? population,
+            Power controllingPower,
+            List<Power> powerplayPowers, PowerplayState powerplayState, bool taxi, bool multicrew, bool inSRV,
+            bool onFoot, ThargoidWar thargoidWar ) : base(timestamp, NAME)
         {
             this.systemname = systemName;
             this.x = x;
@@ -197,8 +210,11 @@ namespace EddiEvents
             this.latitude = latitude;
             this.factions = factions ?? new List<Faction>();
             this.conflicts = conflicts ?? new List<Conflict>();
-            this.Powers = powerplayPowers;
-            this.powerState = powerplayState;
+            this.Power = controllingPower;
+            this.ContestingPowers = powerplayPowers?
+                .Where( p => p.edname != Power?.edname )
+                .ToList();
+            this.PowerState = powerplayState;
             this.taxi = taxi;
             this.multicrew = multicrew;
             this.inSRV = inSRV;

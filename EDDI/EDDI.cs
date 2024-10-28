@@ -1619,10 +1619,12 @@ namespace EddiCore
                     }
 
                     // (When pledged) Powerplay information
-                    CurrentStarSystem.Powers = @event.Powers != null && @event.Powers.Any()
-                        ? @event.Powers
-                        : CurrentStarSystem.Powers;
-                    CurrentStarSystem.powerState = @event.powerState ?? CurrentStarSystem.powerState;
+                    CurrentStarSystem.Powers = @event.Power != null ? new List<Power>() { @event.Power } : new List<Power>();
+                    if ( @event.ContestingPowers.Any() )
+                    {
+                        CurrentStarSystem.Powers.AddRange( @event.ContestingPowers );
+                    }
+                    CurrentStarSystem.powerState = @event.PowerState ?? CurrentStarSystem.powerState;
 
                     // Update to most recent information
                     CurrentStarSystem.visitLog.Add(@event.timestamp);
@@ -2006,10 +2008,12 @@ namespace EddiCore
                 }
 
                 // (When pledged) Powerplay information
-                CurrentStarSystem.Powers = theEvent.Powers != null && theEvent.Powers.Any()
-                    ? theEvent.Powers
-                    : CurrentStarSystem.Powers;
-                CurrentStarSystem.powerState = theEvent.powerState ?? CurrentStarSystem.powerState;
+                CurrentStarSystem.Powers = theEvent.Power != null ? new List<Power>() { theEvent.Power } : new List<Power>();
+                if ( theEvent.ContestingPowers.Any() )
+                {
+                    CurrentStarSystem.Powers.AddRange( theEvent.ContestingPowers );
+                }
+                CurrentStarSystem.powerState = theEvent.PowerState ?? CurrentStarSystem.powerState;
 
                 if ( theEvent.docked )
                 {
@@ -2616,10 +2620,12 @@ namespace EddiCore
                     }
 
                     // (When pledged) Powerplay information
-                    CurrentStarSystem.Powers = theEvent.Powers != null && theEvent.Powers.Any()
-                        ? theEvent.Powers
-                        : CurrentStarSystem.Powers;
-                    CurrentStarSystem.powerState = theEvent.powerState ?? CurrentStarSystem.powerState;
+                    CurrentStarSystem.Powers = theEvent.Power != null ? new List<Power>() { theEvent.Power } : new List<Power>();
+                    if ( theEvent.ContestingPowers.Any() )
+                    {
+                        CurrentStarSystem.Powers.AddRange(theEvent.ContestingPowers);
+                    }
+                    CurrentStarSystem.powerState = theEvent.PowerState ?? CurrentStarSystem.powerState;
 
                     // Update to most recent information
                     CurrentStarSystem.visitLog.Add( theEvent.timestamp );

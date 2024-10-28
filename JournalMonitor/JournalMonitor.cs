@@ -346,7 +346,7 @@ namespace EddiJournalMonitor
                                     }
 
                                     // Powerplay data (if pledged)
-                                    GetPowerplayData(data, out List<Power> powerplayPowers, out PowerplayState powerplayState);
+                                    GetPowerplayData(data, systemAddress, out Power controllingPower, out List<Power> powerplayPowers, out PowerplayState powerplayState);
 
                                     // Thargoid war data (if any)
                                     GetThargoidWarData( data, out ThargoidWar thargoidWar );
@@ -354,7 +354,7 @@ namespace EddiJournalMonitor
                                     bool? taxi = JsonParsing.getOptionalBool(data, "Taxi");
                                     bool? multicrew = JsonParsing.getOptionalBool(data, "Multicrew");
 
-                                    events.Add(new JumpedEvent(timestamp, systemName, systemAddress, x, y, z, starName, distance, fuelUsed, fuelRemaining, boostUsed, controllingfaction, factions, conflicts, economy, economy2, security, population, powerplayPowers, powerplayState, taxi, multicrew, thargoidWar) { raw = line, fromLoad = fromLogLoad });
+                                    events.Add(new JumpedEvent(timestamp, systemName, systemAddress, x, y, z, starName, distance, fuelUsed, fuelRemaining, boostUsed, controllingfaction, factions, conflicts, economy, economy2, security, population, controllingPower, powerplayPowers, powerplayState, taxi, multicrew, thargoidWar) { raw = line, fromLoad = fromLogLoad });
                                 }
                                 handled = true;
                                 break;
@@ -444,7 +444,7 @@ namespace EddiJournalMonitor
                                     }
 
                                     // Powerplay data (if pledged)
-                                    GetPowerplayData( data, out List<Power> powerplayPowers, out PowerplayState powerplayState );
+                                    GetPowerplayData( data, systemAddress, out Power controllingPower, out List<Power> powerplayPowers, out PowerplayState powerplayState );
 
                                     bool taxi = JsonParsing.getOptionalBool(data, "Taxi") ?? false;
                                     bool multicrew = JsonParsing.getOptionalBool(data, "Multicrew") ?? false;
@@ -458,11 +458,11 @@ namespace EddiJournalMonitor
                                     // Per Journal Manual v37, this should be fixed in Odyssey Update 15.
                                     if (docked && carrierJumpCancellationTokenSources.ContainsKey(marketId ?? 0))
                                     {
-                                        events.Add(new CarrierJumpedEvent(timestamp, systemName, systemAddress, x, y, z, body, bodyId, bodyType, docked, onFoot, station, stationtype, marketId, stationServices, systemfaction, stationfaction, factions, conflicts, Economies, economy, economy2, security, population, powerplayPowers, powerplayState, thargoidWar ) { raw = line, fromLoad = fromLogLoad });
+                                        events.Add(new CarrierJumpedEvent(timestamp, systemName, systemAddress, x, y, z, body, bodyId, bodyType, docked, onFoot, station, stationtype, marketId, stationServices, systemfaction, stationfaction, factions, conflicts, Economies, economy, economy2, security, population, controllingPower, powerplayPowers, powerplayState, thargoidWar ) { raw = line, fromLoad = fromLogLoad });
                                     }
                                     else
                                     {
-                                        events.Add(new LocationEvent(timestamp, systemName, systemAddress, x, y, z, distFromStarLs, body, bodyId, bodyType, longitude, latitude, docked, station, stationtype, marketId, stationServices, systemfaction, stationfaction, factions, conflicts, Economies, economy, economy2, security, population, powerplayPowers, powerplayState, taxi, multicrew, inSRV, onFoot, thargoidWar ) { raw = line, fromLoad = fromLogLoad });
+                                        events.Add(new LocationEvent(timestamp, systemName, systemAddress, x, y, z, distFromStarLs, body, bodyId, bodyType, longitude, latitude, docked, station, stationtype, marketId, stationServices, systemfaction, stationfaction, factions, conflicts, Economies, economy, economy2, security, population, controllingPower, powerplayPowers, powerplayState, taxi, multicrew, inSRV, onFoot, thargoidWar ) { raw = line, fromLoad = fromLogLoad });
                                     }
                                 }
                                 handled = true;
@@ -4460,8 +4460,7 @@ namespace EddiJournalMonitor
                                     }
 
                                     // Powerplay data (if pledged)
-                                    GetPowerplayData( data, out List<Power> powerplayPowers,
-                                        out var powerplayState );
+                                    GetPowerplayData( data, systemAddress, out Power controllingPower, out List<Power> powerplayPowers, out var powerplayState );
 
                                     // Thargoid war data (if any)
                                     GetThargoidWarData( data, out var thargoidWar );
@@ -4473,7 +4472,7 @@ namespace EddiJournalMonitor
                                         bodyName, bodyId, bodyType, docked, onFoot, carrierName, carrierType, carrierId,
                                         stationServices, systemfaction, stationFaction, factions, conflicts,
                                         stationEconomies, systemEconomy, systemEconomy2, systemSecurity,
-                                        systemPopulation, powerplayPowers, powerplayState, thargoidWar )
+                                        systemPopulation, controllingPower, powerplayPowers, powerplayState, thargoidWar )
                                     {
                                         raw = line, fromLoad = fromLogLoad
                                     } );
@@ -5232,19 +5231,33 @@ namespace EddiJournalMonitor
             }
         }
 
-        private static void GetPowerplayData(IDictionary<string, object> data, out List<Power> powerplayPowers, out PowerplayState powerplayState)
+        private static void GetPowerplayData ( IDictionary<string, object> data, ulong systemAddress, out Power controllingPower, out List<Power> powerplayPowers, out PowerplayState powerplayState )
         {
+            controllingPower = Power.FromEDName( JsonParsing.getString( data, "ControllingPower" ) );
             powerplayPowers = new List<Power>();
-            data.TryGetValue("Powers", out object powersVal);
+            data.TryGetValue( "Powers", out object powersVal );
             // There can be more than one power listed for a system when the system is being contested
-            if (powersVal is List<object> powerNames)
+            if ( powersVal is List<object> powerNames )
             {
                 foreach ( var powerName in powerNames )
                 {
-                    powerplayPowers.Add(Power.FromEDName((string)powerName));
+                    powerplayPowers.Add( Power.FromEDName( (string)powerName ) );
                 }
             }
-            powerplayState = PowerplayState.FromEDName(JsonParsing.getString(data, "PowerplayState")) ?? PowerplayState.None;
+
+            var edState = JsonParsing.getString( data, "PowerplayState" );
+            if ( systemAddress == controllingPower?.hqSystemAddress && edState == "Stronghold" )
+            {
+                powerplayState = PowerplayState.Headquarters;
+            }
+            else if ( edState is "Uncontrolled" && powerplayPowers.Count > 1 )
+            {
+                powerplayState = PowerplayState.Contested;
+                }
+            else
+            {
+                powerplayState = PowerplayState.FromEDName( edState ) ?? PowerplayState.None;
+            }
         }
 
         private static Superpower GetAllegiance(IDictionary<string, object> data, string key)

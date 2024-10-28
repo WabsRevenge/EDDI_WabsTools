@@ -3,14 +3,19 @@
 Full details of the variables available for each noted event, and VoiceAttack integrations, are available in the individual [event pages](https://github.com/EDCD/EDDI/wiki/Events).
 
 ## 4.1.0-b4
-  * Added `Coriolis (Beta)` export target to Ship Monitor and `coriolisbeta` plugin command.
-  * Added new ship type `Mandalay` and modules.
-  * Added new powerplay object definitions.
-  * Fixed child scripts not always using the latest state variables in their contexts.
-  * Fixed missing `systemname` property in the `Star scanned` event.
-  * Fixed a null reference exception which could occur when deleting scripts.
+  * Core
+    * Added `Coriolis (Beta)` export target to Ship Monitor and `coriolisbeta` plugin command.
+    * Added new ship type `Mandalay` and modules.
+    * Added and updated powerplay object definitions.
+    * Fixed child scripts not always using the latest state variables in their contexts.
+    * Fixed missing `systemname` property in the `Star scanned` event.
+    * Fixed a null reference exception which could occur when deleting scripts.
   * Speech Responder
+    * Scripts 
+      * `Carrier jumped` event updated to include new Powerplay properties.
       * `Holoscreen hacked` event added. 
+      * `Jumped` event updated to include new Powerplay properties.
+      * `Location` event updated to include new Powerplay properties.
       * `Signal detected` script updated to incorporate power spawned signal sources. 
       
 ## 4.1.0-b3
