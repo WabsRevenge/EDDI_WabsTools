@@ -1293,7 +1293,7 @@ namespace EddiInaraResponder
             inaraService.EnqueueAPIEvent( new InaraAPIEvent( @event.timestamp, "setCommanderRankPower", new Dictionary<string, object>()
             {
                 { "powerName", @event.toPower?.invariantName },
-                { "rankValue", 0 }
+                { "rankValue", EDDI.Instance.Cmdr?.powerrating ?? 0 }
             } ) );
         }
 

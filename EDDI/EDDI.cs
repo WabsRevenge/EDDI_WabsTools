@@ -1696,7 +1696,7 @@ namespace EddiCore
             {
                 Cmdr.Power = @event.Power;
                 Cmdr.powermerits = 0;
-                Cmdr.powerrating = 1;
+                Cmdr.powerrating = 0;
 
                 // Store power merits
                 EDDIConfiguration configuration = ConfigService.Instance.eddiConfiguration;
