@@ -11,12 +11,22 @@ Full details of the variables available for each noted event, and VoiceAttack in
     * Fixed missing `systemname` property in the `Star scanned` event.
     * Fixed a null reference exception which could occur when deleting scripts.
   * Speech Responder
-    * Scripts 
-      * `Carrier jumped` event updated to include new Powerplay properties.
+    * Events 
       * `Holoscreen hacked` event added. 
-      * `Jumped` event updated to include new Powerplay properties.
-      * `Location` event updated to include new Powerplay properties.
+      * `Carrier jumped` event updated to expose new Powerplay properties.
+      * `Jumped` event updated to expose new Powerplay properties.
+      * `Location` event updated to expose new Powerplay properties.
+      * `Powerplay` event updated to remove the obsolete `votes` property (Powerplay 2.0 does not use a voting system).
+      * `Signal detected` event updated to include new Powerplay properties.
+      * `Power expansion vote cast` event removed.
+      * `Power preparation vote cast` event removed.
+    * Scripts 
+      * `Carrier jumped` script updated to include new Powerplay details.
+      * `Jumped` script updated to include new Powerplay details.
+      * `Location` script updated to include new Powerplay details.
       * `Signal detected` script updated to incorporate power spawned signal sources. 
+      * `Power expansion vote cast` script removed.
+      * `Power preparation vote cast` script removed.
       
 ## 4.1.0-b3
   * Core

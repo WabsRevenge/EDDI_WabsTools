@@ -3912,17 +3912,6 @@ namespace EddiJournalMonitor
                                 }
                                 handled = true;
                                 break;
-                            case "PowerplayVote":
-                                {
-                                    Power power = Power.FromEDName(JsonParsing.getString(data, "Power"));
-                                    string system = JsonParsing.getString(data, "System");
-                                    data.TryGetValue("Votes", out object val);
-                                    int amount = (int)(long)val;
-
-                                    events.Add(new PowerPreparationVoteCast(timestamp, power, system, amount) { raw = line, fromLoad = fromLogLoad });
-                                }
-                                handled = true;
-                                break;
                             case "PowerplaySalary":
                                 {
                                     Power power = Power.FromEDName(JsonParsing.getString(data, "Power"));
@@ -4351,9 +4340,8 @@ namespace EddiJournalMonitor
                                     var power = Power.FromEDName(JsonParsing.getString(data, "Power"));
                                     var rank = JsonParsing.getInt(data, "Rank") + 1; // This is zero based in the journal but not in the Frontier API. Adding +1 here synchronizes the two.
                                     var merits = JsonParsing.getInt(data, "Merits");
-                                    var votes = JsonParsing.getOptionalInt(data, "Votes");
                                     var timePledged = TimeSpan.FromSeconds(JsonParsing.getLong(data, "TimePledged"));
-                                    events.Add(new PowerplayEvent(timestamp, power, rank, merits, votes, timePledged) { raw = line, fromLoad = fromLogLoad });
+                                    events.Add(new PowerplayEvent(timestamp, power, rank, merits, timePledged) { raw = line, fromLoad = fromLogLoad });
                                 }
                                 handled = true;
                                 break;

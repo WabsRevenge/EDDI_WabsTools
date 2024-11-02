@@ -164,6 +164,10 @@ namespace EddiInaraResponder
             {
                 handlePowerplayEvent(powerplayEvent);
             }
+            else if ( theEvent is PowerDefectedEvent powerDefectedEvent )
+            {
+                handlePowerDefectedEvent( powerDefectedEvent );
+            }
             else if (theEvent is PowerLeftEvent powerLeftEvent)
             {
                 handlePowerLeftEvent(powerLeftEvent);
@@ -1284,16 +1288,16 @@ namespace EddiInaraResponder
             inaraService.EnqueueAPIEvent(new InaraAPIEvent(@event.timestamp, "setCommanderReputationMajorFaction", eventData));
         }
 
-        private void handlePowerJoinedEvent(PowerJoinedEvent @event)
+        private void handlePowerDefectedEvent ( PowerDefectedEvent @event )
         {
-            inaraService.EnqueueAPIEvent(new InaraAPIEvent(@event.timestamp, "setCommanderRankPower", new Dictionary<string, object>()
+            inaraService.EnqueueAPIEvent( new InaraAPIEvent( @event.timestamp, "setCommanderRankPower", new Dictionary<string, object>()
             {
-                { "powerName", @event.Power?.invariantName },
-                { "rankValue", 1 }
-            }));
+                { "powerName", @event.toPower?.invariantName },
+                { "rankValue", 0 }
+            } ) );
         }
 
-        private void handlePowerLeftEvent(PowerLeftEvent @event)
+        private void handlePowerJoinedEvent(PowerJoinedEvent @event)
         {
             inaraService.EnqueueAPIEvent(new InaraAPIEvent(@event.timestamp, "setCommanderRankPower", new Dictionary<string, object>()
             {
@@ -1302,12 +1306,22 @@ namespace EddiInaraResponder
             }));
         }
 
+        private void handlePowerLeftEvent(PowerLeftEvent @event)
+        {
+            inaraService.EnqueueAPIEvent(new InaraAPIEvent(@event.timestamp, "setCommanderRankPower", new Dictionary<string, object>()
+            {
+                { "powerName", @event.Power?.invariantName },
+                { "rankValue", -1 }
+            }));
+        }
+
         private void handlePowerplayEvent(PowerplayEvent @event)
         {
             inaraService.EnqueueAPIEvent(new InaraAPIEvent(@event.timestamp, "setCommanderRankPower", new Dictionary<string, object>()
             {
                 { "powerName", @event.Power?.invariantName },
-                { "rankValue", @event.rank }
+                { "rankValue", @event.rank },
+                { "meritsValue", @event.merits }
             }));
         }
 

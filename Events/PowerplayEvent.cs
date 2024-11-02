@@ -19,10 +19,7 @@ namespace EddiEvents
 
         [PublicAPI("Your merits with the power")]
         public int merits { get; private set; }
-
-        [PublicAPI("Your votes with the power")]
-        public int votes { get; private set; }
-
+        
         [PublicAPI("The amount of time that you've been pledged, in days")]
         public int timepledgeddays => (int)Math.Floor(timePledged.TotalDays);
 
@@ -35,12 +32,11 @@ namespace EddiEvents
         
         public TimeSpan timePledged { get; private set; }
 
-        public PowerplayEvent(DateTime timestamp, Power Power, int rank, int merits, int? votes, TimeSpan timePledged) : base(timestamp, NAME)
+        public PowerplayEvent ( DateTime timestamp, Power Power, int rank, int merits, TimeSpan timePledged ) : base(timestamp, NAME)
         {
             this.Power = Power;
             this.rank = rank;
             this.merits = merits;
-            this.votes = votes ?? 0;
             this.timePledged = timePledged;
         }
     }

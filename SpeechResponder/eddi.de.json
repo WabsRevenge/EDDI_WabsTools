@@ -1860,15 +1860,6 @@
       "name": "Power defected",
       "description": "Triggered when you defect from one power to another"
     },
-    "Power expansion vote cast": {
-      "enabled": true,
-      "priority": 3,
-      "responder": true,
-      "script": "Vote\r\n{OneOf(\"cast\", \"registered\")}",
-      "default": true,
-      "name": "Power expansion vote cast",
-      "description": "Triggered when a commander votes for system expansion"
-    },
     "Power joined": {
       "enabled": true,
       "priority": 3,
@@ -1886,15 +1877,6 @@
       "default": true,
       "name": "Power left",
       "description": "Triggered when you leave a power"
-    },
-    "Power preparation vote cast": {
-      "enabled": true,
-      "priority": 3,
-      "responder": true,
-      "script": "Vote\r\n{OneOf(\"cast\", \"registered\")}",
-      "default": true,
-      "name": "Power preparation vote cast",
-      "description": "Triggered when a commander votes for system preparation"
     },
     "Power salary claimed": {
       "enabled": true,

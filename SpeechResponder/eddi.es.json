@@ -1891,14 +1891,6 @@
       "name": "Power defected",
       "description": "Se activa cuando deserta de una potencia para unirse a otra"
     },
-    "Power expansion vote cast": {
-      "enabled": true,
-      "priority": 4,
-      "responder": true,
-      "script": "Voto\n{OneOf(\"emitido\", \"registrado\")}",
-      "name": "Power expansion vote cast",
-      "description": "Se activa cuando un Comandante vota a favor de la expansión de un sistema"
-    },
     "Power joined": {
       "enabled": true,
       "priority": 3,
@@ -1914,14 +1906,6 @@
       "script": "Ya no se encuentra alineado con {P(event.power)}",
       "name": "Power left",
       "description": "Se activa cuando abandona una potencia"
-    },
-    "Power preparation vote cast": {
-      "enabled": true,
-      "priority": 5,
-      "responder": true,
-      "script": "Voto\n{OneOf(\"emitido\", \"registrado\")}",
-      "name": "Power preparation vote cast",
-      "description": "Se activa cuando un Comandante vota por la preparación de un sistema"
     },
     "Power salary claimed": {
       "enabled": true,

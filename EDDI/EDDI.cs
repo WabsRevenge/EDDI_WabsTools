@@ -1112,10 +1112,6 @@ namespace EddiCore
                     {
                         passEvent = eventPowerLeft();
                     }
-                    else if (@event is PowerPreparationVoteCast powerPreparationVoteCast)
-                    {
-                        passEvent = eventPowerPreparationVoteCast(powerPreparationVoteCast);
-                    }
                     else if (@event is PowerSalaryClaimedEvent powerSalaryClaimedEvent)
                     {
                         passEvent = eventPowerSalaryClaimed(powerSalaryClaimedEvent);
@@ -1669,15 +1665,6 @@ namespace EddiCore
         }
 
         private bool eventPowerSalaryClaimed(PowerSalaryClaimedEvent @event)
-        {
-            if ( Cmdr != null )
-            {
-                Cmdr.Power = @event.Power;
-            }
-            return true;
-        }
-
-        private bool eventPowerPreparationVoteCast(PowerPreparationVoteCast @event)
         {
             if ( Cmdr != null )
             {

@@ -101,7 +101,9 @@ namespace EddiSpeechResponder
             "Exploration promotion", // Replaced by "Commander promotion" script
             "Federation promotion", // Replaced by "Commander promotion" script
             "Trade promotion", // Replaced by "Commander promotion" script
-            "Ship repurchased" // Replaced by "Respawned" script
+            "Ship repurchased", // Replaced by "Respawned" script
+            "Power expansion vote cast", // Made obsolete by Powerplay 2.0 which no longer includes a voting system
+            "Power preparation vote cast" // Made obsolete by Powerplay 2.0 which no longer includes a voting system
         };
 
         private static readonly string[] ignoredEventKeys =

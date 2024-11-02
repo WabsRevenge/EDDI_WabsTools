@@ -2050,15 +2050,6 @@
 			"description": "Triggered when you defect from one power to another",
 			"default": true
 		},
-		"Power expansion vote cast": {
-			"enabled": true,
-			"priority": 3,
-			"responder": true,
-			"script": "Voto\r\n{OneOf(\"dado\", \"registrado\")}",
-			"name": "Power expansion vote cast",
-			"description": "Triggered when a commander votes for system expansion",
-			"default": true
-		},
 		"Power joined": {
 			"enabled": true,
 			"priority": 3,
@@ -2075,15 +2066,6 @@
 			"script": "Você não é mais aliado de {P(event.power)}",
 			"name": "Power left",
 			"description": "Triggered when you leave a power",
-			"default": true
-		},
-		"Power preparation vote cast": {
-			"enabled": true,
-			"priority": 3,
-			"responder": true,
-			"script": "Voto\r\n{OneOf(\"dado\", \"registrado\")}",
-			"name": "Power preparation vote cast",
-			"description": "Triggered when a commander votes for system preparation",
 			"default": true
 		},
 		"Power salary claimed": {
