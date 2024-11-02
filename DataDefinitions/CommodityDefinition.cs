@@ -457,13 +457,17 @@ namespace EddiDataDefinitions
                 new CommodityDefinition(129030459,"ThargoidTitanDriveComponent",Salvage,0, false, true),
                 new CommodityDefinition(129030460,"ThargoidCystSpecimen",Salvage,0,false, true),
                 new CommodityDefinition(129030461,"ThargoidBoneFragments",Salvage,0,false, true),
-                new CommodityDefinition(129030462,"ThargoidOrganSample",Salvage,0,false, true)
+                new CommodityDefinition(129030462,"ThargoidOrganSample",Salvage,0,false, true),
 
                 // Items for which we do not have Elite IDs
+                new CommodityDefinition(null, "KaineAidSupplies", Powerplay, 0, false, false),
+                new CommodityDefinition(null, "KaineMisinformation", Powerplay, 0, false, false),
+                new CommodityDefinition(null, "KaineLobbyingMaterial", Powerplay, 0, false, false),
+                new CommodityDefinition(null, "LavignyStrategicReports", Powerplay, 0, false, false),
             };
         }
 
-        public static CommodityDefinition Unknown = new CommodityDefinition( 0, "Unknown", CommodityCategory.Unknown, 0, false, false );
+        public static CommodityDefinition Unknown = new CommodityDefinition( null, "Unknown", CommodityCategory.Unknown, 0, false, false );
 
         [PublicAPI, JsonProperty("category")]
         public readonly CommodityCategory Category;
@@ -483,29 +487,32 @@ namespace EddiDataDefinitions
 
         // Not intended to be user facing
 
-        public readonly long EliteID;
+        public readonly long? EliteID;
 
         // dummy used to ensure that the static constructor has run
         public CommodityDefinition() : this(0, "", CommodityCategory.Unknown)
         { }
 
-        internal CommodityDefinition ( long EliteID, string edname, CommodityCategory Category, int AveragePrice = 0, bool Rare = false, bool Corrosive = false ) : base(edname, edname)
+        internal CommodityDefinition ( long? EliteID, string edname, CommodityCategory Category, int AveragePrice = 0, bool Rare = false, bool Corrosive = false ) : base(edname, edname)
         {
             this.EliteID = EliteID;
             this.Category = Category;
             this.avgprice = AveragePrice;
             this.rare = Rare;
             this.corrosive = Corrosive;
-            CommoditiesByEliteID[EliteID] = this;
+            if ( EliteID != null )
+            {
+                CommoditiesByEliteID[ (long)EliteID ] = this;
+            }
         }
 
-        public static CommodityDefinition CommodityDefinitionFromEliteID(long id)
+        public static CommodityDefinition CommodityDefinitionFromEliteID(long id, string edName = null)
         {
             if (CommoditiesByEliteID.TryGetValue(id, out CommodityDefinition commodityDefinition))
             {
                 return commodityDefinition;
             }
-            Logging.Info($"Unrecognized Commodity Definition EliteID {id}");
+            Logging.Error($"Unrecognized Commodity Definition EliteID {id} for {edName ?? "<Unknown> EDName"}");
             return null;
         }
 

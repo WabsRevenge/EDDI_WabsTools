@@ -1554,15 +1554,15 @@
     <comment>Commodity PlatinumAloy</comment>
   </data>
   <data name="RepublicanFieldSupplies" xml:space="preserve">
-    <value>Hudson's Field Supplies</value>
+    <value>Archer's Field Supplies</value>
     <comment>Commodity RepublicanFieldSupplies</comment>
   </data>
   <data name="RepublicanGarisonSupplies" xml:space="preserve">
-    <value>Hudson Garrison Supplies</value>
+    <value>Archer Garrison Supplies</value>
     <comment>Commodity RepublicanGarisonSupplies</comment>
   </data>
   <data name="RestrictedIntel" xml:space="preserve">
-    <value>Hudson's Restricted Intel</value>
+    <value>Archer's Restricted Intel</value>
     <comment>Commodity RestrictedIntel</comment>
   </data>
   <data name="RestrictedPackage" xml:space="preserve">
@@ -1864,5 +1864,21 @@
   <data name="ThargoidHeart" xml:space="preserve">
     <value>Thargoid Heart</value>
     <comment>Commodity ThargoidHeart</comment>
+  </data>
+  <data name="KaineAidSupplies" xml:space="preserve">
+    <value>Kaine Aid Supplies</value>
+    <comment>Powerplay</comment>
+  </data>
+  <data name="KaineMisinformation" xml:space="preserve">
+    <value>Kaine Misinformation</value>
+    <comment>Powerplay</comment>
+  </data>
+  <data name="KaineLobbyingMaterial" xml:space="preserve">
+    <value>Kaine Lobbying Material</value>
+    <comment>Powerplay</comment>
+  </data>
+  <data name="LavignyStrategicReports" xml:space="preserve">
+    <value>Lavigny Strategic Reports</value>
+    <comment>Powerplay</comment>
   </data>
 </root>
