@@ -321,7 +321,7 @@ namespace EddiSpeechService
                 if ( discardPendingSegments )  { continue; }
 
                 string voice = null;
-                string statement = null;
+                string statement = segment;
 
                 bool isAudio = segment.Contains("<audio"); // This is an audio file, we will disable voice effects processing
                 if (isAudio)
@@ -355,21 +355,21 @@ namespace EddiSpeechService
                     continue;
                 }
 
-                bool isRadio = segment.Contains("<transmit") || radio; 
+                bool isRadio = statement.Contains("<transmit") || radio; 
                 if (isRadio)
                 {
                     // This is a radio transmission, we will enable radio voice effects processing
-                    statement = SpeechFormatter.StripRadioTags(segment);
+                    statement = SpeechFormatter.StripRadioTags( statement );
                 }
 
-                bool isVoice = segment.Contains("<voice") || radio; 
+                bool isVoice = statement.Contains("<voice") || radio; 
                 if (isVoice)
                 {
                     // This is a voice override
-                    SpeechFormatter.UnpackVoiceTags(segment, out voice, out statement);
+                    SpeechFormatter.UnpackVoiceTags( statement, out voice, out statement );
                 }
 
-                using (Stream stream = getSpeechStream(voice ?? defaultVoice, statement ?? segment))
+                using (Stream stream = getSpeechStream(voice ?? defaultVoice, statement))
                 {
                     if (stream == null)
                     {
