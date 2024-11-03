@@ -32,7 +32,7 @@ namespace EddiConfigService
             if (directory == null) { directory = Constants.DATA_DIR; }
             string filename = directory + (typeof(T).GetCustomAttribute(typeof(RelativePathAttribute)) as RelativePathAttribute)?.relativePath;
             T configuration = null;
-            if (File.Exists(filename))
+            if (File.Exists(filename) && !unitTesting)
             {
                 string json = Files.Read(filename);
                 if (json != null)
