@@ -166,7 +166,7 @@ namespace UnitTests
 
             // Act
             var ship = EddiDataDefinitions.ShipDefinitions.FromEDModel("Anaconda");
-            ship.frameshiftdrive = EddiDataDefinitions.Module.FromEDName("Int_Hyperdrive_Size6_Class5");
+            ship.frameshiftdrive = EddiDataDefinitions.Module.Int_Hyperdrive_Size6_Class5;
             var result = fakeSpanshService.GetGalaxyRoute("NLTT 13249", "Soul Sector EL-Y d7", ship);
 
             // Assert[9]
