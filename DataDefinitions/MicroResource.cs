@@ -174,6 +174,16 @@ namespace EddiDataDefinitions
         public static readonly MicroResource WeaponTestData = new MicroResource("WeaponTestData", MicroResourceCategory.Data, 128972384);
         public static readonly MicroResource XenoDefenceProtocols = new MicroResource("XenoDefenceProtocols", MicroResourceCategory.Data, 128972385);
 
+        // PowerPlay 2.0 Data
+
+        public static readonly MicroResource PowerEmployeeData = new MicroResource( "PowerEmployeeData", MicroResourceCategory.Data, null, true ); // Power Association Data
+        public static readonly MicroResource PowerClassifiedData = new MicroResource( "PowerClassifiedData", MicroResourceCategory.Data, null, true ); // Power Classified Data
+        public static readonly MicroResource PowerFinancialRecords = new MicroResource( "PowerFinancialRecords", MicroResourceCategory.Data, null, true ); // Power Industrial Data
+        public static readonly MicroResource PowerPreparationSpyware = new MicroResource( "PowerPreparationSpyware", MicroResourceCategory.Data, null, true ); // Power Injection Malware (uploaded data)
+        public static readonly MicroResource PowerPropagandaData = new MicroResource( "PowerPropagandaData", MicroResourceCategory.Data, null, true ); // Power Political Data
+        public static readonly MicroResource PowerResearchData = new MicroResource( "PowerResearchData", MicroResourceCategory.Data, null, true ); // Power Research Data
+        public static readonly MicroResource PowerSpyware = new MicroResource( "PowerSpyware", MicroResourceCategory.Data, null, true ); // Power Tracker Malware (uploaded data)
+
         // Items
         public static readonly MicroResource AgriculturalProcessSample = new MicroResource("AgriculturalProcessSample", MicroResourceCategory.Items, 128965837);
         public static readonly MicroResource BiochemicalAgent = new MicroResource("BiochemicalAgent", MicroResourceCategory.Items, 128961554);
@@ -219,9 +229,29 @@ namespace EddiDataDefinitions
         public static readonly MicroResource UniversalTranslator = new MicroResource("UniversalTranslator", MicroResourceCategory.Items, 128962612);
         public static readonly MicroResource VehicleSchematic = new MicroResource("VehicleSchematic", MicroResourceCategory.Items, 128962613);
         public static readonly MicroResource WeaponSchematic = new MicroResource("WeaponSchematic", MicroResourceCategory.Items, 128962614);
+
+        // PowerPlay 2.0 Items
+        public static readonly MicroResource PowerAgriculture = new MicroResource( "PowerAgriculture", MicroResourceCategory.Items, null, true ); // Agricultural Sample
+        public static readonly MicroResource PowerComputer = new MicroResource( "PowerComputer", MicroResourceCategory.Items, null, true ); // Computer Parts
+        public static readonly MicroResource PowerElectronics = new MicroResource( "PowerElectronics", MicroResourceCategory.Items, null, true ); // Electronics Package
+        public static readonly MicroResource PowerEquipment = new MicroResource( "PowerEquipment", MicroResourceCategory.Items, null, true ); // Personal protective Equipment
+        public static readonly MicroResource PowerExperiment = new MicroResource( "PowerExperiment", MicroResourceCategory.Items, null, true ); // Experiment Prototype
+        public static readonly MicroResource PowerExtraction = new MicroResource( "PowerExtraction", MicroResourceCategory.Items, null, true ); // Extraction Sample
+        public static readonly MicroResource PowerIndustrial = new MicroResource( "PowerIndustrial", MicroResourceCategory.Items, null, true ); // Industrial Component
+        public static readonly MicroResource PowerInventory = new MicroResource( "PowerInventory", MicroResourceCategory.Items, null, true ); // Inventory Record
+        public static readonly MicroResource PowerMedical = new MicroResource( "PowerMedical", MicroResourceCategory.Items, null, true ); // Medical Sample
+        public static readonly MicroResource PowerMiscComputer = new MicroResource( "PowerMiscComputer", MicroResourceCategory.Items, null, true ); // Data Storage Device
+        public static readonly MicroResource PowerMiscIndust = new MicroResource( "PowerMiscIndust", MicroResourceCategory.Items, null, true ); // Industrial Machinery
+        public static readonly MicroResource PowerplayMilitary = new MicroResource( "PowerplayMilitary", MicroResourceCategory.Items, null, true ); // Military Schematic
+        public static readonly MicroResource PowerPower = new MicroResource( "PowerPower", MicroResourceCategory.Items, null, true ); // Energy Regulator
+        public static readonly MicroResource PowerResearch = new MicroResource( "PowerResearch", MicroResourceCategory.Items, null, true ); // Research Notes
+        public static readonly MicroResource PowerSecurity = new MicroResource( "PowerSecurity", MicroResourceCategory.Items, null, true ); // Security Logs
         
         // Unknown / Miscellaneous
         public static readonly MicroResource None = new MicroResource("None", MicroResourceCategory.Unknown);
+
+        // Powerplay 2.0 Unconfirmed
+//        public static readonly MicroResource PowerMegashipData = new MicroResource( "PowerMegashipData", MicroResourceCategory.Data, null, true ); // Power Megaship Data
 
         [PublicAPI("The localized category name")]
         public string category => Category?.localizedName;
@@ -230,14 +260,17 @@ namespace EddiDataDefinitions
 
         public MicroResourceCategory Category { get; set; }
 
+        public bool powerplayItem { get; set; }
+
         // dummy used to ensure that the static constructor has run
         public MicroResource() : this("", MicroResourceCategory.Unknown)
         { }
 
-        private MicroResource(string edname, MicroResourceCategory category, long? EDID = null) : base(edname, edname)
+        private MicroResource(string edname, MicroResourceCategory category, long? EDID = null, bool powerplayItem = false ) : base(edname, edname)
         {
             this.Category = category;
             this.EDID = EDID;
+            this.powerplayItem = powerplayItem;
         }
 
         public static MicroResource FromEDName(string edname, string fallbackName = null, string categoryEdName = null)

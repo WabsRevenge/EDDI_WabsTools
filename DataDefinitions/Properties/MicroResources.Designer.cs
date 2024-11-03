@@ -1312,6 +1312,204 @@ namespace EddiDataDefinitions.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Agricultural Sample.
+        /// </summary>
+        public static string PowerAgriculture {
+            get {
+                return ResourceManager.GetString("PowerAgriculture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Power Classified Data.
+        /// </summary>
+        public static string PowerClassifiedData {
+            get {
+                return ResourceManager.GetString("PowerClassifiedData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Computer Parts.
+        /// </summary>
+        public static string PowerComputer {
+            get {
+                return ResourceManager.GetString("PowerComputer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Electronics Package.
+        /// </summary>
+        public static string PowerElectronics {
+            get {
+                return ResourceManager.GetString("PowerElectronics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Power Association Data.
+        /// </summary>
+        public static string PowerEmployeeData {
+            get {
+                return ResourceManager.GetString("PowerEmployeeData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Personal Protective Equipment.
+        /// </summary>
+        public static string PowerEquipment {
+            get {
+                return ResourceManager.GetString("PowerEquipment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Experiment Prototype.
+        /// </summary>
+        public static string PowerExperiment {
+            get {
+                return ResourceManager.GetString("PowerExperiment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extraction Sample.
+        /// </summary>
+        public static string PowerExtraction {
+            get {
+                return ResourceManager.GetString("PowerExtraction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Power Industrial Data.
+        /// </summary>
+        public static string PowerFinancialRecords {
+            get {
+                return ResourceManager.GetString("PowerFinancialRecords", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Industrial Component.
+        /// </summary>
+        public static string PowerIndustrial {
+            get {
+                return ResourceManager.GetString("PowerIndustrial", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inventory Record.
+        /// </summary>
+        public static string PowerInventory {
+            get {
+                return ResourceManager.GetString("PowerInventory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Medical Sample.
+        /// </summary>
+        public static string PowerMedical {
+            get {
+                return ResourceManager.GetString("PowerMedical", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Data Storage Device.
+        /// </summary>
+        public static string PowerMiscComputer {
+            get {
+                return ResourceManager.GetString("PowerMiscComputer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Industrial Machinery.
+        /// </summary>
+        public static string PowerMiscIndust {
+            get {
+                return ResourceManager.GetString("PowerMiscIndust", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Military Schematic.
+        /// </summary>
+        public static string PowerplayMilitary {
+            get {
+                return ResourceManager.GetString("PowerplayMilitary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Energy Regulator.
+        /// </summary>
+        public static string PowerPower {
+            get {
+                return ResourceManager.GetString("PowerPower", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Power Injection Malware.
+        /// </summary>
+        public static string PowerPreparationSpyware {
+            get {
+                return ResourceManager.GetString("PowerPreparationSpyware", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Power Political Data.
+        /// </summary>
+        public static string PowerPropagandaData {
+            get {
+                return ResourceManager.GetString("PowerPropagandaData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Research Notes.
+        /// </summary>
+        public static string PowerResearch {
+            get {
+                return ResourceManager.GetString("PowerResearch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Power Research Data.
+        /// </summary>
+        public static string PowerResearchData {
+            get {
+                return ResourceManager.GetString("PowerResearchData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Security Logs.
+        /// </summary>
+        public static string PowerSecurity {
+            get {
+                return ResourceManager.GetString("PowerSecurity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Power Tracker Malware.
+        /// </summary>
+        public static string PowerSpyware {
+            get {
+                return ResourceManager.GetString("PowerSpyware", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prisoner Logs.
         /// </summary>
         public static string PrisonerLogs {
