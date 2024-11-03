@@ -13,7 +13,7 @@ namespace EddiEvents
         public static readonly string[] SAMPLES =
         {
             @"{ ""timestamp"":""2018-11-22T06:21:00Z"", ""event"":""FSSSignalDiscovered"", ""SystemAddress"":58132919110424, ""SignalName"":""$USS;"", ""SignalName_Localised"":""Unidentified signal source"", ""USSType"":""$USS_Type_Salvage;"", ""USSType_Localised"":""Degraded emissions"", ""SpawningState"":""$FactionState_None;"", ""SpawningState_Localised"":""None"", ""SpawningFaction"":""$faction_none;"", ""SpawningFaction_Localised"":""None"", ""ThreatLevel"":0, ""TimeRemaining"":1519.981689 }",
-            @"{ ""timestamp"":""2024-10-22T19:57:06Z"", ""event"":""FSSSignalDiscovered"", ""SystemAddress"":2557686551258, ""SignalName"":""$USS_PowerEmissions;"", ""SignalName_Localised"":""Unidentified signal source"", ""SignalType"":""USS"", ""USSType"":""$USS_Type_PowerEmissions;"", ""USSType_Localised"":""Power Wreckage Signature"", ""SpawningPower"":""Archon Delaine"", ""ThreatLevel"":3, ""TimeRemaining"":2549.222656 }"
+            @"{ ""timestamp"":""2024-10-31T19:28:41Z"",""event"":""FSSSignalDiscovered"",""SystemAddress"":908620468962,""SignalName"":""$USS_PowerEmissions;"",""SignalName_Localised"":""Unidentified signal source"",""SignalType"":""USS"",""USSType"":""$USS_Type_PowerEmissions;"",""USSType_Localised"":""Power Wreckage Signature"",""SpawningPower"":""Nakato Kaine"",""OpposingPower"":""Aisling Duval"",""ThreatLevel"":3,""TimeRemaining"":1278.169189}"
         };
 
         [PublicAPI("The signal source")]
@@ -30,6 +30,9 @@ namespace EddiEvents
 
         [PublicAPI( "The powerplay power originating the signal source, if any" )]
         public string power => signalSource.spawningPower;
+
+        [PublicAPI( "The powerplay power opposing the originating power, if any" )]
+        public string opposingpower => signalSource.opposingPower;
 
         [PublicAPI("The time before the signal expires, in seconds")]
         public decimal? secondsremaining => signalSource.expiry is null ? null : (decimal?)((DateTime)signalSource.expiry - timestamp).TotalSeconds;

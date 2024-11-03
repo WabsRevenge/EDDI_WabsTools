@@ -108,14 +108,37 @@ namespace EddiDataDefinitions
         public static readonly SignalSource UnidentifiedSignalSource;
         public static readonly SignalSource GenericSignalSource;
 
+        [PublicAPI]
         public SignalType signalType { get; set; }
+        
         public int index;
+
+        [PublicAPI]
         public string spawningFaction { get; set; }
-        public string spawningPower { get; set; }
+
+        [PublicAPI]
+        public string spawningPower => SpawningPower?.localizedName ?? Power.None.localizedName;
+
+        [PublicAPI]
+        public Power SpawningPower { get; set; }
+
+        [ PublicAPI ] 
+        public string opposingPower => OpposingPower?.localizedName ?? Power.None.localizedName;
+
+        [PublicAPI]
+        public Power OpposingPower { get; set; }
+
         public DateTime? expiry { get; set; }
+
+        [PublicAPI]
         public int? threatLevel { get; set; }
+
+        [PublicAPI]
         public bool? isStation { get; set; }
+
+        [PublicAPI]
         public FactionState spawningState { get; set; }
+
         public long? systemAddress { get; set; }
 
         // Not intended to be user facing

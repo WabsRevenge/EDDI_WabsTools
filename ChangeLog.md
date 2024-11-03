@@ -24,7 +24,7 @@ Full details of the variables available for each noted event, and VoiceAttack in
       * `Carrier jumped` script updated to include new Powerplay details.
       * `Jumped` script updated to include new Powerplay details.
       * `Location` script updated to include new Powerplay details.
-      * `Signal detected` script updated to incorporate power spawned signal sources. 
+      * `Signal detected` script updated to incorporate new Powerplay details. 
       * `Power expansion vote cast` script removed.
       * `Power preparation vote cast` script removed.
       
