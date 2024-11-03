@@ -44,7 +44,7 @@ namespace EddiEvents
         public bool stationsignal => Convert.ToBoolean(signalSource.isStation);
 
         [PublicAPI("True if this is the first signal of this type detected within the star system")]
-        public bool unique { get; }
+        public bool unique { get; set; }
 
         // Not intended to be user facing
 
@@ -52,7 +52,7 @@ namespace EddiEvents
 
         public ulong? systemAddress { get; private set; } // Caution: scan events from the destination system can register after StartJump and before we actually leave the originating system
 
-        public SignalDetectedEvent(DateTime timestamp, ulong? systemAddress, SignalSource source, bool unique) : base(timestamp, NAME)
+        public SignalDetectedEvent(DateTime timestamp, ulong? systemAddress, SignalSource source) : base(timestamp, NAME)
         {
             this.systemAddress = systemAddress;
             this.signalSource = source;

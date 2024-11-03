@@ -176,7 +176,14 @@ namespace EddiJournalMonitor
                                     ulong systemAddress = JsonParsing.getULong(data, "SystemAddress");
                                     long? marketId = JsonParsing.getOptionalLong(data, "MarketID");
                                     string stationName = JsonParsing.getString(data, "StationName");
-                                    StationModel stationModel = StationModel.FromEDName(JsonParsing.getString(data, "StationType")) ?? StationModel.None;
+
+                                    // Normalize Powerplay Stronghold Carrier names
+                                    stationName = Regex.Replace( stationName, @"/^(Stronghold Carrier|Porte-vaisseaux de forteresse|Transportadora da potência|Носитель-база|Hochburg-Carrier|Portanaves bastión|\$ShipName_StrongholdCarrier(.*?))$/i", "Stronghold Carrier" );
+
+                                    // Stronghold carriers may be reported with an incorrect StationType. Fix that here.
+                                    var stationTypeEdName = stationName == "Stronghold Carrier" ? StationModel.Megaship.edname : JsonParsing.getString( data, "StationType" );
+                                    StationModel stationModel = StationModel.FromEDName(stationTypeEdName) ?? StationModel.None;
+
                                     Faction controllingfaction = GetFaction(data, "Station", systemName, systemAddress);
                                     decimal? distancefromstar = JsonParsing.getOptionalDecimal(data, "DistFromStarLS");
 
@@ -2369,13 +2376,11 @@ namespace EddiJournalMonitor
                                 {
                                     var systemAddress = JsonParsing.getULong(data, "SystemAddress");
 
-                                    SignalSource source = GetSignalSourceName(data);
-
-                                    var signalTypeEdName = JsonParsing.getString( data, "SignalType" );
-                                    source.signalType = signalTypeEdName is null ? null : SignalType.FromEDName( signalTypeEdName );
+                                    var source = GetSignalSourceName(data);
 
                                     source.spawningFaction = GetFactionName(data, "SpawningFaction") ?? Superpower.None.localizedName; // the minor faction, if relevant
-                                    source.spawningPower = JsonParsing.getString( data, "SpawningPower" ) ?? Power.None.localizedName; // the Powerplay power, if relevant
+                                    source.SpawningPower = Power.FromEDName( JsonParsing.getString( data, "SpawningPower" ) ); // the Powerplay power, if relevant
+                                    source.OpposingPower = Power.FromEDName( JsonParsing.getString( data, "OpposingPower" ) ); // the opposing Powerplay power, if relevant
 
                                     var secondsRemaining = JsonParsing.getOptionalDecimal(data, "TimeRemaining"); // remaining lifetime in seconds, if relevant
                                     source.expiry = secondsRemaining is null ? (DateTime?)null : timestamp.AddSeconds((double)(secondsRemaining));
@@ -2387,30 +2392,8 @@ namespace EddiJournalMonitor
 
                                     source.threatLevel = JsonParsing.getOptionalInt(data, "ThreatLevel") ?? 0;
 
-                                    bool unique = false;
-                                    if (EDDI.Instance.CurrentStarSystem != null && EDDI.Instance.CurrentStarSystem.systemAddress == systemAddress)
-                                    {
-                                        unique = !EDDI.Instance.CurrentStarSystem.signalsources.Contains(source.localizedName);
-                                        EDDI.Instance.CurrentStarSystem.AddOrUpdateSignalSource(source);
-
-                                        if (source.isStation ?? false)
-                                        {
-                                            // Add station signals to the current star system if they are not already present.
-                                            if (EDDI.Instance.CurrentStarSystem.stations.All(s => s.name != source.edname))
-                                            {
-                                                var station = new Station { name = source.edname, systemAddress = systemAddress };
-                                                if (!string.IsNullOrEmpty(source.localizedName) && source.edname != source.localizedName)
-                                                {
-                                                    // At present, fleet carriers are the only station model which may have a localized signal name
-                                                    station.Model = StationModel.FleetCarrier;
+                                    events.Add(new SignalDetectedEvent(timestamp, systemAddress, source) { raw = line, fromLoad = fromLogLoad });
                                                 }
-                                                EDDI.Instance.CurrentStarSystem.stations.Add(station);
-                                            }
-                                        }
-                                    }
-                                    
-                                    events.Add(new SignalDetectedEvent(timestamp, systemAddress, source, unique) { raw = line, fromLoad = fromLogLoad });
-                                }
                                 handled = true;
                                 break;
                             case "BuyExplorationData":
@@ -5494,11 +5477,14 @@ namespace EddiJournalMonitor
 
         private static SignalSource GetSignalSourceName(IDictionary<string, object> data)
         {
+            var signalTypeEdName = JsonParsing.getString( data, "SignalType" );
+
             // The source may be a direct source or a USS. If a USS, we want the USS type.
+            
             SignalSource source;
-            if (JsonParsing.getString(data, "USSType") != null)
+            if ( JsonParsing.getString(data, "USSType") != null)
             {
-                string signalSource = JsonParsing.getString(data, "USSType");
+                var signalSource = JsonParsing.getString(data, "USSType");
                 source = SignalSource.FromEDName(signalSource) ?? new SignalSource();
                 var localizedName = JsonParsing.getString(data, "USSType_Localised");
                 if (!string.IsNullOrEmpty(localizedName) && !localizedName.Contains("$"))
@@ -5508,11 +5494,11 @@ namespace EddiJournalMonitor
             }
             else
             {
-                string signalSource = JsonParsing.getString(data, "SignalName");
+                var signalSource = JsonParsing.getString(data, "SignalName");
                 var isStation = JsonParsing.getOptionalBool(data, "IsStation") ?? false;
                 if (isStation)
                 {
-                    source = SignalSource.FromStationEDName(signalSource);
+                    source = SignalSource.FromStationEDName(signalSource, signalTypeEdName);
                 }
                 else
                 {
@@ -5525,6 +5511,9 @@ namespace EddiJournalMonitor
                 }
                 source.isStation = isStation;
             }
+
+            source.signalType = signalTypeEdName is null ? null : SignalType.FromEDName( signalTypeEdName );
+            
             return source;
         }
 

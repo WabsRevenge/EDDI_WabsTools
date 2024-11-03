@@ -287,23 +287,33 @@ namespace EddiDataDefinitions
             return result;
         }
 
-        public static SignalSource FromStationEDName(string from)
+        public static SignalSource FromStationEDName(string from, string signalTypeEdName)
         {
             if (string.IsNullOrEmpty(from)) { return null; }
 
-            // Signal might be a fleet carrier with name and carrier id in a single string. If so, we break them apart
-            var fleetCarrierRegex = new Regex("^(.+)(?> )([A-Za-z0-9]{3}-[A-Za-z0-9]{3})$");
-            if (fleetCarrierRegex.IsMatch(from))
+            if ( signalTypeEdName == SignalType.FleetCarrier.edname )
             {
-                // Fleet carrier names include both the carrier name and carrier ID, we need to separate them
-                var fleetCarrierParts = fleetCarrierRegex.Matches(from)[0].Groups;
-                if (fleetCarrierParts.Count == 3)
+                // Signal might be a fleet carrier with name and carrier id in a single string. If so, we break them apart
+                var fleetCarrierRegex = new Regex("^(.+)(?> )([A-Za-z0-9]{3}-[A-Za-z0-9]{3})$");
+                if ( fleetCarrierRegex.IsMatch( from ) )
                 {
-                    var fleetCarrierName = fleetCarrierParts[2].Value;
-                    var fleetCarrierLocalizedName = fleetCarrierParts[1].Value;
-                    return new SignalSource(fleetCarrierName) { fallbackLocalizedName = fleetCarrierLocalizedName, isStation = true};
+                    // Fleet carrier names include both the carrier name and carrier ID, we need to separate them
+                    var fleetCarrierParts = fleetCarrierRegex.Matches(from)[0].Groups;
+                    if ( fleetCarrierParts.Count == 3 )
+                    {
+                        var fleetCarrierName = fleetCarrierParts[2].Value;
+                        var fleetCarrierLocalizedName = fleetCarrierParts[1].Value;
+                        return new SignalSource( fleetCarrierName ) { fallbackLocalizedName = fleetCarrierLocalizedName, isStation = true };
+                    }
                 }
             }
+            else if ( signalTypeEdName == SignalType.StationMegaShip.edname )
+            {
+                // Normalize Powerplay Stronghold Carrier names
+                var invariantName = Regex.Replace( from, @"/^(Stronghold Carrier|Porte-vaisseaux de forteresse|Transportadora da potência|Носитель-база|Hochburg-Carrier|Portanaves bastión|\$ShipName_StrongholdCarrier(.*?))$/i", "Stronghold Carrier" );
+                return new SignalSource( invariantName ) { isStation = true };
+            }
+
             return new SignalSource(from) {isStation = true};
         }
     }
