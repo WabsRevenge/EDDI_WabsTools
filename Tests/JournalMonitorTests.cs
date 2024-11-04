@@ -2628,7 +2628,6 @@ namespace UnitTests
             Assert.AreEqual( "Jameson Memorial", storedModule.station );
         }
 
-
         [TestMethod]
         public void TestShipTransferEvent ()
         {

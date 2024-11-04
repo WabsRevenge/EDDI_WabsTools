@@ -8,10 +8,10 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -68,12 +68,16 @@ namespace EddiCargoMonitor
         {
             BindingOperations.CollectionRegistering += Inventory_CollectionRegistering;
             readInventory( configuration );
-            Task.Run( async () =>
-            {
-                await Task.Delay( TimeSpan.FromMilliseconds( 500 ) );
-                CalculateCargoNeeds();
-            } ).ConfigureAwait( false );
+            ConfigService.Instance.PropertyChanged += ConfigChanged;
             Logging.Info( $"Initialized {MonitorName()}" );
+        }
+
+        private void ConfigChanged ( object sender, PropertyChangedEventArgs e )
+        {
+            if ( e.PropertyName.Equals( nameof(ConfigService.Instance.missionMonitorConfiguration) ) )
+            {
+                CalculateCargoNeeds();
+            }
         }
 
         private void Inventory_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
@@ -178,13 +182,17 @@ namespace EddiCargoMonitor
         public void PostHandle ( Event @event )
         {
             // Calculate cargo needs using the post handler (so that mission configuration information is already updated)
-            if ( @event.type.Contains("Depot") || @event.type.Contains("Mission") )
+            if ( @event.type.Contains( "Cargo" ) || 
+                 @event.type.Contains( "Contribution" ) ||
+                 @event.type.Contains( "Market" ) || 
+                 @event.type.Contains( "Mining" ) ||
+                 @event.type.Contains( "Mission" ) )
             {
-                Task.Run( async () =>
+                if ( @event.timestamp >= updateDat )
                 {
-                    await Task.Delay( TimeSpan.FromMilliseconds( 250 ) );
+                    updateDat = @event.timestamp;
                     CalculateCargoNeeds();
-                } ).ConfigureAwait( false );
+                }
             }
         }
 
@@ -666,9 +674,10 @@ namespace EddiCargoMonitor
                 var missionsConfig = ConfigService.Instance.missionMonitorConfiguration.missions.ToList();
                 var missions = missionsConfig
                     .Where( m =>
-                        m.statusDef == MissionStatus.Active &&
                         m.CommodityDefinition != null &&
-                        m.amount != null )
+                        m.amount != null &&
+                        m.delivered < m.amount &&
+                        !m.communal )
                     .ToList();
 
                 List<Cargo> currentCargo;
@@ -677,31 +686,25 @@ namespace EddiCargoMonitor
                     currentCargo = inventory.ToList();
                 }
 
-                // Add any mission commodities we need and do not currently possess
-                foreach ( var mission in missions )
+                // Add any mission cargo types we need and which are not already present in our inventory
+                foreach ( var mission in missions.Where( m => !currentCargo.Any( c =>
+                             c.edname.Equals( m.CommodityDefinition.edname,
+                                 StringComparison.InvariantCultureIgnoreCase ) ) ) )
                 {
-                    if ( currentCargo.SelectMany( c => c.missionCargo ).All( kv => kv.Key != mission.missionid ) )
-                    {
-                        var cargo = new Cargo( mission.CommodityDefinition.edname );
-                        cargo.need += mission.amount ?? 0;
-                        AddOrUpdateCargo( cargo );
-                    }
+                    var cargo = new Cargo( mission.CommodityDefinition.edname );
+                    AddOrUpdateCargo( cargo );
                 }
 
-                // Update need for mission commodities we do possess
+                // Update need for each cargo type
                 foreach ( var cargo in currentCargo )
                 {
                     var missionsData = missions
                         .Where( m => m.CommodityDefinition.edname == cargo.commodityDef.edname )
                         .ToList();
                     var missionNeeds = missionsData.Sum( m => m.amount - m.delivered ) ?? 0;
-                    var shipCargo = cargo.missionCargo
-                        .Where( kv => missionsData.Select( m => m.missionid ).Contains( kv.Key ) )
-                        .Sum( kv => kv.Value );
-                    var wingCargo = missionsData
-                        .Sum( m => m.wingCollected );
+                    var wingCargo = missionsData.Sum( m => m.wingCollected );
 
-                    cargo.need = missionNeeds - shipCargo - wingCargo;
+                    cargo.need = missionNeeds - cargo.haulage - wingCargo;
                     TryRemoveCargo( cargo );
                 }
 

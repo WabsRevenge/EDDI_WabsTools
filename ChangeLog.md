@@ -7,6 +7,7 @@ Full details of the variables available for each noted event, and VoiceAttack in
     * Added `Coriolis (Beta)` export target to Ship Monitor and `coriolisbeta` plugin command.
     * Added new ship type `Mandalay` and modules.
     * Added and updated powerplay object definitions.
+    * Fixed cargo need calculations. (#2645)
     * Fixed child scripts not always using the latest state variables in their contexts.
     * Fixed missing `systemname` property in the `Star scanned` event.
     * Fixed a null reference exception which could occur when deleting scripts.

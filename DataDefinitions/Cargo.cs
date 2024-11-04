@@ -31,7 +31,7 @@ namespace EddiDataDefinitions
         }
 
         // The number of stolen items
-        [PublicAPI]
+        [JsonProperty, PublicAPI]
         public int stolen
         {
             get => _stolen;
@@ -44,14 +44,26 @@ namespace EddiDataDefinitions
                 }
             }
         }
-        [JsonProperty(nameof(stolen))]
         private int _stolen;
 
         // The number of items related to a mission currently on-board
-        public int haulage => missionCargo.Values.Sum();
+        [JsonIgnore]
+        public int haulage
+        {
+            get => _haulage;
+            set
+            {
+                if (_haulage != value )
+                {
+                    _haulage = value;
+                    NotifyPropertyChanged ( nameof(haulage ) );
+                }
+            }
+        }
+        private int _haulage;
 
         // The number of collected/purchased items
-        [PublicAPI]
+        [JsonProperty, PublicAPI]
         public int owned
         {
             get => _owned;
@@ -64,14 +76,13 @@ namespace EddiDataDefinitions
                 }
             }
         }
-        [JsonProperty(nameof(owned))]
         private int _owned;
 
         [Obsolete( "please use owned instead" )]
         public int other => owned;
 
         // Mission items on board (with MissionID and count)
-        [PublicAPI("A dictionary where the key is a mission ID and the value is the amount of cargo associated with that mission ID")]
+        [JsonProperty, PublicAPI( "A dictionary where the key is a mission ID and the value is the amount of cargo associated with that mission ID")]
         public Dictionary<long, int> missionCargo
         {
             get => _missionCargo;
@@ -80,14 +91,27 @@ namespace EddiDataDefinitions
                 if ( _missionCargo != value )
                 {
                     _missionCargo = value;
-                    NotifyPropertyChanged( nameof( missionCargo ) );
+                    haulage = value.Values.Sum();
+                }
+                NotifyPropertyChanged( nameof( haulage ) );
+            }
+        }
+        private Dictionary<long, int> _missionCargo = new Dictionary<long, int>();
+
+        [JsonProperty, PublicAPI] 
+        public int need
+        {
+            get => _need;
+            set
+            {
+                if (_need != value )
+                {
+                    _need = value;
+                    NotifyPropertyChanged ( nameof(need ) );
                 }
             }
         }
-        [ JsonProperty(nameof(missionCargo)) ]
-        private Dictionary<long, int> _missionCargo = new Dictionary<long, int>();
-
-        [ PublicAPI ] public int need { get; set; }
+        private int _need;
 
         // Total amount of the commodity
 
@@ -206,8 +230,7 @@ namespace EddiDataDefinitions
             {
                 missionCargo.Add( missionID, acquistionAmount );
             }
-
-            NotifyPropertyChanged( nameof(missionCargo) );
+            haulage = missionCargo.Values.Sum();
         }
 
         /// <summary> Remove non-mission cargo </summary>
@@ -244,6 +267,8 @@ namespace EddiDataDefinitions
                 {
                     missionCargo.Remove( missionID );
                 }
+
+                haulage = missionCargo.Values.Sum();
             }
         }
     }
