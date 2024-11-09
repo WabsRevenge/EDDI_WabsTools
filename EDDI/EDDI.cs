@@ -1206,7 +1206,7 @@ namespace EddiCore
             }
         }
 
-        private bool eventSignalDetected ( SignalDetectedEvent @event )
+        internal bool eventSignalDetected ( SignalDetectedEvent @event )
         {
             if ( Instance.CurrentStarSystem != null && Instance.CurrentStarSystem.systemAddress == @event.systemAddress )
             {
