@@ -221,21 +221,26 @@ namespace UnitTests
             var line3 = @"{ ""timestamp"":""2019-02-04T02:38:53Z"", ""event"":""FSSSignalDiscovered"", ""SystemAddress"":6606892846275, ""SignalName"":""$Fixed_Event_Life_Ring;"", ""SignalName_Localised"":""Notable stellar phenomena"" }";
             var line4 = @"{ ""timestamp"":""2019-02-04T02:38:53Z"", ""event"":""FSSSignalDiscovered"", ""SystemAddress"":6606892846275, ""SignalName"":""$NumberStation;"", ""SignalName_Localised"":""Unregistered Comms Beacon"" }";
 
-            JournalMonitor.ParseJournalEntry(line0);
+            var event0 = (SignalDetectedEvent)JournalMonitor.ParseJournalEntry(line0).FirstOrDefault();
+            EDDI.Instance.eventSignalDetected( event0 );
             Assert.AreEqual(1, currentStarSystem?.signalsources.Count());
             Assert.AreEqual("Unregistered Comms Beacon", currentStarSystem?.signalsources[0]);
 
-            JournalMonitor.ParseJournalEntry(line1);
+            var event1 = (SignalDetectedEvent)JournalMonitor.ParseJournalEntry(line1).FirstOrDefault();
+            EDDI.Instance.eventSignalDetected( event1 );
             Assert.AreEqual(1, currentStarSystem?.signalsources.Count() );
 
-            JournalMonitor.ParseJournalEntry(line2);
+            var event2 = (SignalDetectedEvent)JournalMonitor.ParseJournalEntry(line2).FirstOrDefault();
+            EDDI.Instance.eventSignalDetected( event2 );
             Assert.AreEqual(2, currentStarSystem?.signalsources.Count() );
             Assert.AreEqual("Notable Stellar Phenomena", currentStarSystem?.signalsources[1]);
 
-            JournalMonitor.ParseJournalEntry(line3);
+            var event3 = (SignalDetectedEvent)JournalMonitor.ParseJournalEntry(line3).FirstOrDefault();
+            EDDI.Instance.eventSignalDetected( event3 );
             Assert.AreEqual(2, currentStarSystem?.signalsources.Count() );
 
-            JournalMonitor.ParseJournalEntry(line4);
+            var event4 = (SignalDetectedEvent)JournalMonitor.ParseJournalEntry(line4).FirstOrDefault();
+            EDDI.Instance.eventSignalDetected( event4 );
             Assert.AreEqual(2, currentStarSystem?.signalsources.Count() );
         }
 
