@@ -1806,10 +1806,8 @@ namespace EddiCore
 
         private bool eventPowerplay(PowerplayEvent @event)
         {
-            if (Cmdr != null && Cmdr.powermerits is null)
+            if (Cmdr != null)
             {
-                // Per the journal, this is written at startup. In actuality, it can also be written whenever switching FSD states
-                // and needs to be filtered to prevent redundant outputs.
                 Cmdr.Power = @event.Power;
                 Cmdr.powerrating = @event.rank;
                 Cmdr.powermerits = @event.merits;
