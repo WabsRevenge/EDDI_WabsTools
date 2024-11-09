@@ -19,15 +19,17 @@ Full details of the variables available for each noted event, and VoiceAttack in
       * `Location` event updated to expose new Powerplay properties.
       * `Powerplay` event updated to remove the obsolete `votes` property (Powerplay 2.0 does not use a voting system).
       * `Signal detected` event updated to include new Powerplay properties.
-      * `Power expansion vote cast` event removed.
-      * `Power preparation vote cast` event removed.
+      * `Power defected` obsolete event removed.
+      * `Power expansion vote cast` obsolete event removed.
+      * `Power preparation vote cast` obsolete event removed.
     * Scripts 
       * `Carrier jumped` script updated to include new Powerplay details.
       * `Jumped` script updated to include new Powerplay details.
       * `Location` script updated to include new Powerplay details.
       * `Signal detected` script updated to incorporate new Powerplay details. 
-      * `Power expansion vote cast` script removed.
-      * `Power preparation vote cast` script removed.
+      * `Power defected` obsolete script removed.
+      * `Power expansion vote cast` obsolete script removed.
+      * `Power preparation vote cast` obsolete script removed.
       
 ## 4.1.0-b3
   * Core

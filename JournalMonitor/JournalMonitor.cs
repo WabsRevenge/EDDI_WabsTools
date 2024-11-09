@@ -3871,80 +3871,63 @@ namespace EddiJournalMonitor
                                 break;
                             case "PowerplayJoin":
                                 {
-                                    Power power = Power.FromEDName(JsonParsing.getString(data, "Power"));
-
+                                    var power = Power.FromEDName(JsonParsing.getString(data, "Power"));
                                     events.Add(new PowerJoinedEvent(timestamp, power) { raw = line, fromLoad = fromLogLoad });
                                 }
                                 handled = true;
                                 break;
                             case "PowerplayLeave":
                                 {
-                                    Power power = Power.FromEDName(JsonParsing.getString(data, "Power"));
-
+                                    var power = Power.FromEDName(JsonParsing.getString(data, "Power"));
                                     events.Add(new PowerLeftEvent(timestamp, power) { raw = line, fromLoad = fromLogLoad });
-
-                                }
-                                handled = true;
-                                break;
-                            case "PowerplayDefect":
-                                {
-                                    Power fromPower = Power.FromEDName(JsonParsing.getString(data, "FromPower"));
-                                    Power toPower = Power.FromEDName(JsonParsing.getString(data, "ToPower"));
-
-                                    events.Add(new PowerDefectedEvent(timestamp, fromPower, toPower) { raw = line, fromLoad = fromLogLoad });
                                 }
                                 handled = true;
                                 break;
                             case "PowerplaySalary":
                                 {
-                                    Power power = Power.FromEDName(JsonParsing.getString(data, "Power"));
+                                    var power = Power.FromEDName(JsonParsing.getString(data, "Power"));
                                     data.TryGetValue("Amount", out object val);
                                     int amount = (int)(long)val;
-
                                     events.Add(new PowerSalaryClaimedEvent(timestamp, power, amount) { raw = line, fromLoad = fromLogLoad });
                                 }
                                 handled = true;
                                 break;
                             case "PowerplayCollect":
                                 {
-                                    Power power = Power.FromEDName(JsonParsing.getString(data, "Power"));
-                                    CommodityDefinition commodity = CommodityDefinition.FromEDName(JsonParsing.getString(data, "Type"));
+                                    var power = Power.FromEDName(JsonParsing.getString(data, "Power"));
+                                    var commodity = CommodityDefinition.FromEDName(JsonParsing.getString(data, "Type"));
                                     commodity.fallbackLocalizedName = JsonParsing.getString(data, "Type_Localised");
                                     data.TryGetValue("Count", out object val);
-                                    int amount = (int)(long)val;
-
+                                    var amount = (int)(long)val;
                                     events.Add(new PowerCommodityObtainedEvent(timestamp, power, commodity, amount) { raw = line, fromLoad = fromLogLoad });
                                 }
                                 handled = true;
                                 break;
                             case "PowerplayDeliver":
                                 {
-                                    Power power = Power.FromEDName(JsonParsing.getString(data, "Power"));
-                                    CommodityDefinition commodity = CommodityDefinition.FromEDName(JsonParsing.getString(data, "Type"));
+                                    var power = Power.FromEDName(JsonParsing.getString(data, "Power"));
+                                    var commodity = CommodityDefinition.FromEDName(JsonParsing.getString(data, "Type"));
                                     commodity.fallbackLocalizedName = JsonParsing.getString(data, "Type_Localised");
                                     data.TryGetValue("Count", out object val);
-                                    int amount = (int)(long)val;
-
+                                    var amount = (int)(long)val;
                                     events.Add(new PowerCommodityDeliveredEvent(timestamp, power, commodity, amount) { raw = line, fromLoad = fromLogLoad });
                                 }
                                 handled = true;
                                 break;
                             case "PowerplayFastTrack":
                                 {
-                                    Power power = Power.FromEDName(JsonParsing.getString(data, "Power"));
+                                    var power = Power.FromEDName(JsonParsing.getString(data, "Power"));
                                     data.TryGetValue("Cost", out object val);
-                                    int amount = (int)(long)val;
-
+                                    var amount = (int)(long)val;
                                     events.Add(new PowerCommodityFastTrackedEvent(timestamp, power, amount) { raw = line, fromLoad = fromLogLoad });
                                 }
                                 handled = true;
                                 break;
                             case "PowerplayVoucher":
                                 {
-                                    Power power = Power.FromEDName(JsonParsing.getString(data, "Power"));
+                                    var power = Power.FromEDName(JsonParsing.getString(data, "Power"));
                                     data.TryGetValue("Systems", out object val);
-                                    List<string> systems = ((List<object>)val).Cast<string>().ToList();
-
+                                    var systems = ((List<object>)val).Cast<string>().ToList();
                                     events.Add(new PowerVoucherReceivedEvent(timestamp, power, systems) { raw = line, fromLoad = fromLogLoad });
                                 }
                                 handled = true;

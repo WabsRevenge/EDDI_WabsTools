@@ -1871,15 +1871,6 @@
       "name": "Power commodity obtained",
       "description": "Triggered when a commander obtains a commodity from a power"
     },
-    "Power defected": {
-      "enabled": true,
-      "priority": 3,
-      "responder": true,
-      "script": "Vous avez quité {P(event.frompower)} pour rejoindre {P(event.topower)}.",
-      "default": true,
-      "name": "Power defected",
-      "description": "Triggered when you defect from one power to another"
-    },
     "Power joined": {
       "enabled": true,
       "priority": 3,

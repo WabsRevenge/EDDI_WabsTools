@@ -1851,15 +1851,6 @@
       "name": "Power commodity obtained",
       "description": "Triggered when a commander obtains a commodity from a power"
     },
-    "Power defected": {
-      "enabled": true,
-      "priority": 3,
-      "responder": true,
-      "script": "You have defected from {P(event.frompower, \"power\")} to {P(event.topower, \"power\")}.",
-      "default": true,
-      "name": "Power defected",
-      "description": "Triggered when you defect from one power to another"
-    },
     "Power joined": {
       "enabled": true,
       "priority": 3,
@@ -1877,6 +1868,24 @@
       "default": true,
       "name": "Power left",
       "description": "Triggered when you leave a power"
+    },
+    "Power micro resources delivered": {
+      "enabled": true,
+      "priority": 3,
+      "responder": true,
+      "script": null,
+      "default": true,
+      "name": "Power micro resources delivered",
+      "description": "Triggered when delivering micro resources to a Powerplay contact"
+    },
+    "Power micro resources requested": {
+      "enabled": true,
+      "priority": 3,
+      "responder": true,
+      "script": null,
+      "default": true,
+      "name": "Power micro resources requested",
+      "description": "Triggered when requesting micro resources from a Powerplay contact"
     },
     "Power salary claimed": {
       "enabled": true,

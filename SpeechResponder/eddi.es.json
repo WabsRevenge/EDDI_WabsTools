@@ -1883,14 +1883,6 @@
       "name": "Power commodity obtained",
       "description": "Se activa cuando un Comandante obtiene una mercancía de una potencia"
     },
-    "Power defected": {
-      "enabled": true,
-      "priority": 4,
-      "responder": true,
-      "script": "Ha desertado de {P(event.frompower)} para unirse a {P(event.topower)}.",
-      "name": "Power defected",
-      "description": "Se activa cuando deserta de una potencia para unirse a otra"
-    },
     "Power joined": {
       "enabled": true,
       "priority": 3,

@@ -1841,15 +1841,6 @@
       "name": "Power commodity obtained",
       "description": "Triggered when a commander obtains a commodity from a power"
     },
-    "Power defected": {
-      "enabled": true,
-      "priority": 3,
-      "responder": true,
-      "script": "您以选择背叛 {P(event.frompower, \"power\")} ,转而投靠 {P(event.topower, \"power\")}.",
-      "default": true,
-      "name": "Power defected",
-      "description": "Triggered when you defect from one power to another"
-    },
     "Power joined": {
       "enabled": true,
       "priority": 3,

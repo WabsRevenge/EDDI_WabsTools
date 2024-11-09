@@ -1100,10 +1100,6 @@ namespace EddiCore
                     {
                         passEvent = eventPowerplay(powerplayEvent);
                     }
-                    else if (@event is PowerDefectedEvent powerDefectedEvent)
-                    {
-                        passEvent = eventPowerDefected(powerDefectedEvent);
-                    }
                     else if (@event is PowerJoinedEvent powerJoinedEvent)
                     {
                         passEvent = eventPowerJoined(powerJoinedEvent);
@@ -1754,46 +1750,6 @@ namespace EddiCore
                 Cmdr.Power = @event.Power;
                 Cmdr.powermerits = 0;
                 Cmdr.powerrating = 0;
-
-                // Store power merits
-                EDDIConfiguration configuration = ConfigService.Instance.eddiConfiguration;
-                configuration.powerMerits = Cmdr.powermerits;
-                ConfigService.Instance.eddiConfiguration = configuration;
-            }
-
-            return true;
-        }
-
-        private bool eventPowerDefected(PowerDefectedEvent @event)
-        {
-            if ( Cmdr != null )
-            {
-                Cmdr.Power = @event.toPower;
-                // Merits are halved upon defection
-                Cmdr.powermerits = (int)Math.Round( (double)( Cmdr.powermerits ?? 0 ) / 2, 0 );
-                if ( Cmdr.powermerits > 10000 )
-                {
-                    Cmdr.powerrating = 4;
-                }
-
-                if ( Cmdr.powermerits > 1500 )
-                {
-                    Cmdr.powerrating = 3;
-                }
-
-                if ( Cmdr.powermerits > 750 )
-                {
-                    Cmdr.powerrating = 2;
-                }
-
-                if ( Cmdr.powermerits > 100 )
-                {
-                    Cmdr.powerrating = 1;
-                }
-                else
-                {
-                    Cmdr.powerrating = 0;
-                }
 
                 // Store power merits
                 EDDIConfiguration configuration = ConfigService.Instance.eddiConfiguration;

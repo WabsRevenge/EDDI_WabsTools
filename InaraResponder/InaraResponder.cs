@@ -164,10 +164,6 @@ namespace EddiInaraResponder
             {
                 handlePowerplayEvent(powerplayEvent);
             }
-            else if ( theEvent is PowerDefectedEvent powerDefectedEvent )
-            {
-                handlePowerDefectedEvent( powerDefectedEvent );
-            }
             else if (theEvent is PowerLeftEvent powerLeftEvent)
             {
                 handlePowerLeftEvent(powerLeftEvent);
@@ -1286,15 +1282,6 @@ namespace EddiInaraResponder
                 }
             };
             inaraService.EnqueueAPIEvent(new InaraAPIEvent(@event.timestamp, "setCommanderReputationMajorFaction", eventData));
-        }
-
-        private void handlePowerDefectedEvent ( PowerDefectedEvent @event )
-        {
-            inaraService.EnqueueAPIEvent( new InaraAPIEvent( @event.timestamp, "setCommanderRankPower", new Dictionary<string, object>()
-            {
-                { "powerName", @event.toPower?.invariantName },
-                { "rankValue", EDDI.Instance.Cmdr?.powerrating ?? 0 }
-            } ) );
         }
 
         private void handlePowerJoinedEvent(PowerJoinedEvent @event)

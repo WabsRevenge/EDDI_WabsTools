@@ -102,8 +102,9 @@ namespace EddiSpeechResponder
             "Federation promotion", // Replaced by "Commander promotion" script
             "Trade promotion", // Replaced by "Commander promotion" script
             "Ship repurchased", // Replaced by "Respawned" script
-            "Power expansion vote cast", // Made obsolete by Powerplay 2.0 which no longer includes a voting system
-            "Power preparation vote cast" // Made obsolete by Powerplay 2.0 which no longer includes a voting system
+            "Power defected", // Made obsolete in Powerplay 2.0 which no longer includes a defection mechanic.
+            "Power expansion vote cast", // Made obsolete in Powerplay 2.0 which no longer includes a voting system
+            "Power preparation vote cast" // Made obsolete in Powerplay 2.0 which no longer includes a voting system
         };
 
         private static readonly string[] ignoredEventKeys =
