@@ -2023,15 +2023,6 @@
 			"description": "Triggered when a commander delivers a commodity to a power",
 			"default": true
 		},
-		"Power commodity fast tracked": {
-			"enabled": true,
-			"priority": 3,
-			"responder": true,
-			"script": "{Humanise(event.amount)} créditos foram gastos acelerando a liberação de mercadorias {Occasionally(2, \"de {P(event.power)}\")}.",
-			"name": "Power commodity fast tracked",
-			"description": "Triggered when a commander fast tracks a commodity of a power",
-			"default": true
-		},
 		"Power commodity obtained": {
 			"enabled": true,
 			"priority": 3,

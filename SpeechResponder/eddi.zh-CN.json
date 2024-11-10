@@ -1823,15 +1823,6 @@
       "name": "Power commodity delivered",
       "description": "Triggered when a commander delivers a commodity to a power"
     },
-    "Power commodity fast tracked": {
-      "enabled": true,
-      "priority": 3,
-      "responder": true,
-      "script": "花费了{event.amount}信用点, 用于 {Occasionally(2, \"向 {P(event.power, 'power')}\")}快速追踪货物 .",
-      "default": true,
-      "name": "Power commodity fast tracked",
-      "description": "Triggered when a commander fast tracks a commodity of a power"
-    },
     "Power commodity obtained": {
       "enabled": true,
       "priority": 3,

@@ -1867,14 +1867,6 @@
       "name": "Power commodity delivered",
       "description": "Se activa cuando un Comandante entrega una mercancía a una potencia"
     },
-    "Power commodity fast tracked": {
-      "enabled": true,
-      "priority": 5,
-      "responder": true,
-      "script": "{Humanise(event.amount)} créditos gastados en un rápido rastreo de mercancías {Occasionally(2, \"para {P(event.power)}\")}.",
-      "name": "Power commodity fast tracked",
-      "description": "Se activa cuando un Comandante rastrea rápidamente una mercancía de una potencia"
-    },
     "Power commodity obtained": {
       "enabled": true,
       "priority": 5,

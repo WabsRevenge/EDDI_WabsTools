@@ -3914,15 +3914,6 @@ namespace EddiJournalMonitor
                                 }
                                 handled = true;
                                 break;
-                            case "PowerplayFastTrack":
-                                {
-                                    var power = Power.FromEDName(JsonParsing.getString(data, "Power"));
-                                    data.TryGetValue("Cost", out object val);
-                                    var amount = (int)(long)val;
-                                    events.Add(new PowerCommodityFastTrackedEvent(timestamp, power, amount) { raw = line, fromLoad = fromLogLoad });
-                                }
-                                handled = true;
-                                break;
                             case "PowerplayVoucher":
                                 {
                                     var power = Power.FromEDName(JsonParsing.getString(data, "Power"));

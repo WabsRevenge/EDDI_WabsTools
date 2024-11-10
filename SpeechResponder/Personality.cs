@@ -102,6 +102,7 @@ namespace EddiSpeechResponder
             "Federation promotion", // Replaced by "Commander promotion" script
             "Trade promotion", // Replaced by "Commander promotion" script
             "Ship repurchased", // Replaced by "Respawned" script
+            "Power commodity fast tracked", // Made obsolete in Powerplay 2.0 which no longer allows fast tracking commodity allocations
             "Power defected", // Made obsolete in Powerplay 2.0 which no longer includes a defection mechanic.
             "Power expansion vote cast", // Made obsolete in Powerplay 2.0 which no longer includes a voting system
             "Power preparation vote cast" // Made obsolete in Powerplay 2.0 which no longer includes a voting system

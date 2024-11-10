@@ -1833,15 +1833,6 @@
       "name": "Power commodity delivered",
       "description": "Triggered when a commander delivers a commodity to a power"
     },
-    "Power commodity fast tracked": {
-      "enabled": true,
-      "priority": 3,
-      "responder": true,
-      "script": "{Humanise(event.amount)} credits spent fast-tracking commodities {Occasionally(2, \"for {P(event.power, 'power')}\")}.",
-      "default": true,
-      "name": "Power commodity fast tracked",
-      "description": "Triggered when a commander fast tracks a commodity of a power"
-    },
     "Power commodity obtained": {
       "enabled": true,
       "priority": 3,
