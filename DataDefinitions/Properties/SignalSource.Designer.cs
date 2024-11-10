@@ -574,6 +574,15 @@ namespace EddiDataDefinitions.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Power Convoy.
+        /// </summary>
+        public static string USS_Type_PowerConvoy {
+            get {
+                return ResourceManager.GetString("USS_Type_PowerConvoy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Power Wreckage Signature.
         /// </summary>
         public static string USS_Type_PowerEmissions {

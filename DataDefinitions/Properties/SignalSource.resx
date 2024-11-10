@@ -427,5 +427,10 @@
   </data>
   <data name="USS_Type_PowerEmissions" xml:space="preserve">
     <value>Power Wreckage Signature</value>
+    <comment>Powerplay</comment>
+  </data>
+  <data name="USS_Type_PowerConvoy" xml:space="preserve">
+    <value>Power Convoy</value>
+    <comment>Powerplay</comment>
   </data>
 </root>

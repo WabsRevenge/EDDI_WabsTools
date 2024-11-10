@@ -47,6 +47,7 @@ namespace EddiDataDefinitions
             var NonHuman = new SignalSource("USS_Type_NonHuman", "USS_NonHumanSignalSource");
             var TradingBeacon = new SignalSource("USS_Type_TradingBeacon", "USS_TradingBeacon");
             var WeaponsFire = new SignalSource("USS_Type_WeaponsFire", "USS_WeaponsFire");
+            var PowerConvoy = new SignalSource( "USS_Type_PowerConvoy", "USS_PowerConvoy" );
             var PowerEmmissions = new SignalSource( "USS_Type_PowerEmissions", "USS_PowerEmissions" );
 
             var UnregisteredCommsBeacon = new SignalSource("NumberStation");
