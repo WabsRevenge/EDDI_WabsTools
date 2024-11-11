@@ -200,14 +200,18 @@ namespace EddiStatusMonitor
                                 b.bodyId == currentStatus.destinationBodyId
                                 && b.bodyname == currentStatus.destination_name);
                         var station = EDDI.Instance.CurrentStarSystem.stations.FirstOrDefault(s =>
-                                s.name == currentStatus.destination_name);
+                            s.name == currentStatus.destination_name);
 
                         // There is an FDev bug where both Encoded Emissions and High Grade Emissions use the `USS_HighGradeEmissions` edName.
                         // When this occurs, we need to fall back to our generic signal source name.
+                        // It's also possible for both the standard name and localized name to be symbolic values. If so, prefer and try to match the value in the localized field. 
                         var signalSource = currentStatus.destination_name == "$USS_HighGradeEmissions;"
-                                ? SignalSource.GenericSignalSource
-                                : EDDI.Instance.CurrentStarSystem.signalSources.FirstOrDefault(s =>
-                                      s.edname == currentStatus.destination_name) ?? SignalSource.FromEDName(currentStatus.destination_name);
+                            ? SignalSource.GenericSignalSource
+                            : EDDI.Instance.CurrentStarSystem.signalSources.FirstOrDefault( s =>
+                                s.edname == currentStatus.destination_name ) ?? SignalSource.FromEDName(
+                                ( currentStatus.destination_localized_name?.StartsWith( "$" ) ?? false )
+                                    ? currentStatus.destination_localized_name
+                                    : currentStatus.destination_name );
 
                         // Might be a body (including the primary star of a different system if selecting a star system)
                         if ( body != null && currentStatus.destination_name == body.bodyname )
