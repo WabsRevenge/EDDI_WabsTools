@@ -433,4 +433,8 @@
     <value>Power Convoy</value>
     <comment>Powerplay</comment>
   </data>
+  <data name="USS_Type_PowerplayConvoyDistressSignal" xml:space="preserve">
+    <value>Power Convoy Distress Signal</value>
+    <comment>Powerplay</comment>
+  </data>
 </root>

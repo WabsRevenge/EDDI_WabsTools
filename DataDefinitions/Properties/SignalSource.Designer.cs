@@ -592,6 +592,15 @@ namespace EddiDataDefinitions.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Power Convoy Distress Signal.
+        /// </summary>
+        public static string USS_Type_PowerplayConvoyDistressSignal {
+            get {
+                return ResourceManager.GetString("USS_Type_PowerplayConvoyDistressSignal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Degraded Emissions.
         /// </summary>
         public static string USS_Type_Salvage {
