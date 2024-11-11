@@ -1323,7 +1323,7 @@ namespace Eddi
 
         private void createGithubIssue()
         {
-            Process.Start("https://github.com/EDCD/EDDI/issues/new");
+            Process.Start( "https://github.com/EDCD/EDDI/issues/new?template=bug_report.md" );
         }
 
         private void upgradeClicked(object sender, RoutedEventArgs e)
