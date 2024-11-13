@@ -1891,6 +1891,24 @@
       "name": "Power left",
       "description": "Se activa cuando abandona una potencia"
     },
+    "Power micro resources collected": {
+      "enabled": true,
+      "priority": 3,
+      "responder": true,
+      "script": "Collected\r\n{set resources to []}\r\n{for microresource in event.resourceamounts:\r\n    {set resources to cat(resources, [cat(microresource.amount, \" units of \", microresource.name)])}    \r\n}\r\n{List(resources)}.",
+      "default": true,
+      "name": "Power micro resources collected",
+      "description": "Triggered when collecting micro resources from a Powerplay contact"
+    },
+    "Power micro resources delivered": {
+      "enabled": true,
+      "priority": 3,
+      "responder": true,
+      "script": "Delivered\r\n{set resources to []}\r\n{for microresource in event.resourceamounts:\r\n    {set resources to cat(resources, [cat(microresource.amount, \" units of \", microresource.name)])}    \r\n}\r\n{List(resources)}.",
+      "default": true,
+      "name": "Power micro resources delivered",
+      "description": "Triggered when delivering micro resources to a Powerplay contact"
+    },
     "Power salary claimed": {
       "enabled": true,
       "priority": 5,

@@ -13,25 +13,30 @@ Full details of the variables available for each noted event, and VoiceAttack in
     * Fixed a null reference exception which could occur when deleting scripts.
   * Speech Responder
     * Events 
-      * `Holoscreen hacked` event added. 
       * `Carrier jumped` event updated to expose new Powerplay properties.
+      * `Holoscreen hacked` event added. 
       * `Jumped` event updated to expose new Powerplay properties.
       * `Location` event updated to expose new Powerplay properties.
-      * `Powerplay` event updated to remove the obsolete `votes` property (Powerplay 2.0 does not use a voting system).
-      * `Signal detected` event updated to include new Powerplay properties.
       * `Power commodity fast tracked` obsolete event removed.
       * `Power defected` obsolete event removed.
       * `Power expansion vote cast` obsolete event removed.
       * `Power preparation vote cast` obsolete event removed.
+      * `Power micro resources collected` event added.
+      * `Power micro resources delivered` event added.
+      * `Powerplay` event updated to remove the obsolete `votes` property (Powerplay 2.0 does not use a voting system).
+      * `Signal detected` event updated to include new Powerplay properties.
     * Scripts 
       * `Carrier jumped` script updated to include new Powerplay details.
+      * `Holoscreen hacked` event added. 
       * `Jumped` script updated to include new Powerplay details.
       * `Location` script updated to include new Powerplay details.
-      * `Signal detected` script updated to incorporate new Powerplay details. 
       * `Power commodity fast tracked` obsolete script removed.
       * `Power defected` obsolete script removed.
       * `Power expansion vote cast` obsolete script removed.
       * `Power preparation vote cast` obsolete script removed.
+      * `Power micro resources collected` script added.
+      * `Power micro resources delivered` script added.
+      * `Signal detected` script updated to incorporate new Powerplay details. 
       
 ## 4.1.0-b3
   * Core

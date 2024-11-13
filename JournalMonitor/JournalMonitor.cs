@@ -2391,9 +2391,9 @@ namespace EddiJournalMonitor
                                     source.spawningState.fallbackLocalizedName = JsonParsing.getString(data, "SpawningState_Localised");
 
                                     source.threatLevel = JsonParsing.getOptionalInt(data, "ThreatLevel") ?? 0;
-
+                                    
                                     events.Add(new SignalDetectedEvent(timestamp, systemAddress, source) { raw = line, fromLoad = fromLogLoad });
-                                                }
+                                }
                                 handled = true;
                                 break;
                             case "BuyExplorationData":
@@ -4716,22 +4716,6 @@ namespace EddiJournalMonitor
                                 {
                                     var marketId = JsonParsing.getOptionalLong(data, "MarketID");
 
-                                    MicroResource GetResource( IDictionary<string, object> resourceData )
-                                    {
-                                        var edname = JsonParsing.getString(resourceData, "Name");
-                                        var microResource = MicroResource.FromEDName(edname);
-                                        if ( microResource is null ) { return null; }
-
-                                        var fallbackName = JsonParsing.getString(resourceData, "Name_Localised");
-                                        microResource.fallbackLocalizedName = fallbackName;
-
-                                        var category = JsonParsing.getString(resourceData, "Category");
-                                        var fallbackCategoryName = JsonParsing.getString(resourceData, "Category_Localised");
-                                        if ( microResource.Category is null ) { microResource.Category = MicroResourceCategory.FromEDName( category ); }
-                                        microResource.Category.fallbackLocalizedName = fallbackCategoryName;
-                                        return microResource;
-                                    }
-
                                     // The `BuyMicroResources` event sometimes contains an array
                                     // (thought to occur primarily when buying from a fleet carrier bartender)
                                     if ( data.ContainsKey("TotalCount") )
@@ -4746,7 +4730,7 @@ namespace EddiJournalMonitor
                                                 {
                                                     if ( res is IDictionary<string, object> microVal )
                                                     {
-                                                        var microResource = GetResource( microVal );
+                                                        var microResource = GetMicroResource( microVal );
                                                         var amount = JsonParsing.getInt(microVal, "Count");
                                                         if ( microResource != null )
                                                         {
@@ -4760,7 +4744,7 @@ namespace EddiJournalMonitor
                                     }
                                     else
                                     {
-                                        var microResource = GetResource( data );
+                                        var microResource = GetMicroResource( data );
                                         var amount = JsonParsing.getInt( data, "Count" );
                                         var price = JsonParsing.getInt(data, "Price"); // Total price
                                         var resourceAmounts = new List<MicroResourceAmount> { new MicroResourceAmount( microResource, amount ) };
@@ -5030,6 +5014,75 @@ namespace EddiJournalMonitor
                                 }
                                 handled = true;
                                 break;
+                            case "RequestPowerMicroResources":
+                                {
+                                    // {"timestamp":"2024-10-23T19:59:28Z","event":"RequestPowerMicroResources","TotalCount":3,"MicroResources":[{"Name":"powerspyware","Name_Localised":"Power Tracker Malware","Category":"Data","Count":3}],"MarketID":3930400257}
+                                    if ( data.ContainsKey( "TotalCount" ) )
+                                    {
+                                        var marketID = JsonParsing.getLong( data, "MarketID" );
+                                        var resourceAmounts = new List<MicroResourceAmount>();
+                                        if ( data.TryGetValue( "MicroResources", out var val ) )
+                                        {
+                                            if ( val is List<object> listVal )
+                                            {
+                                                foreach ( var res in listVal )
+                                                {
+                                                    if ( res is IDictionary<string, object> microVal )
+                                                    {
+                                                        var microResource = GetMicroResource( microVal );
+                                                        var amount = JsonParsing.getInt(microVal, "Count");
+                                                        if ( microResource != null )
+                                                        {
+                                                            resourceAmounts.Add( new MicroResourceAmount( microResource, amount ) );
+                                                        }
+                                                    }
+                                                }
+                                                events.Add( new PowerMicroResourcesCollectedEvent( timestamp, marketID, resourceAmounts ) { raw = line, fromLoad = fromLogLoad } );
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // We haven't seen this pattern before. Break unhandled.
+                                        break;
+                                    }
+                                }
+                                handled = true;
+                                break;
+                            case "DeliverPowerMicroResources":
+                                {
+                                    // { "timestamp":"2024-10-19T15:01:28Z", "event":"DeliverPowerMicroResources", "TotalCount":2, "MicroResources":[ { "Name":"powerelectronics", "Name_Localised":"Electronics Package", "Category":"Item", "Count":2 } ], "MarketID":3223182848 }
+                                    if ( data.ContainsKey( "TotalCount" ) )
+                                    {
+                                        var marketID = JsonParsing.getLong( data, "MarketID" );
+                                        var resourceAmounts = new List<MicroResourceAmount>();
+                                        if ( data.TryGetValue( "MicroResources", out var val ) )
+                                        {
+                                            if ( val is List<object> listVal )
+                                            {
+                                                foreach ( var res in listVal )
+                                                {
+                                                    if ( res is IDictionary<string, object> microVal )
+                                                    {
+                                                        var microResource = GetMicroResource( microVal );
+                                                        var amount = JsonParsing.getInt(microVal, "Count");
+                                                        if ( microResource != null )
+                                                        {
+                                                            resourceAmounts.Add( new MicroResourceAmount( microResource, amount ) );
+                                                        }
+                                                    }
+                                                }
+                                                events.Add( new PowerMicroResourcesDeliveredEvent( timestamp, marketID, resourceAmounts ) { raw = line, fromLoad = fromLogLoad } );
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // We haven't seen this pattern before. Break unhandled.
+                                        break;
+                                    }
+                                }
+                                handled = true;
                                 break;
 
                             // we silently ignore these, but forward them to the responders
@@ -5189,7 +5242,7 @@ namespace EddiJournalMonitor
                     powerplayPowers.Add( Power.FromEDName( (string)powerName ) );
                 }
             }
-
+            
             var edState = JsonParsing.getString( data, "PowerplayState" );
             if ( systemAddress == controllingPower?.hqSystemAddress && edState == "Stronghold" )
             {
@@ -5198,7 +5251,7 @@ namespace EddiJournalMonitor
             else if ( edState is "Uncontrolled" && powerplayPowers.Count > 1 )
             {
                 powerplayState = PowerplayState.Contested;
-                }
+            }
             else
             {
                 powerplayState = PowerplayState.FromEDName( edState ) ?? PowerplayState.None;
@@ -5489,6 +5542,24 @@ namespace EddiJournalMonitor
             source.signalType = signalTypeEdName is null ? null : SignalType.FromEDName( signalTypeEdName );
             
             return source;
+        }
+
+        private static MicroResource GetMicroResource ( IDictionary<string, object> resourceData )
+        {
+            var edname = JsonParsing.getString(resourceData, "Name");
+            var microResource = MicroResource.FromEDName(edname);
+            if ( microResource is null )
+            { return null; }
+
+            var fallbackName = JsonParsing.getString(resourceData, "Name_Localised");
+            microResource.fallbackLocalizedName = fallbackName;
+
+            var category = JsonParsing.getString(resourceData, "Category");
+            var fallbackCategoryName = JsonParsing.getString(resourceData, "Category_Localised");
+            if ( microResource.Category is null )
+            { microResource.Category = MicroResourceCategory.FromEDName( category ); }
+            microResource.Category.fallbackLocalizedName = fallbackCategoryName;
+            return microResource;
         }
 
         // Be sensible with health - round it unless it's very low
