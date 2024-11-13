@@ -49,7 +49,7 @@
       "priority": 3,
       "responder": true,
       "script": "{if ship.Role.edname = \"Mining\" || ship.Role.edname = \"Multipurpose\":\r\n\r\n\t{if len(event.motherlode) > 0 && spokenCores[event.motherlode]:\r\n\t\t{OneOf(\r\n\t\t\t\"Veta{Occasionally(2, '-madre')} detectada de {event.motherlode}.\",\r\n\t   \t\t\"Detectada {Occasionally(2, 'una')} veta{Occasionally(2, '-madre')} de {event.motherlode}.\",\r\n\t   \t\t\"Núcleo de {event.motherlode} detectado.\",\r\n\t   \t\t\"{Occasionally(2, 'Se ha')} detectado {Occasionally(2 'un')} núcleo de {event.motherlode}.\"\r\n\t   \t)}\r\n\t}\r\n\r\n\t{set minerals to []}\r\n\t{for mineral in event.commodities:\r\n\t    {if mineral.percentage > minimumPercent && spokenMinerals[mineral.commodity]:\r\n\t        {set mineral_desc to: \r\n\t            {round(mineral.percentage)} porciento de {mineral.commodity}\r\n\t        }\r\n\t        {set minerals to cat(minerals, [mineral_desc])}\r\n\t    }\r\n\t}\r\n\t{if len(minerals) > 0:\r\n\t    El asteroide contiene {List(minerals)}\r\n\t    {if event.materialcontent = \"High\":\r\n\t        , y una alta concentración de materiales de ingeniería\r\n\t    }.\r\n\t    {if event.remaining < 100:\r\n\t    \t{OneOf(\r\n\t    \t\t\"Cantidad {Occasionally(2, 'de material')} {Occasionally(2, 'aproximada')} restante {Occasionally(2, 'en el asteroide')}: {event.remaining} porciento.\",\r\n\t        \t\"Queda un {event.remaining} porciento {Occasionally(2, 'de material')} {OneOf('por extraer', 'por minar', '')} {Occasionally(2, 'en el asteroide')}.\",\r\n\t        \t\"{Occasionally(2, 'Al asteroide')} le queda {Occasionally(2, 'aproximadamente,')} un {event.remaining} porciento {Occasionally(2, 'de material')} {OneOf('por extraer','por minar', 'hasta agotarse')}.\",\r\n        \t\t\"{Occasionally(2, 'Está')} agotado en un {100 - event.remaining} porciento {Occasionally(2, 'aproximadamente')}.\",\r\n\t        \t\"Se le puede {OneOf('extraer', 'minar')} {Occasionally(2, 'aproximadamente,')} un {event.remaining} porciento {Occasionally(2, 'de material')}.\"\r\n    \t    )}\r\n    \t}\r\n\t}\r\n}",
-       "default": false,
+      "default": false,
       "includes": ".Preferencias"
     },
     "Backpack": {
@@ -1432,6 +1432,15 @@
       "default": true,
       "includes": null
     },
+    "Holoscreen hacked": {
+      "enabled": true,
+      "priority": 3,
+      "responder": true,
+      "script": null,
+      "default": true,
+      "name": "Holoscreen hacked",
+      "description": "Triggered when you hack a power's holoscreen."
+    },
     "Honorific": {
       "name": "Honorific",
       "description": "Función para proporcionar un tratamiento honorífico a su Comandante",
@@ -2312,16 +2321,6 @@
       "default": true,
       "includes": null
     },
-    "Power commodity fast tracked": {
-      "name": "Power commodity fast tracked",
-      "description": "Se activa cuando un Comandante rastrea rápidamente una mercancía de una potencia",
-      "enabled": true,
-      "priority": 5,
-      "responder": true,
-      "script": "{Humanise(event.amount)} créditos gastados en un rápido rastreo de mercancías {Occasionally(2, \"para {P(event.power)}\")}.",
-      "default": true,
-      "includes": null
-    },
     "Power commodity obtained": {
       "name": "Power commodity obtained",
       "description": "Se activa cuando un Comandante obtiene una mercancía de una potencia",
@@ -2329,26 +2328,6 @@
       "priority": 5,
       "responder": true,
       "script": "Obtenidas {event.amount} unidades de {event.commodity} {Occasionally(2, \"para {P(event.power)}\")}.",
-      "default": true,
-      "includes": null
-    },
-    "Power defected": {
-      "name": "Power defected",
-      "description": "Se activa cuando deserta de una potencia para unirse a otra",
-      "enabled": true,
-      "priority": 4,
-      "responder": true,
-      "script": "Ha desertado de {P(event.frompower)} para unirse a {P(event.topower)}.",
-      "default": true,
-      "includes": null
-    },
-    "Power expansion vote cast": {
-      "name": "Power expansion vote cast",
-      "description": "Se activa cuando un Comandante vota a favor de la expansión de un sistema",
-      "enabled": true,
-      "priority": 4,
-      "responder": true,
-      "script": "Voto\n{OneOf(\"emitido\", \"registrado\")}",
       "default": true,
       "includes": null
     },
@@ -2369,16 +2348,6 @@
       "priority": 3,
       "responder": true,
       "script": "Ya no se encuentra alineado con {P(event.power)}",
-      "default": true,
-      "includes": null
-    },
-    "Power preparation vote cast": {
-      "name": "Power preparation vote cast",
-      "description": "Se activa cuando un Comandante vota por la preparación de un sistema",
-      "enabled": true,
-      "priority": 5,
-      "responder": true,
-      "script": "Voto\n{OneOf(\"emitido\", \"registrado\")}",
       "default": true,
       "includes": null
     },
