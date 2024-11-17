@@ -1144,6 +1144,10 @@ namespace EddiCore
                     {
                         passEvent = eventCarrierJumped(carrierJumpedEvent);
                     }
+                    else if ( @event is CarrierJumpRequestEvent carrierJumpRequestEvent )
+                    {
+                        passEvent = eventCarrierJumpRequest( carrierJumpRequestEvent );
+                    }
                     else if (@event is CarrierFinanceEvent carrierFinanceEvent)
                     {
                         passEvent = eventCarrierFinance(carrierFinanceEvent);
@@ -1489,6 +1493,12 @@ namespace EddiCore
 
         private bool eventCarrierJumpEngaged(CarrierJumpEngagedEvent @event)
         {
+            if ( FleetCarrier != null )
+            {
+                FleetCarrier.currentStarSystem = @event.systemname;
+                FleetCarrier.nextStarSystem = null;
+            }
+
             // Only update our information if we are still docked at the carrier
             if (Environment == Constants.ENVIRONMENT_DOCKED && @event.carrierId == CurrentStation?.marketId)
             {
@@ -1554,6 +1564,11 @@ namespace EddiCore
         private bool eventCarrierJumped(CarrierJumpedEvent @event)
         {
             Logging.Info( "Carrier jumped to: " + @event.systemname );
+            if ( FleetCarrier != null )
+            {
+                FleetCarrier.currentStarSystem = @event.systemname;
+                FleetCarrier.nextStarSystem = null;
+            }
 
             if ( @event.docked || @event.onFoot )
             {
@@ -1705,6 +1720,15 @@ namespace EddiCore
                 throw new NotImplementedException();
             }
 
+            return true;
+        }
+
+        private bool eventCarrierJumpRequest ( CarrierJumpRequestEvent @event )
+        {
+            if ( FleetCarrier != null )
+            {
+                FleetCarrier.nextStarSystem = @event.systemname;
+            }
             return true;
         }
 
