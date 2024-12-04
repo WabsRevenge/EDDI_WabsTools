@@ -18,9 +18,9 @@ namespace EddiEvents
 
         // Not intended to be user facing
 
-        public long systemAddress { get; private set; }
+        public ulong systemAddress { get; private set; }
 
-        public SystemScanComplete(DateTime timestamp, string systemname, long systemAddress, int count) : base(timestamp, NAME)
+        public SystemScanComplete(DateTime timestamp, string systemname, ulong systemAddress, int count) : base(timestamp, NAME)
         {
             this.systemname = systemname;
             this.systemAddress = systemAddress;

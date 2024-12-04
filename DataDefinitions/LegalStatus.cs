@@ -11,6 +11,7 @@
             resourceManager.IgnoreCase = false;
             missingEDNameHandler = (edname) => new LegalStatus(edname);
 
+            Allied = new LegalStatus( "Allied" );
             Clean = new LegalStatus("Clean");
             None = new LegalStatus("None");
             Unknown = new LegalStatus("Unknown");
@@ -41,6 +42,7 @@
         public static readonly LegalStatus Hostile;
         public static readonly LegalStatus PassengerWanted;
         public static readonly LegalStatus Thargoid;
+        public static readonly LegalStatus Allied;
 
         // dummy used to ensure that the static constructor has run
         public LegalStatus() : this("")

@@ -1,5 +1,4 @@
-﻿using Eddi;
-using EddiBgsService;
+﻿using EddiBgsService;
 using EddiConfigService;
 using EddiConfigService.Configurations;
 using EddiCore;
@@ -11,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
@@ -19,6 +19,7 @@ using System.Windows.Data;
 using System.Windows.Threading;
 using Utilities;
 
+[assembly: InternalsVisibleTo( "Tests" )]
 namespace EddiCrimeMonitor
 {
     /**
@@ -31,11 +32,10 @@ namespace EddiCrimeMonitor
         public long claims => criminalrecord.Sum(r => r.claims);
         public long fines => criminalrecord.Sum(r => r.fines);
         public long bounties => criminalrecord.Sum(r => r.bounties);
-        public string targetSystem;
         public Dictionary<string, string> homeSystems;
         private DateTime updateDat;
         private string crimeAuthorityFaction;
-        public List<Target> shipTargets = new List<Target>();
+        public readonly List<Target> shipTargets = new List<Target>();
 
         internal static readonly object recordLock = new object();
         public event EventHandler RecordUpdatedEvent;
@@ -114,19 +114,11 @@ namespace EddiCrimeMonitor
             return new ConfigurationWindow();
         }
 
-        public void EnableConfigBinding(MainWindow configWindow)
-        {
-            configWindow.Dispatcher.Invoke(() => { BindingOperations.EnableCollectionSynchronization(criminalrecord, recordLock); });
-        }
-
-        public void DisableConfigBinding(MainWindow configWindow)
-        {
-            configWindow.Dispatcher.Invoke(() => { BindingOperations.DisableCollectionSynchronization(criminalrecord); });
-        }
-
         public void HandleProfile(JObject profile)
-        {
-        }
+        { }
+
+        public void HandleStatus ( Status status )
+        { }
 
         public void PostHandle(Event @event)
         {
@@ -207,7 +199,6 @@ namespace EddiCrimeMonitor
         {
             if (@event.timestamp > updateDat || (@event.timestamp == updateDat && !@event.fromLoad))
             {
-                targetSystem = @event.systemname;
                 updateDat = @event.timestamp;
                 writeRecord();
             }
@@ -223,20 +214,18 @@ namespace EddiCrimeMonitor
             }
         }
 
-        private void _handleJumpedEvent(JumpedEvent @event)
+        internal void _handleJumpedEvent(JumpedEvent @event)
         {
             shipTargets.Clear();
-            targetSystem = @event.system;
         }
 
-        private void handleShipTargetedEvent(ShipTargetedEvent @event)
+        internal void handleShipTargetedEvent(ShipTargetedEvent @event)
         {
             // System targets list may be 're-built' for the current system from Log Load
-            string currentSystem = EDDI.Instance?.CurrentStarSystem?.systemname;
-            if (targetSystem == null) { targetSystem = currentSystem; }
-            if (@event.targetlocked && currentSystem == targetSystem)
+            var currentSystem = EDDI.Instance?.CurrentStarSystem;
+            if ( @event.targetlocked )
             {
-                Target target = new Target();
+                var target = new Target();
                 if (@event.scanstage >= 1)
                 {
                     target = shipTargets.FirstOrDefault(t => t.name == @event.name);
@@ -249,16 +238,11 @@ namespace EddiCrimeMonitor
                 if (@event.scanstage >= 3 && target.LegalStatus == null)
                 {
                     target.faction = @event.faction;
-                    Faction faction = bgsService.GetFactionByName(@event.faction);
-                    target.Power = @event.Power ?? Power.None;
-
-                    // Prioritize power allegiance (when present) over faction
-                    target.Allegiance = @event.Power != Power.None
-                        ? @event.Power?.Allegiance
-                        : faction?.Allegiance;
-
+                    target.Power = @event.Power;
                     target.LegalStatus = @event.LegalStatus;
                     target.bounty = @event.bounty;
+                    target.Allegiance = currentSystem?.factions.FirstOrDefault(f => f.name == @event.faction)?.Allegiance ?? 
+                                        bgsService.GetFactionByName( @event.faction )?.Allegiance;
                 }
             }
         }
@@ -273,7 +257,7 @@ namespace EddiCrimeMonitor
             }
         }
 
-        private void _handleBondAwardedEvent(BondAwardedEvent @event)
+        internal void _handleBondAwardedEvent(BondAwardedEvent @event)
         {
             string currentSystem = EDDI.Instance?.CurrentStarSystem?.systemname;
 
@@ -306,7 +290,7 @@ namespace EddiCrimeMonitor
             }
         }
 
-        private bool _handleBondRedeemedEvent(BondRedeemedEvent @event)
+        internal bool _handleBondRedeemedEvent(BondRedeemedEvent @event)
         {
             bool update = false;
 
@@ -377,7 +361,7 @@ namespace EddiCrimeMonitor
             }
         }
 
-        private void _handleBountyAwardedEvent(BountyAwardedEvent @event, bool test = false)
+        internal void _handleBountyAwardedEvent(BountyAwardedEvent @event, bool test = false)
         {
             // 20% bonus for Arissa Lavigny-Duval 'controlled' and 'exploited' systems
             StarSystem currentSystem = EDDI.Instance?.CurrentStarSystem;
@@ -418,7 +402,7 @@ namespace EddiCrimeMonitor
             }
         }
 
-        private bool _handleBountyRedeemedEvent(BountyRedeemedEvent @event)
+        internal bool _handleBountyRedeemedEvent(BountyRedeemedEvent @event)
         {
             bool update = false;
 
@@ -487,7 +471,7 @@ namespace EddiCrimeMonitor
             }
         }
 
-        private void _handleBountyIncurredEvent(BountyIncurredEvent @event)
+        internal void _handleBountyIncurredEvent(BountyIncurredEvent @event)
         {
             crimeAuthorityFaction = @event.faction;
             var crime = Crime.FromEDName(@event.crimetype);
@@ -521,7 +505,7 @@ namespace EddiCrimeMonitor
             }
         }
 
-        private bool _handleBountyPaidEvent(BountyPaidEvent @event)
+        internal bool _handleBountyPaidEvent(BountyPaidEvent @event)
         {
             void PayBounty(FactionRecord record)
             {
@@ -598,7 +582,7 @@ namespace EddiCrimeMonitor
             }
         }
 
-        private void _handleFineIncurredEvent(FineIncurredEvent @event)
+        internal void _handleFineIncurredEvent(FineIncurredEvent @event)
         {
             crimeAuthorityFaction = @event.faction;
             Crime crime = Crime.FromEDName(@event.crimetype);
@@ -626,7 +610,7 @@ namespace EddiCrimeMonitor
             }
         }
 
-        private bool _handleFinePaidEvent(FinePaidEvent @event)
+        internal bool _handleFinePaidEvent(FinePaidEvent @event)
         {
             // This event may trigger for both bounties paid and fines paid (FDev bug)
             bool update = false;
@@ -681,15 +665,13 @@ namespace EddiCrimeMonitor
             }
         }
 
-        private bool _handleMissionAbandonedEvent(MissionAbandonedEvent @event)
+        internal bool _handleMissionAbandonedEvent(MissionAbandonedEvent @event)
         {
-            bool update = false;
-
-            if (@event.fine > 0 && @event.missionid != null)
+            if (@event.fine > 0)
             {
-                update = handleMissionFine(@event.timestamp, @event.missionid ?? 0, @event.fine);
+                return handleMissionFine(@event.timestamp, @event.missionid, @event.fine);
             }
-            return update;
+            return false;
         }
 
         private void handleMissionFailedEvent(MissionFailedEvent @event)
@@ -704,13 +686,12 @@ namespace EddiCrimeMonitor
             }
         }
 
-        private bool _handleMissionFailedEvent(MissionFailedEvent @event)
+        internal bool _handleMissionFailedEvent(MissionFailedEvent @event)
         {
-            bool update = false;
-
-            if (@event.fine > 0 && @event.missionid != null)
+            var update = false;
+            if (@event.fine > 0)
             {
-                update = handleMissionFine(@event.timestamp, @event.missionid ?? 0, @event.fine);
+                update = handleMissionFine(@event.timestamp, @event.missionid, @event.fine);
             }
             return update;
         }
@@ -725,7 +706,7 @@ namespace EddiCrimeMonitor
             }
         }
 
-        private void _handleRespawnedEvent(RespawnedEvent @event)
+        internal void _handleRespawnedEvent(RespawnedEvent @event)
         {
             void RemoveCriminalRecords(string faction = null)
             {
@@ -818,7 +799,6 @@ namespace EddiCrimeMonitor
                 var configuration = new CrimeMonitorConfiguration()
                 {
                     criminalrecord = criminalrecord,
-                    targetSystem = targetSystem,
                     homeSystems = homeSystems,
                     updatedat = updateDat
                 };
@@ -834,7 +814,6 @@ namespace EddiCrimeMonitor
             {
                 // Obtain current criminal record from configuration
                 configuration = configuration ?? ConfigService.Instance.crimeMonitorConfiguration;
-                targetSystem = configuration.targetSystem;
                 homeSystems = configuration.homeSystems;
                 updateDat = configuration.updatedat;
 
@@ -900,22 +879,23 @@ namespace EddiCrimeMonitor
             var total = record.fines + record.bounties + report.amount;
             var powerRecord = GetRecordWithFaction(record.allegiance);
 
-            if (powerRecord == null && total <= 2000000) 
+            // Minor faction crimes are converted to an interstellar power record, owned by the faction's aligned
+            // superpower, when total fines & bounties incurred exceed 10,000 credits
+            if (powerRecord == null && total <= 10000) 
             {
                 // Add new report to the minor faction record
                 _AddReportToRecord(record, report);
             }
             else
             {
-                // Minor faction crimes are converted to an interstellar power record, owned by the faction's aligned
-                // superpower, when total fines & bounties incurred exceed 2 million credits
+                // We've exceeded the threshold for an interstellar bounty
                 if (powerRecord == null) 
                 {
                     // Add a new interstellar bounty. 
                     // Transfer existing fines and bounties incurred to the interstellar power record
                     // Collect all minor faction fines and bounties incurred
                     powerRecord = AddRecord(record.allegiance);
-                    List<FactionReport> reports = record.factionReports
+                    var reports = record.factionReports
                         .Where(r => r.crimeDef != Crime.None && r.crimeDef != Crime.Claim).ToList();
                     powerRecord.factionReports.AddRange(reports);
                     powerRecord.fines += record.fines;
@@ -977,7 +957,7 @@ namespace EddiCrimeMonitor
             return update;
         }
 
-        public bool _handleMissionFine(DateTime timestamp, Mission mission, long fine)
+        internal bool _handleMissionFine(DateTime timestamp, Mission mission, long fine)
         {
             bool update = false;
 

@@ -43,7 +43,7 @@ namespace EddiEvents
         public string systemfaction => controllingsystemfaction?.name;
 
         [PublicAPI("The state of the faction controlling the system into which the carrier has jumped, if any")]
-        public string systemstate => (controllingsystemfaction?.presences.FirstOrDefault(p => p.systemName == systemname)?.FactionState ?? FactionState.None).localizedName;
+        public string systemstate => (controllingsystemfaction?.presences.FirstOrDefault(p => p.systemAddress == systemAddress )?.FactionState ?? FactionState.None).localizedName;
 
         [PublicAPI("The government of the system into which the carrier has jumped, if any")]
         public string systemgovernment => (controllingsystemfaction?.Government ?? Government.None).localizedName;
@@ -59,11 +59,25 @@ namespace EddiEvents
 
         // Powerplay properties (only when pledged)
 
-        [PublicAPI("(Only when pledged) The powerplay power exerting influence over the star system. If the star system is `Contested`, this will be empty")]
+        [PublicAPI( "(Only when pledged) The localized powerplay power controlling the star system, if any. If the star system is `Contested`, this will be empty" )]
         public string power => ( Power ?? Power.None ).localizedName;
 
-        [ PublicAPI( "(Only when pledged) The state of powerplay efforts within the star system, if any" ) ]
-        public string powerstate => ( powerState ?? PowerplayState.None ).localizedName;
+        [PublicAPI( "(Only when pledged) The localized names of powerplay powers contesting control of the star system, if any" )]
+        public List<string> contestingpowers => ContestingPowers?
+            .Select( p => p.localizedName )
+            .ToList();
+
+        [PublicAPI( "(Only when pledged) The state of powerplay efforts within the star system" )]
+        public string powerstate => ( PowerState ?? PowerplayState.None ).localizedName;
+
+        [PublicAPI( "(Only when pledged) The powerplay power controlling the star system, if any, as an object. If the star system is `Contested`, this will be empty" )]
+        public Power Power { get; private set; }
+
+        [PublicAPI( "(Only when pledged) Powerplay powers contesting control of the star system, if any, as objects" )]
+        public List<Power> ContestingPowers { get; set; }
+
+        [PublicAPI( "(Only when pledged) The state of powerplay efforts within the star system, as an object" )]
+        public PowerplayState PowerState { get; private set; }
 
         // Body variables
 
@@ -105,13 +119,7 @@ namespace EddiEvents
         public BodyType bodyType { get; private set; }
 
         public long? bodyId { get; private set; }
-
-        public Power Power => Powers.Count > 1 ? null : Powers.FirstOrDefault();
-
-        public List<Power> Powers { get; set; }
-
-        public PowerplayState powerState { get; private set; }
-
+        
         public Faction carrierFaction { get; private set; }
 
         public StationModel carrierType { get; private set; }
@@ -120,11 +128,14 @@ namespace EddiEvents
 
         public List<EconomyShare> carrierEconomies { get; private set; }
 
-        public CarrierJumpedEvent(DateTime timestamp, string systemName, ulong systemAddress, decimal x, decimal y, decimal z,
+        public CarrierJumpedEvent ( DateTime timestamp, string systemName, ulong systemAddress, decimal x, decimal y,
+            decimal z,
             string bodyName, long? bodyId, BodyType bodyType, bool docked, bool onFoot,
             string carrierName, StationModel carrierType, long? carrierId, List<StationService> stationServices,
             Faction systemFaction, Faction stationFaction, List<Faction> factions, List<Conflict> conflicts,
-            List<EconomyShare> stationEconomies, Economy systemEconomy, Economy systemEconomy2, SecurityLevel systemSecurity, long? systemPopulation, 
+            List<EconomyShare> stationEconomies, Economy systemEconomy, Economy systemEconomy2,
+            SecurityLevel systemSecurity, long? systemPopulation,
+            Power controllingPower,
             List<Power> powerplayPowers, PowerplayState powerplayState, ThargoidWar thargoidWar ) : base(timestamp, NAME)
         {
             // System
@@ -140,8 +151,11 @@ namespace EddiEvents
             this.population = systemPopulation;
             this.factions = factions ?? new List<Faction>();
             this.conflicts = conflicts ?? new List<Conflict>();
-            this.Powers = powerplayPowers;
-            this.powerState = powerplayState ?? PowerplayState.None;
+            this.Power = controllingPower;
+            this.ContestingPowers = powerplayPowers?
+                .Where( p => p.edname != Power?.edname )
+                .ToList();
+            this.PowerState = powerplayState;
             this.ThargoidWar = thargoidWar;
 
             // Body
@@ -154,7 +168,7 @@ namespace EddiEvents
             this.onFoot = onFoot;
             this.carrierId = carrierId;
             this.carriername = carrierName;
-            this.carrierType = carrierType ?? StationModel.FleetCarrier;
+            this.carrierType = carrierId is null ? null : carrierType ?? StationModel.FleetCarrier;
             this.carrierFaction = stationFaction;
             this.carrierServices = stationServices ?? new List<StationService>();
             this.carrierEconomies = stationEconomies ?? new List<EconomyShare>();

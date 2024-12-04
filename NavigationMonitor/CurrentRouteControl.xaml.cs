@@ -1,7 +1,9 @@
 ﻿using EddiCore;
 using EddiDataDefinitions;
+using System;
 using System.Windows;
 using System.Windows.Controls;
+using Utilities;
 
 namespace EddiNavigationMonitor
 {
@@ -47,7 +49,15 @@ namespace EddiNavigationMonitor
             {
                 if (button.DataContext is NavWaypoint navWaypoint)
                 {
-                    Clipboard.SetText(navWaypoint.systemName);
+                    try
+                    {
+                        Clipboard.Clear();
+                        Clipboard.SetData( DataFormats.Text, navWaypoint.systemName );
+                    }
+                    catch ( Exception ex )
+                    {
+                        Logging.Warn( "Failed to set clipboard", ex );
+                    }
                 }
             }
         }

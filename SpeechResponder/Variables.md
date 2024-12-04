@@ -23,6 +23,7 @@ Information on game state is available at the top level i.e. these values can be
   - *icao_active* - true if ICAO is currently enabled
   - *ipa_active* - true if phonetic speech ssml tags are currently enabled
   - *va_active* - true when the Voice Attack plug-in is active
+  - *version* - the version level of EDDI which is currently running
 
 ---
 
@@ -107,29 +108,9 @@ Details of an individual commodity being carried.
   - *owned* - number of units privately purchased or collected (not stolen or mission related)
   - *stolen* - number of units flagged as stolen
   - *haulage* - number of units associated with a mission
-  - *haulageData* - list of mission related specifics for associated haulage
   - *total* - total number of units
   - *need* - number of units needed to satisfy all mission requirements associated with cargo
   - *price* - price of an individual unit
-
-### Haulage
-
-Mission related details of haulage under the haulageData object, within the Cargo object, used by the Cargo Monitor.
-
-  - *missionid* - unique identifier ID of the mission
-  - *name* - name of mission
-  - *status* - status (active, complete, failed) of the mission
-  - *originsystem* - origin system of the mission
-  - *sourcesystem* - source system for 'source and return' and 'salvage' missions
-  - *sourcebody* - station for 'source and return' missions, body for 'salvage' missions
-  - *type* - type (altruism, delivery, massacre, etc) of the mission
-  - *legal* - true if the mission is legal
-  - *need* - amount of the commodity needed to satisfy mission requirements
-  - *shared* - true if the mission was shared by a wing-mate
-  - *amount* - amount of the commodity involved in the mission
-  - *collected* - amount of the commodity collected in a wing mission
-  - *delivered* - amount of the commodity delivered in a wing mission
-  - *expiry* - expiry date and time of the mission
 
 ### Commodity
 
@@ -138,6 +119,7 @@ A commodity.
   - *name* - the name of the commodity (e.g. Tea)
   - *category* - the category of the commodity (e.g. Foods, Machinery, Technology)
   - *rare* - the rarity of the commodity (boolean true or false)
+  - *corrosive* - true if the commodity is known to be corrosive (boolean true or false)
 
 Additional properties may become available in station, via *station.commodities.[property]*  
 (see Commodity sale check and Commodity purchase check for sample usages).
@@ -219,6 +201,10 @@ Details of an individual mission in the commander's mission log.
   - *amount* - amount of the commodity,  passengers or targets involved in the mission (if applicable)
   - *expiry* - expiry date and time of the mission
   - *expiryseconds* - amount of seconds remaining before mission expiration
+  - *sourcesystem* - the system where the mission cargo has been found, as applicable
+  - *sourcebody* - the body or station where the mission cargo has been found, as applicable
+  - *collected* - the quantity of mission cargo which has been collected at a cargo depot
+  - *delivered* - the quantity of mission cargo which has been delivered to a cargo depot
 
 ---
 

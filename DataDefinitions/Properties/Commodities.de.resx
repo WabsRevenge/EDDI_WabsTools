@@ -426,7 +426,7 @@
     <comment>Commodity CropHarvesters</comment>
   </data>
   <data name="Cryolite" xml:space="preserve">
-    <value>Kryolith</value>
+    <value>Kriolyth</value>
     <comment>Commodity Cryolite</comment>
   </data>
   <data name="CrystallineSpheres" xml:space="preserve">
@@ -770,7 +770,7 @@
     <comment>Commodity LeestianEvilJuice</comment>
   </data>
   <data name="Lepidolite" xml:space="preserve">
-    <value>Lepidolit</value>
+    <value>Lepidolith</value>
     <comment>Commodity Lepidolite</comment>
   </data>
   <data name="LiquidOxygen" xml:space="preserve">
@@ -1170,7 +1170,7 @@
     <comment>Commodity SyntheticReagents</comment>
   </data>
   <data name="Taaffeite" xml:space="preserve">
-    <value>Taaffeite</value>
+    <value>Taaffeit</value>
     <comment>Commodity Taaffeite</comment>
   </data>
   <data name="TacticalData" xml:space="preserve">
@@ -1582,7 +1582,7 @@
     <comment>Commodity SiriusIndustrialEquipment</comment>
   </data>
   <data name="ThargoidScoutTissueSample" xml:space="preserve">
-    <value>Gewebeprobe von Thargoiden-Späher </value>
+    <value>Thargoidenspäher Gewebeprobe</value>
     <comment>Commodity ThargoidScoutTissueSample</comment>
   </data>
   <data name="UnmarkedWeapons" xml:space="preserve">
@@ -1738,15 +1738,15 @@
     <comment>Commodity M3_TissueSample_Spores</comment>
   </data>
   <data name="S6_TissueSample_Mesoglea" xml:space="preserve">
-    <value>Hülsen-Mesoglea</value>
+    <value>Mesoglea Gewebeprobe</value>
     <comment>Commodity S6_TissueSample_Mesoglea</comment>
   </data>
   <data name="S6_TissueSample_Cells" xml:space="preserve">
-    <value>Schalenaussengewebeprobe</value>
+    <value>Zellen Gewebeprobe</value>
     <comment>Commodity S6_TissueSample_Cells</comment>
   </data>
   <data name="S6_TissueSample_Coenosarc" xml:space="preserve">
-    <value>Hülsen-Schalengewebe</value>
+    <value>Coenosarc Gewebeprobe</value>
     <comment>Commodity S6_TissueSample_Coenosarc</comment>
   </data>
   <data name="SanumaMEAT" xml:space="preserve">
@@ -1821,10 +1821,48 @@
     <value>Titan Maw Teilgewebeprobe</value>
     <comment>Commodity ThargoidTissueSampleType10c</comment>
   </data>
-  
-  
-  
-  
-  
-  
+  <data name="ThargoidTissueSampleType7" xml:space="preserve">
+    <value>Thargoid Scythe Gewebeprobe</value>
+    <comment>Commodity ThargoidTissueSampleType7</comment>
+  </data>
+  <data name="UnknownSack" xml:space="preserve">
+    <value>Schutzmembranen-Schrott</value>
+    <comment>Commodity UnknownSack</comment>
+  </data>
+  <data name="ThargoidPod" xml:space="preserve">
+    <value>Thargoid Biospeicherkapsel</value>
+    <comment>Commodity ThargoidPod</comment>
+  </data>
+  <data name="CoralSap" xml:space="preserve">
+    <value>Korallensaft</value>
+    <comment>Commodity CoralSap</comment>
+  </data>
+  <data name="UnknownMineral" xml:space="preserve">
+    <value>Unreines Spitzen-Mineral</value>
+    <comment>Commodity UnknownMineral</comment>
+  </data>
+  <data name="UnknownRefinedMineral" xml:space="preserve">
+    <value>Teilveredeltes Spitzen-Mineral</value>
+    <comment>Commodity UnknownRefinedMineral</comment>
+  </data>
+  <data name="ThargoidTitanDriveComponent" xml:space="preserve">
+    <value>Titan Antriebskomponente</value>
+    <comment>Commodity ThargoidTitanDriveComponent</comment>
+  </data>
+  <data name="ThargoidCystSpecimen" xml:space="preserve">
+    <value>Zystenprobe</value>
+    <comment>Commodity ThargoidCystSpecimen</comment>
+  </data>
+  <data name="ThargoidBoneFragments" xml:space="preserve">
+    <value>Knochenfragmente</value>
+    <comment>Commodity ThargoidBoneFragments</comment>
+  </data>
+  <data name="ThargoidOrganSample" xml:space="preserve">
+    <value>Organprobe</value>
+    <comment>Commodity ThargoidOrganSample</comment>
+  </data>
+  <data name="ThargoidHeart" xml:space="preserve">
+    <value>Thargoiden Herz</value>
+    <comment>Commodity ThargoidHeart</comment>
+  </data>
 </root>

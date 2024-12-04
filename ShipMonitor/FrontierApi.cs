@@ -82,7 +82,6 @@ namespace EddiShipMonitor
                 Ship.ident = (string)json.GetValue("shipID");
 
                 Ship.value = (long)(json["value"]?["hull"] ?? 0) + (long)(json["value"]?["modules"] ?? 0);
-                Ship.cargocapacity = 0;
 
                 decimal? healthOutOf1e6 = (decimal?)(json["health"]?["hull"]);
                 if (healthOutOf1e6 != null)
@@ -102,21 +101,7 @@ namespace EddiShipMonitor
                     Ship.powerdistributor = ModuleFromJson( (JObject)json["modules"]["PowerDistributor"]);
                     Ship.sensors = ModuleFromJson( (JObject)json["modules"]["Radar"]);
                     Ship.fueltank = ModuleFromJson( (JObject)json["modules"]["FuelTank"]);
-                    if (Ship.fueltank != null)
-                    {
-                        Ship.fueltankcapacity = (decimal)Math.Pow(2, Ship.fueltank.@class);
-                    }
-                    Ship.fueltanktotalcapacity = Ship.fueltankcapacity;
                     Ship.paintjob = (string)(json["modules"]?["PaintJob"]?["name"]);
-
-                    // Get the ship's FSD optimal mass for jump calculations
-                    string fsd = Ship.frameshiftdrive.@class + Ship.frameshiftdrive.grade;
-                    if (Constants.baseOptimalMass.TryGetValue(fsd, out decimal optimalMass))
-                    {
-                        decimal modifier = (decimal?)json["modules"]["FrameShiftDrive"]?["WorkInProgress_modifications"]?
-                            ["OutfittingFieldType_FSDOptimalMass"]?["value"] ?? 1;
-                        Ship.optimalmass = optimalMass * modifier;
-                    }
 
                     // Obtain the hardpoints.  Hardpoints can come in any order so first parse them then second put them in the correct order
                     Dictionary<string, Hardpoint> hardpoints = new Dictionary<string, Hardpoint>();
@@ -145,18 +130,6 @@ namespace EddiShipMonitor
                         if (module.Name.Contains("Slot"))
                         {
                             Compartment compartment = CompartmentFromJson(module);
-                            if (compartment.module != null)
-                            {
-                                string moduleName = compartment.module.invariantName ?? "";
-                                if (moduleName == "Fuel Tank")
-                                {
-                                    Ship.fueltanktotalcapacity += (decimal)Math.Pow(2, compartment.module.@class);
-                                }
-                                if (moduleName.Contains("Cargo Rack"))
-                                {
-                                    Ship.cargocapacity += (int)Math.Pow(2, compartment.module.@class);
-                                }
-                            }
                             Ship.compartments.Add(compartment);
                         }
                     }
@@ -246,16 +219,14 @@ namespace EddiShipMonitor
             long id = (long)json["module"]["id"];
             string edName = (string)json["module"]["name"];
 
-            Module module = new Module(Module.FromEliteID(id, json["module"]) 
-                                       ?? Module.FromEDName(edName, json["module"]) 
-                                       ?? new Module());
+            Module module = new Module(Module.FromEDName(edName, json["module"]) ?? new Module());
             if (module.invariantName == null)
             {
                 // Unknown module; report the full object so that we can update the definitions
                 Logging.Info("Module definition error: " + edName, JsonConvert.SerializeObject(json["module"]));
 
                 // Create a basic module & supplement from the info available
-                module = new Module(id, edName, edName, -1, "", (long)json["module"]["value"]);
+                module = new Module( edName, edName, -1, "", (long)json["module"]["value"]);
             }
 
             module.fallbackLocalizedName = (string)json["module"]["locName"];
@@ -275,6 +246,47 @@ namespace EddiShipMonitor
                 module.engineermodification = Blueprint.FromEDNameAndGrade(blueprintName, blueprintGrade);
                 module.blueprintId = module.engineermodification?.blueprintId ?? 0;
                 module.engineerExperimentalEffectEDName = json["specialModifications"].ToObject<KeyValuePair<string, string>>().Value;
+
+                if ( module.edname.Contains("hyperdrive") )
+                {
+                    // Get the ship FSD's optimal mass for jump calculations
+                    var fsdOptimalMassMultiplier = json[ "WorkInProgress_modifications" ]?["OutfittingFieldType_FSDOptimalMass"];
+                    if ( fsdOptimalMassMultiplier != null )
+                    {
+                        var baseOptimalMass = Convert.ToDecimal( module.GetFsdBaseOptimalMass() );
+                        var modifier = module.modifiers.FirstOrDefault( m => m.EDName == "FSDOptimalMass" );
+                        if ( modifier is null )
+                        {
+                            modifier = new EngineeringModifier
+                            {
+                                EDName = "FSDOptimalMass",
+                                lessIsGood = false,
+                            };
+                            module.modifiers.Add( modifier );
+                        }
+                        modifier.currentValue = baseOptimalMass * (decimal)fsdOptimalMassMultiplier[ "value" ];
+                        modifier.originalValue = baseOptimalMass;
+                    }
+
+                    // Get the ship FSD's max fuel per jump for jump calculations
+                    var fsdMaxFuelPerJumpMultiplier = json[ "WorkInProgress_modifications" ]?["OutfittingFieldType_MaxFuelPerJump"];
+                    if ( fsdMaxFuelPerJumpMultiplier != null )
+                    {
+                        var baseMaxFuelPerJump = module.GetFsdMaxFuelPerJump();
+                        var modifier = module.modifiers.FirstOrDefault( m => m.EDName == "MaxFuelPerJump" );
+                        if ( modifier is null )
+                        {
+                            modifier = new EngineeringModifier
+                            {
+                                EDName = "MaxFuelPerJump",
+                                lessIsGood = false,
+                            };
+                            module.modifiers.Add( modifier );
+                        }
+                        modifier.currentValue = baseMaxFuelPerJump * (decimal)fsdMaxFuelPerJumpMultiplier[ "value" ];
+                        modifier.originalValue = baseMaxFuelPerJump;
+                    }
+                }
             }
             return module;
         }

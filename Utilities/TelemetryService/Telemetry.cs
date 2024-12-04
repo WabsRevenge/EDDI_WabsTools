@@ -1,10 +1,10 @@
-﻿using Rollbar.DTOs;
-using Rollbar;
+﻿using Rollbar;
+using Rollbar.DTOs;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using System.Collections.Generic;
 
 namespace Utilities.TelemetryService
 {
@@ -94,6 +94,11 @@ namespace Utilities.TelemetryService
                 TelemetryEnabled = false;
                 Logging.Warn( "Telemetry process has failed", e );
             }
+        }
+
+        public static void Stop ()
+        {
+            RollbarInfrastructure.Instance.Stop(false);
         }
 
         internal static void RecordTelemetryInfo ( ErrorLevel errorLevel, string message, IDictionary<string, object> preppedData = null )

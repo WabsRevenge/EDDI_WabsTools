@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Utilities;
 
 namespace EddiNavigationMonitor
 {
@@ -51,7 +52,7 @@ namespace EddiNavigationMonitor
         {
             if (e.PropertyName == nameof(FleetCarrier))
             {
-                Dispatcher.Invoke( () =>
+                Dispatcher.InvokeAsync( () =>
                 {
                     var fleetCarrier = navigationMonitor().FleetCarrier;
                     LastCarrierOriginArg = fleetCarrier?.currentStarSystem;
@@ -87,7 +88,7 @@ namespace EddiNavigationMonitor
             {
                 case nameof(NavWaypointCollection.Waypoints):
                 {
-                    Dispatcher.Invoke( () =>
+                    Dispatcher.InvokeAsync( () =>
                     {
                         ClearRouteButton.IsEnabled = navWaypointCollection.Waypoints.Count > 0;
                     } );
@@ -104,14 +105,14 @@ namespace EddiNavigationMonitor
                 {
                     if ( NavigationService.Instance.IsWorking )
                     {
-                        Dispatcher.Invoke( () =>
+                        Dispatcher.InvokeAsync( () =>
                         {
                             SearchProgressBar.Visibility = Visibility.Visible;
                         } );
                     }
                     else
                     {
-                        Dispatcher.Invoke( () =>
+                        Dispatcher.InvokeAsync( () =>
                         {
                             SearchProgressBar.Visibility = Visibility.Collapsed;
                         } );
@@ -277,7 +278,15 @@ namespace EddiNavigationMonitor
             {
                 if (button.DataContext is NavWaypoint navWaypoint)
                 {
-                    Clipboard.SetText(navWaypoint.systemName);
+                    try
+                    {
+                        Clipboard.Clear();
+                        Clipboard.SetData( DataFormats.Text, navWaypoint.systemName );
+                    }
+                    catch ( Exception ex )
+                    {
+                        Logging.Warn( "Failed to set clipboard", ex );
+                    }
                 }
             }
         }

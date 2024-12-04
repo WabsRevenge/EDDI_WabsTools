@@ -23,16 +23,8 @@ namespace EddiDataDefinitions
                 .Where(m => m.greatpctbody != null)
                 .ToList().ToImmutableHashSet();
 
-            jumponiumElements = ImmutableHashSet.Create(
-                Carbon,
-                Germanium,
-                Vanadium,
-                Cadmium,
-                Niobium,
-                Arsenic,
-                Yttrium,
-                Polonium
-            );
+            jumponiumElements = new[] { Carbon, Germanium, Vanadium, Cadmium, Niobium, Arsenic, Yttrium, Polonium }
+                .ToImmutableHashSet();
         }
 
         #region Elements
@@ -142,6 +134,7 @@ namespace EddiDataDefinitions
         public static readonly Material Guardian_VesselBlueprint = new Material("guardian_vesselblueprint", Data, VeryRare);
 
         // Unknown rarity
+        public static readonly Material SearchRescueVoucher = new Material( "searchrescuevoucher", Data, Rarity.Unknown );
 
         #endregion
 
@@ -274,7 +267,7 @@ namespace EddiDataDefinitions
 
         // Blueprints for the material; 
         [PublicAPI]
-        public List<Blueprint> blueprints => Blueprint.AllOfThem
+        public List<Blueprint> blueprints => Blueprint.AllOfThem.ToList().Distinct()
             .Where(bp => bp.materials?.Any(ma => ma.edname == this.edname) ?? false)
             .ToList();
 

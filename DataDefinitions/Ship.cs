@@ -46,18 +46,19 @@ namespace EddiDataDefinitions
         public int? militarysize { get; set; }
 
         /// <summary>the total tonnage cargo capacity</summary>
-        [PublicAPI]
-        public int cargocapacity { get; set; }
+        [ PublicAPI, JsonIgnore] 
+        public int cargocapacity => compartments
+            .Where( c=> c.module != null  )
+            .Select(c => c.module)
+            .Where( m => m.@class > 0 && m.basename.Contains( "CargoRack", StringComparison.InvariantCultureIgnoreCase ))
+            .Sum( m => 1 << m.@class); // Calculated using a shift operator (`<<`), equiv to 2^(@class), calculated as an integer )
 
         /// <summary>the value of the ship without cargo, in credits</summary>
 
         [PublicAPI]
         public long value
         {
-            get
-            {
-                return _value;
-            }
+            get => _value;
             set
             {
                 if (_value != value)
@@ -75,42 +76,36 @@ namespace EddiDataDefinitions
         [PublicAPI]
         public long? hullvalue
         {
-            get
-            {
-                return _hullvalue;
-            }
+            get => _hullvalue;
             set
             {
                 if (_hullvalue != value)
                 {
-                    _hullvalue = value;
+                    _hullvalue = value ?? 0;
                     OnPropertyChanged();
                 }
             }
         }
 
-        private long? _hullvalue;
+        private long _hullvalue;
 
         /// <summary>the value of the ship's hull, in credits</summary>
 
         [PublicAPI]
         public long? modulesvalue
         {
-            get
-            {
-                return _modulesvalue;
-            }
+            get => _modulesvalue;
             set
             {
                 if (_modulesvalue != value)
                 {
-                    _modulesvalue = value;
+                    _modulesvalue = value ?? 0;
                     OnPropertyChanged();
                 }
             }
         }
 
-        private long? _modulesvalue;
+        private long _modulesvalue;
 
         /// <summary>the value of the ship's rebuy, in credits</summary>
         [PublicAPI]
@@ -119,17 +114,13 @@ namespace EddiDataDefinitions
             get => _rebuy;
             set { _rebuy = value; OnPropertyChanged(); }
         }
-
         private long _rebuy;
 
         /// <summary>the name of this ship</summary>
         [PublicAPI]
         public string name
         {
-            get
-            {
-                return _name;
-            }
+            get => _name;
             set
             {
                 if (_name != value)
@@ -145,10 +136,7 @@ namespace EddiDataDefinitions
         [PublicAPI]
         public string model
         {
-            get
-            {
-                return _model;
-            }
+            get => _model;
             set
             {
                 if (_model != value)
@@ -166,10 +154,7 @@ namespace EddiDataDefinitions
         [PublicAPI]
         public string ident
         {
-            get
-            {
-                return _ident;
-            }
+            get => _ident;
             set
             {
                 if (_ident != value)
@@ -219,8 +204,8 @@ namespace EddiDataDefinitions
             get => Role.edname;
             set
             {
-                Role rDef = Role.FromEDName(value);
-                this.Role = rDef;
+                var rDef = Role.FromEDName(value);
+                Role = rDef;
                 OnPropertyChanged();
             }
         }
@@ -228,10 +213,7 @@ namespace EddiDataDefinitions
         [JsonIgnore]
         public Role Role
         {
-            get
-            {
-                return _Role;
-            }
+            get => _Role;
             set
             {
                 if (_Role != value)
@@ -241,7 +223,6 @@ namespace EddiDataDefinitions
                 }
             }
         }
-
         private Role _Role = Role.MultiPurpose;
 
         [PublicAPI, JsonIgnore, Obsolete("Please use localizedName or invariantName")]
@@ -263,6 +244,7 @@ namespace EddiDataDefinitions
                 // get the canonical role object for the given EDName
                 Role = Role.FromEDName(Role.edname);
             }
+
             if (EDName is null && !(model is null)) // legacy shipmonitor JSON may not include EDName or EDID
             {
                 Ship template = ShipDefinitions.FromModel(model);
@@ -276,10 +258,7 @@ namespace EddiDataDefinitions
         /// </summary>
         public string raw
         {
-            get
-            {
-                return _raw;
-            }
+            get => _raw;
             set
             {
                 if (_raw != value)
@@ -299,10 +278,7 @@ namespace EddiDataDefinitions
         [PublicAPI, JsonIgnore]
         public bool hot
         {
-            get
-            {
-                return _hot;
-            }
+            get => _hot;
             set
             {
                 if (_hot != value)
@@ -319,10 +295,7 @@ namespace EddiDataDefinitions
         [PublicAPI]
         public string starsystem
         {
-            get
-            {
-                return _starsystem;
-            }
+            get => _starsystem;
             set
             {
                 if (_starsystem != value)
@@ -383,8 +356,7 @@ namespace EddiDataDefinitions
             get => _health;
             set { _health = value; OnPropertyChanged(); }
         }
-
-        private decimal _health;
+        private decimal _health = 100M;
 
         [PublicAPI]
         public Module cargohatch
@@ -392,7 +364,7 @@ namespace EddiDataDefinitions
             get => _cargohatch;
             set { _cargohatch = value; OnPropertyChanged(); }
         }
-        private Module _cargohatch;
+        private Module _cargohatch = new Module();
 
         [PublicAPI]
         public Module bulkheads
@@ -400,7 +372,7 @@ namespace EddiDataDefinitions
             get => _bulkheads;
             set { _bulkheads = value; OnPropertyChanged(); }
         }
-        private Module _bulkheads;
+        private Module _bulkheads = new Module();
 
         [PublicAPI]
         public Module canopy
@@ -408,7 +380,7 @@ namespace EddiDataDefinitions
             get => _canopy;
             set { _canopy = value; OnPropertyChanged(); }
         }
-        private Module _canopy;
+        private Module _canopy = new Module();
 
         [PublicAPI]
         public Module powerplant
@@ -416,8 +388,7 @@ namespace EddiDataDefinitions
             get => _powerplant;
             set { _powerplant = value; OnPropertyChanged(); }
         }
-
-        private Module _powerplant;
+        private Module _powerplant = new Module();
 
         [PublicAPI]
         public Module thrusters
@@ -425,22 +396,15 @@ namespace EddiDataDefinitions
             get => _thrusters;
             set { _thrusters = value; OnPropertyChanged(); }
         }
-        private Module _thrusters;
+        private Module _thrusters = new Module();
 
         [PublicAPI]
         public Module frameshiftdrive
         {
             get => _frameshiftdrive;
-            set
-            {
-                _frameshiftdrive = value;
-                maxjumprange = maxjumprange > 0 ? maxjumprange : JumpRange(fuelInTanks ?? 0, 0);
-                maxfuelperjump = maxfuelperjump > 0 ? maxfuelperjump : GetFsdMaxFuelPerJump();
-                optimalmass = optimalmass > 0 ? optimalmass : GetFsdOptimalMass();
-                OnPropertyChanged();
-            }
+            set { _frameshiftdrive = value; OnPropertyChanged(); }
         }
-        private Module _frameshiftdrive;
+        private Module _frameshiftdrive = new Module();
 
         [PublicAPI]
         public Module lifesupport
@@ -448,7 +412,7 @@ namespace EddiDataDefinitions
             get => _lifesupport;
             set { _lifesupport = value; OnPropertyChanged(); }
         }
-        private Module _lifesupport;
+        private Module _lifesupport = new Module();
 
         [PublicAPI]
         public Module powerdistributor
@@ -456,7 +420,7 @@ namespace EddiDataDefinitions
             get => _powerdistributor;
             set { _powerdistributor = value; OnPropertyChanged(); }
         }
-        private Module _powerdistributor;
+        private Module _powerdistributor = new Module();
 
         [PublicAPI]
         public Module sensors
@@ -464,15 +428,15 @@ namespace EddiDataDefinitions
             get => _sensors;
             set { _sensors = value; OnPropertyChanged(); }
         }
-        private Module _sensors;
+        private Module _sensors = new Module();
 
         [PublicAPI]
         public Module fueltank
         {
             get => _fueltank;
             set { _fueltank = value; OnPropertyChanged(); }
-        }
-        private Module _fueltank;
+            }
+        private Module _fueltank = new Module();
 
         [PublicAPI, JetBrains.Annotations.NotNull, JetBrains.Annotations.ItemNotNull]
         public List<Hardpoint> hardpoints
@@ -500,23 +464,19 @@ namespace EddiDataDefinitions
 
         public string paintjob { get; set; }
 
-        [PublicAPI]
-        public decimal? fueltankcapacity // Core capacity
-        {
-            get => _fueltankcapacity;
-            set { _fueltankcapacity = value; OnPropertyChanged(); }
-        }
-        private decimal? _fueltankcapacity;
+        [PublicAPI, JsonIgnore] // Core capacity
+        public decimal? fueltankcapacity => fueltank?.@class > 0 ? 1 << fueltank?.@class : 0; // Shift operator, equiv to 2^(fueltank.@class), calculated as an integer
 
-        [PublicAPI]
-        public decimal? fueltanktotalcapacity // Capacity including additional tanks
-        {
-            get => _fueltanktotalcapacity;
-            set { _fueltanktotalcapacity = value; OnPropertyChanged(); }
-        }
-        private decimal? _fueltanktotalcapacity;
+        [PublicAPI, JsonIgnore] // Capacity including additional tanks (and excluding the active fuel reservoir)
+        public decimal? fueltanktotalcapacity => fueltankcapacity + compartments
+            .Where( c => c.module != null )
+            .Select( c => c.module )
+            .Where( m => m.@class > 0 && m.basename.Contains( "FuelTank", StringComparison.InvariantCultureIgnoreCase ) )
+            .Sum( m => 1 << m.@class ); // Calculated using a shift operator (`<<`), equiv to 2^(@class), calculated as an integer )
 
         public decimal activeFuelReservoirCapacity { get; set; }
+
+        public decimal? fuelInReservoir { get; set; }
 
         // Ship jump and mass properties
 
@@ -543,63 +503,28 @@ namespace EddiDataDefinitions
         [JsonIgnore, Obsolete("Please use maxjumprange instead")]
         public decimal maxjump => maxjumprange;
 
-        [PublicAPI]
-        public decimal maxfuelperjump
-        {
-            get => _maxfuelperjump;
-            set
-            {
-                if (value > 0)
-                {
-                    _maxfuelperjump = value;
-                }
-                else
-                {
-                    _maxfuelperjump = GetFsdMaxFuelPerJump();
-                }
-                OnPropertyChanged(nameof(maxfuelperjump));
-            }
-        }
-        private decimal _maxfuelperjump;
+        [ PublicAPI, JsonIgnore] 
+        public decimal maxfuelperjump => frameshiftdrive?.GetFsdMaxFuelPerJump() ?? 0;
 
         [JsonIgnore, Obsolete("Please use maxfuelperjump instead")]
         public decimal maxfuel => maxfuelperjump;
 
-        public decimal optimalmass 
-        {
-            get => _optimalmass;
-            set
-            {
-                if (value > 0)
-                {
-                    _optimalmass = value;
-                }
-                else
-                {
-                    _optimalmass = GetFsdOptimalMass();
-                }
-                OnPropertyChanged(nameof(optimalmass));
-            }
-        }
-        private decimal _optimalmass;
-
         public decimal unladenmass { get; set; }
 
-        public decimal? fuelInTanks { get; set; }
+        public decimal? fuelInTanks
+        {
+            get => _fuelInTanks;
+            set
+            {
+                _fuelInTanks = value ?? 0;
+                maxjumprange = JumpRange( _fuelInTanks, 0 );
+            }
+        }
+        private decimal _fuelInTanks;
 
         public int cargoCarried { get; set; }
 
-        [JsonIgnore]
-        public decimal fsdRatingConstant => GetFsdRatingConstant();
-
-        [JsonIgnore]
-        public decimal fsdPowerConstant => GetFsdPowerConstant();
-
         // Admin
-
-        // The ID in Elite: Dangerous' database
-        [JsonIgnore]
-        public long EDID { get; set; }
 
         // The name in Elite: Dangerous' database
         public string EDName { get; set; }
@@ -609,46 +534,18 @@ namespace EddiDataDefinitions
         internal string possessiveYour { get; set; } = nameof(Properties.Ship.yourSidewinder); // Default context is a Sidewinder
 
         public Ship()
-        {
-            health = 100M;
-            hardpoints = new List<Hardpoint>();
-            compartments = new List<Compartment>();
-            launchbays = new List<LaunchBay>();
-            bulkheads = new Module();
-            powerplant = new Module();
-            thrusters = new Module();
-            powerdistributor = new Module();
-            frameshiftdrive = new Module();
-            lifesupport = new Module();
-            sensors = new Module();
-            fueltank = new Module();
-            cargohatch = new Module();
-        }
+        { }
 
-        public Ship(long EDID, string EDName, string Manufacturer, string Model, string possessiveYour, List<Translation> PhoneticModel, LandingPadSize Size, int? MilitarySize, decimal reservoirFuelTankSize)
+        public Ship( string EDName, ShipManufacturer Manufacturer, string Model, string possessiveYour, List<Translation> PhoneticModel, LandingPadSize Size, int? MilitarySize, decimal reservoirFuelTankSize )
         {
-            this.EDID = EDID;
             this.EDName = EDName;
-            manufacturer = Manufacturer;
+            manufacturer = Manufacturer.name;
             model = Model;
             this.possessiveYour = possessiveYour;
             phoneticModel = PhoneticModel;
             this.Size = Size;
             militarysize = MilitarySize;
-            health = 100M;
-            hardpoints = new List<Hardpoint>();
-            compartments = new List<Compartment>();
-            launchbays = new List<LaunchBay>();
-            bulkheads = new Module();
-            powerplant = new Module();
-            thrusters = new Module();
-            powerdistributor = new Module();
-            frameshiftdrive = new Module();
-            lifesupport = new Module();
-            sensors = new Module();
-            fueltank = new Module();
-            cargohatch = new Module();
-            this.activeFuelReservoirCapacity = reservoirFuelTankSize;
+            activeFuelReservoirCapacity = reservoirFuelTankSize;
         }
 
         public override string ToString()
@@ -693,7 +590,7 @@ namespace EddiDataDefinitions
             return result;
         }
 
-        public string SpokenManufacturer() => ShipDefinitions.SpokenManufacturer(manufacturer) ?? manufacturer;
+        public string SpokenManufacturer() => ShipManufacturer.SpokenManufacturer(manufacturer) ?? manufacturer;
 
         /// <summary> Calculates the distance from the specified coordinates to the ship's recorded x, y, and z coordinates </summary>
         public decimal? Distance(decimal? fromX, decimal? fromY, decimal? fromZ)
@@ -702,12 +599,12 @@ namespace EddiDataDefinitions
             return Functions.StellarDistanceLy(x, y, z, fromX, fromY, fromZ);
         }
 
-        public string CoriolisUri()
+        public string CoriolisUri(bool beta = false)
         {
             if (raw != null)
             {
                 // Generate a Coriolis import URI to retain as much information as possible
-                string uri = "https://coriolis.io/import?";
+                var uri = beta ? "https://beta.coriolis.io/import?" : "https://coriolis.io/import?";
 
                 // Take the ship's JSON, gzip it, then turn it in to base64 and attach it to the base uri
                 var bytes = Encoding.UTF8.GetBytes(raw);
@@ -722,7 +619,7 @@ namespace EddiDataDefinitions
                 }
 
                 // Add the ship's name
-                string bn = name ?? $"{Role.localizedName} {model}";
+                var bn = name ?? $"{Role.localizedName} {model}";
                 uri += "&bn=" + Uri.EscapeDataString(bn);
 
                 return uri;
@@ -765,7 +662,6 @@ namespace EddiDataDefinitions
             Ship template = ShipDefinitions.FromModel(model);
             if (template != null)
             {
-                EDID = template.EDID;
                 EDName = template.EDName;
                 manufacturer = template.manufacturer;
                 possessiveYour = template.possessiveYour;
@@ -782,12 +678,8 @@ namespace EddiDataDefinitions
 
         public JumpDetail JumpDetails(string type, decimal? fuelInTanksOverride = null, int? cargoCarriedOverride = null)
         {
-            var currentFuel = fuelInTanksOverride ?? fuelInTanks;
+            var currentFuel = (fuelInTanksOverride ?? fuelInTanks ?? 0);
             var cargoTonnage = cargoCarriedOverride ?? cargoCarried;
-
-            if (string.IsNullOrEmpty(type) || currentFuel is null) { return null; }
-
-            decimal maxFuel = fueltanktotalcapacity ?? 0;
 
             if (!string.IsNullOrEmpty(type))
             {
@@ -795,35 +687,38 @@ namespace EddiDataDefinitions
                 {
                     case "next":
                         {
-                            decimal jumpRange = JumpRange((decimal)currentFuel, cargoTonnage);
+                            currentFuel += fuelInReservoir ?? activeFuelReservoirCapacity;
+                            decimal jumpRange = JumpRange( currentFuel, cargoTonnage );
                             return new JumpDetail(jumpRange, 1);
                         }
                     case "max":
                         {
-                            decimal jumpRange = JumpRange(maxfuelperjump, cargoTonnage);
+                            var jumpRange = JumpRange( maxfuelperjump, cargoTonnage );
                             return new JumpDetail(jumpRange, 1);
                         }
                     case "total":
                         {
+                            currentFuel += fuelInReservoir ?? activeFuelReservoirCapacity;
                             decimal total = 0;
                             int jumps = 0;
                             while (currentFuel > 0)
                             {
-                                total += JumpRange((decimal)currentFuel, cargoTonnage);
+                                total += JumpRange( Math.Min( currentFuel, maxfuelperjump ), cargoTonnage );
                                 jumps++;
-                                currentFuel -= Math.Min((decimal)currentFuel, maxfuelperjump);
+                                currentFuel -= Math.Min( currentFuel, maxfuelperjump );
                             }
                             return new JumpDetail(total, jumps);
                         }
                     case "full":
                         {
+                            currentFuel = ( fueltanktotalcapacity ?? 0 ) + activeFuelReservoirCapacity;
                             decimal total = 0;
                             int jumps = 0;
-                            while (maxFuel > 0)
+                            while ( currentFuel > 0)
                             {
-                                total += JumpRange(maxFuel, cargoTonnage);
+                                total += JumpRange( Math.Min( currentFuel, maxfuelperjump ), cargoTonnage );
                                 jumps++;
-                                maxFuel -= Math.Min(maxFuel, maxfuelperjump);
+                                currentFuel -= Math.Min( currentFuel, maxfuelperjump );
                             }
                             return new JumpDetail(total, jumps);
                         }
@@ -832,76 +727,58 @@ namespace EddiDataDefinitions
             return null;
         }
 
-        private decimal GetFsdRatingConstant()
+        private decimal JumpRange ( decimal currentFuel, int carriedCargo, double boostModifier = 1 )
         {
-            if (!string.IsNullOrEmpty(frameshiftdrive?.grade) && 
-                Constants.ratingConstantFSD.TryGetValue(frameshiftdrive.grade, out var fsdRatingConst))
-            {
-                return fsdRatingConst;
-            }
-            return 0;
+            if ( frameshiftdrive is null || unladenmass == 0 ) { return 0; }
+
+            var optimalMass = frameshiftdrive.GetFsdOptimalMass();
+            var mass = Convert.ToDouble( unladenmass + currentFuel + carriedCargo);
+            var fuel = Convert.ToDouble( Math.Min(currentFuel, maxfuelperjump ) );
+            var linearConstant = frameshiftdrive.GetFsdRatingConstant();
+            var powerConstant = frameshiftdrive.GetFsdPowerConstant();
+            var guardianFsdBoosterRange = compartments.FirstOrDefault(c => c.module.edname.Contains("Int_GuardianFSDBooster"))?.module?.GetGuardianFSDBoost() ?? 0;
+
+            return JumpRange( optimalMass, mass, fuel, linearConstant, powerConstant, guardianFsdBoosterRange, boostModifier );
         }
 
-        private decimal GetFsdPowerConstant()
+        private decimal JumpRange ( double optimalMass, double mass, double fuel, double linearConstant, double powerConstant, double guardianFsdBoosterRange, double boostModifier )
         {
-            if (frameshiftdrive != null && 
-                Constants.powerConstantFSD.TryGetValue(frameshiftdrive.@class, out var fsdPowerConst))
+            if ( linearConstant == 0 || powerConstant == 0 )
             {
-                return fsdPowerConst;
-            }
-            return 0;
-        }
-
-        private decimal GetFsdOptimalMass()
-        {
-            if (!string.IsNullOrEmpty(frameshiftdrive?.grade) && optimalmass == 0)
-            {
-                var optimalMass = frameshiftdrive.modifiers?.FirstOrDefault(m => m.EDName.Equals("FSDOptimalMass", StringComparison.InvariantCultureIgnoreCase))?.currentValue ?? 0;
-                if (optimalMass == 0)
-                {
-                    Constants.baseOptimalMass.TryGetValue(frameshiftdrive.@class + frameshiftdrive.grade, out optimalMass);
-                }
-                return optimalMass;
-            }
-            return 0;
-        }
-
-        private decimal GetFsdMaxFuelPerJump()
-        {
-            if (frameshiftdrive?.@class > 0 && maxfuelperjump == 0)
-            {
-                var maxFuelPerJump = frameshiftdrive.modifiers?.FirstOrDefault(m => m.EDName.Equals("FSDFuelUseIncrease", StringComparison.InvariantCultureIgnoreCase))?.currentValue ?? 0;
-                if (maxFuelPerJump == 0)
-                {
-                    Constants.baseMaxFuelPerJump.TryGetValue(frameshiftdrive.@class + frameshiftdrive.grade, out maxFuelPerJump);
-                }
-                return maxFuelPerJump;
-            }
-            return 0;
-        }
-
-        private decimal JumpRange(decimal currentFuel, int carriedCargo)
-        {
-            if (frameshiftdrive is null) 
-            {
-                return 0; 
-            }
-            else if (unladenmass == 0)
-            {
+                Logging.Warn("Unable to acquire frameshift drive information required to calculate jump range. Please revisit Outfitting to update your ship's loadout definition.");
                 return 0;
             }
-
-            decimal boostConstant = 0;
-            Module module = compartments.FirstOrDefault(c => c.module.edname.Contains("Int_GuardianFSDBooster"))?.module;
-            if (module != null)
+            try
             {
-                Constants.guardianBoostFSD.TryGetValue(module.@class, out boostConstant);
+                // Calculate our base max range
+                var baseMaxRange = optimalMass / mass * Math.Pow( ( fuel * 1000 / linearConstant ), ( 1 / powerConstant ) );
+                if ( baseMaxRange == 0 ) { return 0; }
+
+                // Return the maximum range with the specified fuel and cargo levels, with a boost modifier if using synthesis or a jet cone boost
+                var guardianBoostedMaxRange = ( baseMaxRange + guardianFsdBoosterRange ) / baseMaxRange * optimalMass / mass * Math.Pow( ( fuel * 1000 / linearConstant ), ( 1 / powerConstant ) );
+
+                var result = Convert.ToDecimal( guardianBoostedMaxRange * boostModifier );
+                return result;
             }
-
-            decimal massRatio = optimalmass / (unladenmass + currentFuel + carriedCargo);
-            decimal fuel = Math.Min(currentFuel, maxfuelperjump);
-
-            return ((decimal)Math.Pow((double)(1000 * fuel / fsdRatingConstant), (double)(1 / fsdPowerConstant)) * massRatio) + boostConstant;
+            catch ( Exception e )
+            {
+                var data = new Dictionary<string, object>
+                {
+                    [ "exception" ] = e,
+                    [ "inputs" ] = new Dictionary<string, object>
+                    {
+                        [ "optimalMass" ] = optimalMass,
+                        [ "mass" ] = mass,
+                        [ "fuel" ] = fuel,
+                        [ "linearConstant" ] = linearConstant,
+                        [ "powerConstant" ] = powerConstant,
+                        [ "guardianFsdBoosterRange" ] = guardianFsdBoosterRange,
+                        [ "boostModifier" ] = boostModifier
+                    }
+                };
+                Logging.Error( "Failed to calculate jump range", data );
+                return 0;
+            }
         }
 
         public static Ship FromShipyardInfo(ShipyardInfoItem item)
@@ -909,7 +786,7 @@ namespace EddiDataDefinitions
             try
             {
                 Logging.Debug($"Converting ShipyardInfoItem to Ship: ", item);
-                var ship = ShipDefinitions.FromEliteID(item.EliteID) ?? ShipDefinitions.FromEDModel(item.edModel, false);
+                var ship = ShipDefinitions.FromEDModel(item.edModel, false);
                 if (ship == null)
                 {
                     // Unknown ship; report the full object so that we can update the definitions 

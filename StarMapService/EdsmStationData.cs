@@ -10,14 +10,13 @@ namespace EddiStarMapService
 {
     public partial class StarMapService
     {
-        public List<Station> GetStarMapStations(string system, long? edsmId = null)
+        public List<Station> GetStarMapStations(ulong systemAddress)
         {
-            if (system == null) { return new List<Station>(); }
+            if ( systemAddress == 0) { return new List<Station>(); }
             if (currentGameVersion != null && currentGameVersion < minGameVersion) { return new List<Station>(); }
 
             var request = new RestRequest("api-system-v1/stations", Method.POST);
-            request.AddParameter("systemName", system);
-            if (edsmId != null) { request.AddParameter("systemId", edsmId); }
+            request.AddParameter("systemId64", systemAddress );
             var clientResponse = restClient.Execute<JObject>(request);
             if (clientResponse.IsSuccessful)
             {

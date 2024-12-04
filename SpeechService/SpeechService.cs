@@ -22,11 +22,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
 using System.Xml.Schema;
 using Utilities;
 
+[assembly: InternalsVisibleTo( "Tests" )]
 namespace EddiSpeechService
 {
     /// <summary>Provide speech services with a varying amount of alterations to the voice</summary>
@@ -57,12 +56,12 @@ namespace EddiSpeechService
             .Select(v => v.name)
             .ToList();
 
-        private readonly XmlSchemaSet lexiconSchemas = new XmlSchemaSet();
+        internal readonly XmlSchemaSet lexiconSchemas = new XmlSchemaSet();
 
         private static readonly object activeAudioLock = new object();
         private static readonly object activeSpeechLock = new object();
 
-        private int activeSpeechPriority;
+        internal int activeSpeechPriority;
         private static bool discardPendingSegments;
 
         private readonly ConcurrentDictionary<ISoundOut, CancellationTokenSource> activeSpeechTS = new ConcurrentDictionary<ISoundOut, CancellationTokenSource>();
@@ -157,11 +156,17 @@ namespace EddiSpeechService
             {
                 systemSpeechSynth = new SystemSpeechSynthesizer( ref voiceStore, lexiconSchemas );
             }
+            catch ( ThreadAbortException )
+            {
+                // Nothing to do here
+            }
             catch ( Exception e )
             {
-                Logging.Error( $"Unable to initialize System.Speech.Synthesis.SpeechSynthesizer, {RuntimeInformation.OSDescription}", e );
+                Logging.Error(
+                    $"Unable to initialize System.Speech.Synthesis.SpeechSynthesizer, {RuntimeInformation.OSDescription}",
+                    e );
             }
-            
+
             // Sort results alphabetically by voice name
             allVoices = voiceStore.OrderBy(v => v.name).ToList();
 
@@ -203,65 +208,52 @@ namespace EddiSpeechService
         private static bool IsWindowsMediaSynthesizerSupported()
         {
             return OSInfo.TryGetWindowsVersion( out var osVersion ) &&
-                   osVersion >= new System.Version( 10, 0, 16299, 0 );
+                   osVersion >= new System.Version( 10, 0, 17763, 0 );
         }
 
         private void CompanionAppService_StateChanged(CompanionAppService.State oldState, CompanionAppService.State newState)
         {
-            if (newState == CompanionAppService.State.ConnectionLost)
+            if (newState == CompanionAppService.State.ConnectionLost && !CompanionAppService.unitTesting)
             {
                 Say(null, EddiCompanionAppService.Properties.CapiResources.frontier_api_lost, 0);
             }
         }
 
-        public void Say(Ship ship, string message, int priority = 3, string voice = null, bool radio = false, string eventType = null, bool invokedFromVA = false)
+        public void Say(Ship ship, string message, int priority = 3, string voice = null, bool radio = false, string eventType = null, bool invokedFromVA = false )
         {
             // Skip empty speech and speech containing nothing except one or more pauses / breaks.
             message = SpeechFormatter.TrimSpeech(message);
             if (string.IsNullOrEmpty(message)) { return; }
 
-            Thread speechQueueHandler = new Thread(() =>
-            {
-                // Queue the current speech
-                EddiSpeech queuingSpeech = new EddiSpeech(message, ship, priority, voice, radio, eventType);
-                speechQueue.Enqueue(queuingSpeech);
+            // Queue the current speech
+            var queuingSpeech = new EddiSpeech(message, ship, priority, voice, radio, eventType);
+            speechQueue.Enqueue( queuingSpeech );
 
-                // Check the first item in the speech queue
-                if (speechQueue.TryPeek(out EddiSpeech peekedSpeech))
+            // Check the first item in the speech queue
+            if ( speechQueue.TryPeek( out var peekedSpeech ) )
+            {
+                // Interrupt current speech when appropriate
+                if ( checkSpeechInterrupt( peekedSpeech.priority ) )
                 {
-                    // Interrupt current speech when appropriate
-                    if (checkSpeechInterrupt(peekedSpeech.priority))
-                    {
-                        Logging.Debug("Interrupting current speech");
-                        StopCurrentSpeech();
-                    }
+                    Logging.Debug( "Interrupting current speech" );
+                    StopCurrentSpeech();
                 }
-
-                // Start or continue speaking from the speech queue
-                Instance.StartOrContinueSpeaking();
-            })
-            {
-                Name = "SpeechQueueHandler",
-                IsBackground = true
-            };
-            speechQueueHandler.Start();
-            if (invokedFromVA)
-            {
-                // If invoked from VA, thread should terminate only after speech completes
-                speechQueueHandler.Join();
             }
+
+            // Start or continue speaking from the speech queue
+            Instance.StartOrContinueSpeaking( invokedFromVA );
         }
 
-        private void StartOrContinueSpeaking ()
+        private void StartOrContinueSpeaking ( bool invokedFromVA )
         {
             if ( !eddiSpeaking )
             {
                 // Put everything in a thread
-                Thread speechThread = new Thread(() =>
+                var speechThread = new Thread(() =>
                 {
                     while (speechQueue.hasSpeech)
                     {
-                        if (speechQueue.TryDequeue(out EddiSpeech speech))
+                        if (speechQueue.TryDequeue(out var speech))
                         {
                             try
                             {
@@ -282,7 +274,10 @@ namespace EddiSpeechService
                 try
                 {
                     speechThread.Start();
-                    speechThread.Join();
+                    if ( invokedFromVA )
+                    {
+                        speechThread.Join();
+                    }
                 }
                 catch ( ThreadAbortException tax )
                 {
@@ -292,7 +287,7 @@ namespace EddiSpeechService
             }
         }
 
-        private bool checkSpeechInterrupt ( int priority )
+        internal bool checkSpeechInterrupt ( int priority )
         {
             // Priority 0 speech (system messages) and priority 1 speech and will interrupt current speech
             // Priority 5 speech in interruptable by any higher priority speech. 
@@ -326,7 +321,7 @@ namespace EddiSpeechService
                 if ( discardPendingSegments )  { continue; }
 
                 string voice = null;
-                string statement = null;
+                string statement = segment;
 
                 bool isAudio = segment.Contains("<audio"); // This is an audio file, we will disable voice effects processing
                 if (isAudio)
@@ -360,21 +355,21 @@ namespace EddiSpeechService
                     continue;
                 }
 
-                bool isRadio = segment.Contains("<transmit") || radio; 
+                bool isRadio = statement.Contains("<transmit") || radio; 
                 if (isRadio)
                 {
                     // This is a radio transmission, we will enable radio voice effects processing
-                    statement = SpeechFormatter.StripRadioTags(segment);
+                    statement = SpeechFormatter.StripRadioTags( statement );
                 }
 
-                bool isVoice = segment.Contains("<voice") || radio; 
+                bool isVoice = statement.Contains("<voice") || radio; 
                 if (isVoice)
                 {
                     // This is a voice override
-                    SpeechFormatter.UnpackVoiceTags(segment, out voice, out statement);
+                    SpeechFormatter.UnpackVoiceTags( statement, out voice, out statement );
                 }
 
-                using (Stream stream = getSpeechStream(voice ?? defaultVoice, statement ?? segment))
+                using (Stream stream = getSpeechStream(voice ?? defaultVoice, statement))
                 {
                     if (stream == null)
                     {
@@ -508,16 +503,26 @@ namespace EddiSpeechService
             return false;
         }
 
-        private ISoundOut GetSoundOut ()
+        private ISoundOut GetSoundOut ( IWaveSource source )
         {
             if ( WasapiOut.IsSupportedOnCurrentPlatform )
             {
-                return new WasapiOut();
+                var soundOut = new WasapiOut();
+                if ( TryInitializeSoundOut( soundOut, source ) )
+                {
+                    return soundOut;
+                }
+                Logging.Warn( "Falling back to legacy DirectSoundOut." );
             }
-            else
+
+            var directSoundOut = new DirectSoundOut();
+            if ( TryInitializeSoundOut( directSoundOut, source ) )
             {
-                return new DirectSoundOut();
+                return directSoundOut;
             }
+
+            Logging.Warn("Unable to initialize any playback device.");
+            return null;
         }
 
         private static bool TryInitializeSoundOut ( ISoundOut soundOut, IWaveSource source )
@@ -531,6 +536,12 @@ namespace EddiSpeechService
                 Logging.Warn( $"Failed to initialize. {ce.Source} not registered. Installation may be corrupt or Windows version may be incompatible. ", ce );
                 return false;
             }
+            catch ( InvalidCastException ice )
+            {
+                Logging.Warn( $"Failed to initialize. {ice.Message} ", ice );
+                return false;
+            }
+
             return true;
         }
 
@@ -541,7 +552,7 @@ namespace EddiSpeechService
                 float fadePer10Milliseconds = soundOut.Volume / ActiveSpeechFadeOutMilliseconds * 10;
                 while ( soundOut.Volume > 0 )
                 {
-                    soundOut.Volume -= fadePer10Milliseconds;
+                    soundOut.Volume -= Math.Min( fadePer10Milliseconds, soundOut.Volume );
                     Thread.Sleep( 10 );
                 }
             }
@@ -550,7 +561,7 @@ namespace EddiSpeechService
 
         #region Speech
 
-        private void PlaySpeechStream(IWaveSource source, int priority, bool useLegacySoundOut = false)
+        private void PlaySpeechStream(IWaveSource source, int priority)
         {
             try
             {
@@ -562,17 +573,9 @@ namespace EddiSpeechService
 
                 var waitTime = source.GetTime(source.Length);
 
-                using ( var soundOut = GetSoundOut() )
+                using ( var soundOut = GetSoundOut( source ) )
                 {
-                    if ( !TryInitializeSoundOut( soundOut, source ) )
-                    {
-                        if ( soundOut is WasapiOut && !useLegacySoundOut )
-                        {
-                            Logging.Warn( "Falling back to legacy DirectSoundOut." );
-                            PlaySpeechStream( source, priority, true );
-                        }
-                    }
-
+                    if ( soundOut is null ) { return; }
                     var cancellationTokenSource = new CancellationTokenSource();
                     StartSpeech( soundOut, priority, cancellationTokenSource );
 
@@ -623,17 +626,26 @@ namespace EddiSpeechService
             lock ( activeSpeechLock )
             {
                 Logging.Debug( "Ending active speech." );
-                discardPendingSegments = true;
-                var keysToRemove = activeSpeechTS.Keys;
-                keysToRemove.AsParallel().ForAll(key =>
+                try
                 {
-                    if ( activeSpeechTS.TryRemove( key, out var tokenSource ) )
+                    discardPendingSegments = true;
+                    if ( activeSpeechTS.Keys is ICollection<ISoundOut> keysToRemove )
                     {
-                        tokenSource.Cancel();
-                        tokenSource.Token.WaitHandle.WaitOne( TimeSpan.FromSeconds( 5 ) );
-                        tokenSource.Dispose();
+                        keysToRemove.AsParallel().ForAll( key =>
+                        {
+                            if ( activeSpeechTS.TryRemove( key, out var tokenSource ) )
+                            {
+                                tokenSource.Cancel();
+                                tokenSource.Token.WaitHandle.WaitOne( TimeSpan.FromSeconds( 5 ) );
+                                tokenSource.Dispose();
+                            }
+                        } );
                     }
-                } );
+                }
+                catch ( Exception e )
+                {
+                    Logging.Warn( e.Message, e );
+                }
                 OnPropertyChanged( nameof( eddiSpeaking ) );
             }
         }
@@ -648,7 +660,7 @@ namespace EddiSpeechService
 
         #region Audio
 
-        public void PlayAudio ( string fileName, decimal? volumeOverride, bool useLegacySoundOut = false )
+        public void PlayAudio ( string fileName, decimal? volumeOverride )
         {
             try
             {
@@ -662,29 +674,23 @@ namespace EddiSpeechService
                 {
                     Say( null, $"Audio file not found at {fnfe.FileName}.", 0 );
                     Logging.Warn( fnfe.Message, fnfe );
-                    throw;
+                    return;
                 }
                 catch ( NotSupportedException e )
                 {
                     Say( null, "Audio file format not supported.", 0 );
                     Logging.Warn( $"Skipping unsupported audio file {fileName}.", e );
-                    throw;
+                    return;
                 }
                 if ( !( audioSource?.Length > 0 ) ) { return; }
 
                 var waitTime = audioSource.GetTime( audioSource.Length );
 
-                using ( var soundOut = GetSoundOut() )
+                using ( var soundOut = GetSoundOut( audioSource ) )
                 {
+                    if ( soundOut is null ) { return; }
+
                     Logging.Debug($"Beginning audio playback for {fileName}.");
-                    if ( !TryInitializeSoundOut( soundOut, audioSource ) )
-                    {
-                        if ( soundOut is WasapiOut && !useLegacySoundOut )
-                        {
-                            Logging.Warn( "Falling back to legacy DirectSoundOut." );
-                            PlayAudio( absolutePath, volumeOverride, true );
-                        }
-                    }
 
                     if ( volumeOverride != null )
                     {
@@ -770,128 +776,30 @@ namespace EddiSpeechService
         public string synthType { get; }
 
         [Utilities.PublicAPI]
-        public string cultureinvariantname => Culture.EnglishName;
+        public string cultureinvariantname { get; }
 
         [Utilities.PublicAPI]
-        public string culturename => Culture.NativeName;
-
-        public CultureInfo Culture { get; }
+        public string culturename { get; }
 
         public bool hideVoice { get; set; }
+
+        internal string cultureTwoLetterISOLanguageName;
+        internal string cultureIetfLanguageTag;
 
         internal VoiceDetails( string displayName, string gender, CultureInfo Culture, string synthType, XmlSchemaSet lexiconSchemas )
         {
             this.name = displayName;
             this.gender = gender;
-            this.Culture = Culture;
+            this.cultureinvariantname = Culture.EnglishName;
+            this.culturename = Culture.NativeName;
+            this.cultureTwoLetterISOLanguageName = Culture.TwoLetterISOLanguageName;
+            this.cultureIetfLanguageTag = Culture.IetfLanguageTag;
             this.synthType = synthType;
 
-            culturecode = BestGuessCulture();
-            this.lexiconSchemas = lexiconSchemas;
+            culturecode = BestGuessCulture(Culture);
         }
 
-        #region Lexicons
-
-        private XmlSchemaSet lexiconSchemas;
-
-        public HashSet<string> GetLexicons()
-        {
-            var result = new HashSet<string>();
-            HashSet<string> GetLexiconsFromDirectory(string directory, bool createIfMissing = false)
-            {
-                // When multiple lexicons are referenced, their precedence goes from lower to higher with document order.
-                // Precedence means that a token is first looked up in the lexicon with highest precedence.
-                // Only if not found in that lexicon, the next lexicon is searched and so on until a first match or until all lexicons have been used for lookup. (https://www.w3.org/TR/2004/REC-speech-synthesis-20040907/#S3.1.4).
-
-                if (string.IsNullOrEmpty(directory) || string.IsNullOrEmpty(culturecode)) { return null; }
-                DirectoryInfo dir = new DirectoryInfo(directory);
-                if (dir.Exists)
-                {
-                    // Find two letter language code lexicons (these will have lower precedence than any full language code lexicons)
-                    foreach (var file in dir.GetFiles("*.pls", SearchOption.AllDirectories)
-                        .Where(f => $"{f.Name.ToLowerInvariant()}" == $"{Culture.TwoLetterISOLanguageName.ToLowerInvariant()}.pls"))
-                    {
-                        CheckAndAdd(file);
-                    }
-                    // Find full language code lexicons
-                    foreach (var file in dir.GetFiles("*.pls", SearchOption.AllDirectories)
-                        .Where(f => $"{f.Name.ToLowerInvariant()}" == $"{Culture.IetfLanguageTag.ToLowerInvariant()}.pls"))
-                    {
-                        CheckAndAdd(file);
-                    }
-                }
-                else if (createIfMissing)
-                {
-                    dir.Create();
-                }
-                return result;
-            }
-
-            void CheckAndAdd(FileInfo file)
-            {
-                if (IsValidXML(file.FullName, out _))
-                {
-                    result.Add(file.FullName);
-                }
-                else
-                {
-                    file.MoveTo($"{file.FullName}.malformed");
-                }
-            }
-
-            // When multiple lexicons are referenced, their precedence goes from lower to higher with document order (https://www.w3.org/TR/2004/REC-speech-synthesis-20040907/#S3.1.4) 
-
-            // Add lexicons from our installation directory
-            result.UnionWith(GetLexiconsFromDirectory(new FileInfo(System.Reflection.Assembly.GetExecutingAssembly().Location).DirectoryName + @"\lexicons"));
-
-            // Add lexicons from our user configuration (allowing these to overwrite any prior lexeme values)
-            result.UnionWith(GetLexiconsFromDirectory(Constants.DATA_DIR + @"\lexicons"));
-
-            return result;
-        }
-
-        private bool IsValidXML(string filename, out XDocument xml)
-        {
-            // Check whether the file is valid .xml (.pls is an xml-based format)
-            xml = null;
-            try
-            {
-                // Try to load the file as xml
-                xml = XDocument.Load(filename);
-
-                // Validate the lexicon xml against the schema
-                xml.Validate(lexiconSchemas, ( o, e ) =>
-                {
-                    if ( e.Severity == XmlSeverityType.Warning || e.Severity == XmlSeverityType.Error )
-                    {
-                        throw new XmlSchemaValidationException( e.Message, e.Exception );
-                    }
-                } );
-                var reader = xml.CreateReader();
-                var lastNodeName = string.Empty;
-                while ( reader.Read() )
-                {
-                    if ( reader.HasValue && 
-                         reader.NodeType is XmlNodeType.Text && 
-                         lastNodeName == "phoneme" && 
-                         !IPA.IsValid( reader.Value ) )
-                    {
-                        throw new ArgumentException( $"Invalid phoneme found in lexicon file: {reader.Value}" );
-                    }
-                    lastNodeName = reader.Name;
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Logging.Warn($"Could not load lexicon file '{filename}', please review.", ex);
-                return false;
-            }
-        }
-
-        #endregion
-
-        private string BestGuessCulture()
+        private string BestGuessCulture(CultureInfo Culture)
         {
             string guess;
             if (name.Contains("CereVoice"))

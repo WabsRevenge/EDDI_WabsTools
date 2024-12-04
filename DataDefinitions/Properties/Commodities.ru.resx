@@ -1578,10 +1578,7 @@
     <value>Промышленное оборудование Sirius</value>
     <comment>Commodity SiriusIndustrialEquipment</comment>
   </data>
-  <data name="ThargoidScoutTissueSample" xml:space="preserve">
-    <value>Образец тканей таргоида-разведчика </value>
-    <comment>Commodity ThargoidScoutTissueSample</comment>
-  </data>
+  
   <data name="UnmarkedWeapons" xml:space="preserve">
     <value>Военные припасы без меток</value>
     <comment>Commodity UnmarkedWeapons</comment>
@@ -1771,6 +1768,11 @@
     <value>Классифицированное экспериментальное оборудование</value>
     <comment>Commodity ClassifiedExperimentalEquipment</comment>
   </data>
+  
+  
+  
+  
+  
   
   
   

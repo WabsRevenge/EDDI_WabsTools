@@ -374,7 +374,15 @@ namespace EddiNavigationMonitor
             {
                 if (button.DataContext is NavBookmark navBookmark)
                 {
-                    Clipboard.SetText(navBookmark.systemname);
+                    try
+                    {
+                        Clipboard.Clear();
+                        Clipboard.SetData( DataFormats.Text, navBookmark.systemname );
+                    }
+                    catch ( Exception ex )
+                    {
+                        Logging.Warn( "Failed to set clipboard", ex );
+                    }
                 }
             }
         }

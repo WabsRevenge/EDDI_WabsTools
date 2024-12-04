@@ -13,40 +13,39 @@ namespace EddiNavigationService.QueryResolvers
     internal class SetQueryResolver : IQueryResolver
     {
         public QueryType Type => QueryType.set;
-        public RouteDetailsEvent Resolve ( Query query ) => SetRoute ( query.StringArg0, query.StringArg1 );
+        public RouteDetailsEvent Resolve ( Query query, StarSystem startSystem ) => SetRoute ( startSystem, query.StringArg0, query.StringArg1 );
 
-        private static RouteDetailsEvent SetRoute ( string system, string station = null )
+        private static RouteDetailsEvent SetRoute ( StarSystem startSystem, string system, string station = null )
         {
-            NavWaypointCollection navRouteList;
-            NavWaypoint firstUnvisitedWaypoint;
-            // Use our saved route if a named system is not provided
+            // Disregard commands to set a route to the current star system.
+            if ( startSystem.systemname == system ) { return null; }
+
             if ( string.IsNullOrEmpty ( system ) )
             {
-                navRouteList = ConfigService.Instance.navigationMonitorConfiguration.plottedRouteList ?? new NavWaypointCollection ();
-                firstUnvisitedWaypoint = navRouteList.Waypoints.FirstOrDefault ( w => !w.visited );
+                // Use our saved route if a named system is not provided
+                var navRouteList = ConfigService.Instance.navigationMonitorConfiguration.plottedRouteList ?? new NavWaypointCollection ();
+                navRouteList.UpdateLocationData( startSystem.systemAddress, startSystem.x, startSystem.y, startSystem.z );
+                var firstUnvisitedWaypoint = navRouteList.Waypoints.FirstOrDefault ( w => !w.visited );
                 if ( firstUnvisitedWaypoint != null )
                 {
                     return new RouteDetailsEvent ( DateTime.UtcNow, QueryType.set.ToString (), firstUnvisitedWaypoint.systemName, firstUnvisitedWaypoint.stationName, navRouteList, navRouteList.Waypoints.Count, firstUnvisitedWaypoint.missionids );
                 }
             }
-
-            // Disregard commands to set a route to the current star system.
-            var curr = EDDI.Instance?.CurrentStarSystem;
-            if ( curr?.systemname == system )
-            { return null; }
-
-            // Set a course to a named system (and optionally station)
-            var neutronRoute = NavigationService.Instance.NavQuery(QueryType.neutron, system);
-            if ( neutronRoute == null || neutronRoute.Route.Waypoints.Count <= 1 )
-            { return null; }
-
-            navRouteList = neutronRoute.Route;
-            foreach ( var wp in navRouteList.Waypoints )
+            else
             {
-                wp.missionids = NavigationService.GetSystemMissionIds ( wp.systemName );
+                // Set a course to a named system (and optionally station)
+                var neutronRoute = NavigationService.Instance.NavQuery(QueryType.neutron, system);
+                if ( neutronRoute == null || neutronRoute.Route.Waypoints.Count == 1 ) { return null; }
+                var navRouteList = neutronRoute.Route;
+                navRouteList.UpdateLocationData( startSystem.systemAddress, startSystem.x, startSystem.y, startSystem.z );
+                foreach ( var wp in navRouteList.Waypoints )
+                {
+                    wp.missionids = NavigationService.GetSystemMissionIds( wp.systemName );
+                }
+                var firstUnvisitedWaypoint = navRouteList.Waypoints.FirstOrDefault( w => !w.visited );
+                return new RouteDetailsEvent( DateTime.UtcNow, QueryType.set.ToString(), firstUnvisitedWaypoint?.systemName, firstUnvisitedWaypoint?.systemName == system ? station : null, navRouteList, navRouteList.Waypoints.Count, firstUnvisitedWaypoint?.missionids ?? new List<long>() );
             }
-            firstUnvisitedWaypoint = navRouteList.Waypoints.FirstOrDefault ( w => !w.visited );
-            return new RouteDetailsEvent ( DateTime.UtcNow, QueryType.set.ToString (), firstUnvisitedWaypoint?.systemName, firstUnvisitedWaypoint?.systemName == system ? station : null, navRouteList, navRouteList.Waypoints.Count, firstUnvisitedWaypoint?.missionids ?? new List<long> () );
+            return null;
         }
     }
 
@@ -54,7 +53,7 @@ namespace EddiNavigationService.QueryResolvers
     internal class CancelQueryResolver : IQueryResolver
     {
         public QueryType Type => QueryType.cancel;
-        public RouteDetailsEvent Resolve ( Query query ) => CancelRoute ();
+        public RouteDetailsEvent Resolve ( Query query, StarSystem startSystem ) => CancelRoute ();
 
         private static RouteDetailsEvent CancelRoute ()
         {
@@ -77,22 +76,22 @@ namespace EddiNavigationService.QueryResolvers
     public class UpdateQueryResolver : IQueryResolver
     {
         public QueryType Type => QueryType.update;
-        public RouteDetailsEvent Resolve ( Query query ) => RefreshLastNavigationQuery ();
+        public RouteDetailsEvent Resolve ( Query query, StarSystem currentSystem ) => RefreshLastNavigationQuery ( currentSystem );
 
         /// <summary> Repeat the last mission query and return an updated result if different from the prior result, either relative to your current location or to a named system </summary>
         /// <returns> The star system result from the repeated query </returns>
-        private static RouteDetailsEvent RefreshLastNavigationQuery ()
+        private static RouteDetailsEvent RefreshLastNavigationQuery ( [ NotNull ] StarSystem currentSystem )
         {
             var config = ConfigService.Instance.navigationMonitorConfiguration;
-            if ( !( config?.plottedRouteList?.GuidanceEnabled ?? false ) )
-            { return null; }
+            if ( config is null ) { return null; }
+            if ( !( config.plottedRouteList?.GuidanceEnabled ?? false ) ) { return null; }
 
             if ( NavigationService.Instance.LastQuery.Group () == QueryGroup.missions )
             {
                 var missionsList = ConfigService.Instance.missionMonitorConfiguration?.missions?.ToList() ?? new List<Mission>();
                 if ( missionsList
                     .Where ( m => m != null && m.statusDef == MissionStatus.Active )
-                    .Any ( m => m.destinationsystem == EDDI.Instance.CurrentStarSystem?.systemname ) )
+                    .Any ( m => m.destinationsystem == currentSystem.systemname ) )
                 {
                     // We still have active missions at the current location
                     return null;
@@ -100,47 +99,43 @@ namespace EddiNavigationService.QueryResolvers
             }
 
             var currentPlottedRoute = ConfigService.Instance.navigationMonitorConfiguration?.plottedRouteList;
-            if ( !currentPlottedRoute?.UnvisitedWaypoints.Any() ?? false )
+            if ( currentPlottedRoute is null ) { return null; }
+
+            if ( !currentPlottedRoute.UnvisitedWaypoints.Any() )
             {
                 // The current route has already been completed
                 return null;
             }
 
-            var currentWaypoint = currentPlottedRoute?.Waypoints.FirstOrDefault( w =>
-                w.systemAddress == EDDI.Instance.CurrentStarSystem?.systemAddress );
+            var currentWaypoint = currentPlottedRoute.Waypoints.FirstOrDefault( w => w.systemAddress == currentSystem.systemAddress );
             if ( currentWaypoint != null )
             {
-                // We're visiting a waypoint on the plotted route and need to update using the next unvisited waypoint
-                return new RouteDetailsEvent( DateTime.UtcNow, QueryType.update.ToString(), currentPlottedRoute.UnvisitedWaypoints.First().systemName, currentPlottedRoute.UnvisitedWaypoints.First().stationName, currentPlottedRoute, currentPlottedRoute.Waypoints.Count, currentPlottedRoute.UnvisitedWaypoints.First().missionids );
+                // We're currently visiting a waypoint on the plotted route and need to update to the next waypoint
+                currentPlottedRoute.NextWaypoint = null; 
+                return new RouteDetailsEvent( DateTime.UtcNow, QueryType.update.ToString(), currentPlottedRoute.NextWaypoint?.systemName, currentPlottedRoute.NextWaypoint?.stationName, currentPlottedRoute, currentPlottedRoute.Waypoints.Count, currentPlottedRoute.NextWaypoint?.missionids );
             }
 
-            NavWaypoint destinationWaypoint = null;
-            if ( currentPlottedRoute?.FillVisitedGaps ?? false )
-            {
-                // If `FillVisitedGaps` is true then our goal is simply get to the end of the route and
-                // any unvisited waypoint on the route is a valid destination.
-                destinationWaypoint = currentPlottedRoute.Waypoints.Where(w => !w.visited).FirstOrDefault( w => 
-                        w.systemAddress == EDDI.Instance.DestinationStarSystem?.systemAddress );
-            }
-            if ( destinationWaypoint is null )
-            {
-                // If `FillVisitedGaps` is not true then our goal is to reach the first unvisited waypoint on the route.
-                // Other destinations (including waypoints we are planning to visit later in the route) are invalid.
-                destinationWaypoint = currentPlottedRoute?.Waypoints.FirstOrDefault( w => 
-                    !w.visited && w.systemAddress == EDDI.Instance.DestinationStarSystem?.systemAddress ); 
-            }
+            var destinationWaypoint = currentPlottedRoute.Waypoints
+                .Where( w => !w.visited )
+                .FirstOrDefault( w => w.systemAddress == EDDI.Instance.DestinationStarSystem?.systemAddress );
             if ( destinationWaypoint != null )
             {
-                // We're making our way to a valid destination waypoint
-                return new RouteDetailsEvent( DateTime.UtcNow, QueryType.update.ToString(), destinationWaypoint.systemName, destinationWaypoint.stationName, currentPlottedRoute, currentPlottedRoute.Waypoints.Count, destinationWaypoint.missionids );
+                // We're making our way towards a valid destination waypoint
+                currentPlottedRoute.NextWaypoint = destinationWaypoint;
+                return new RouteDetailsEvent( DateTime.UtcNow, QueryType.update.ToString(),
+                    destinationWaypoint.systemName, destinationWaypoint.stationName, currentPlottedRoute,
+                    currentPlottedRoute.Waypoints.Count, destinationWaypoint.missionids );
             }
 
             // We've strayed, recalculate the route
+            currentPlottedRoute.NextWaypoint = null;
             Enum.TryParse( config?.searchQuery, out QueryType lastQuery );
             var @event = NavigationService.Instance.NavQuery(lastQuery, config?.searchQuerySystemArg, config?.searchQuerySystemArg, config?.maxSearchDistanceFromStarLs, config?.prioritizeOrbitalStations);
-            if ( @event is null ) { return null; }
+            if ( @event is null )
+            { return null; }
             EDDI.Instance.enqueueEvent( new RouteDetailsEvent( DateTime.UtcNow, QueryType.recalculating.ToString(), @event.system, @event.station, @event.Route, @event.count, @event.missionids ) );
             return new RouteDetailsEvent( DateTime.UtcNow, config?.searchQuery, @event.system, @event.station, @event.Route, @event.count, @event.missionids );
+
         }
     }
 }

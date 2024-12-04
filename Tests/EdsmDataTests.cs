@@ -357,15 +357,16 @@ namespace UnitTests
         public void TestFactions()
         {
             // Test factions data
-            JObject response = DeserializeJsonResource<JObject>(Resources.edsmFactions);
-            string systemName = (string)response["name"];
-            List<Faction> factions = fakeEdsmService.ParseStarMapFactionsParallel(response, systemName);
+            var response = DeserializeJsonResource<JObject>(Resources.edsmFactions);
+            var systemName = (string)response["name"];
+            var systemAddress = (ulong)response["id64"];
+            var factions = fakeEdsmService.ParseStarMapFactionsParallel(response, systemAddress);
 
             Assert.IsNotNull(factions);
 
             // Test The Dark Wheel
             var faction = factions.Find(s => s.name == "The Dark Wheel");
-            var presence = faction.presences.FirstOrDefault(p => p.systemName == systemName);
+            var presence = faction.presences.FirstOrDefault(p => p.systemAddress == systemAddress);
             Assert.AreEqual(702, faction.EDSMID);
             Assert.AreEqual("Independent", faction.Allegiance.invariantName);
             Assert.AreEqual("Democracy", faction.Government.invariantName);
@@ -381,7 +382,7 @@ namespace UnitTests
 
             // Test The Pilots Federation
             faction = factions.Find(s => s.name == "The Pilots Federation");
-            presence = faction.presences.FirstOrDefault(p => p.systemName == systemName);
+            presence = faction.presences.FirstOrDefault(p => p.systemAddress == systemAddress );
             Assert.AreEqual(61, faction.EDSMID);
             Assert.AreEqual("Independent", faction.Allegiance.invariantName);
             Assert.AreEqual("Democracy", faction.Government.invariantName);
@@ -396,7 +397,7 @@ namespace UnitTests
 
             // Test LTT 4487 Industry
             faction = factions.Find(s => s.name == "LTT 4487 Industry");
-            presence = faction.presences.FirstOrDefault(p => p.systemName == systemName);
+            presence = faction.presences.FirstOrDefault(p => p.systemAddress == systemAddress );
             Assert.AreEqual(434, faction.EDSMID);
             Assert.AreEqual("Federation", faction.Allegiance.invariantName);
             Assert.AreEqual("Corporate", faction.Government.invariantName);
@@ -428,10 +429,11 @@ namespace UnitTests
             Assert.AreEqual(27.15625M, system.z);
             Assert.IsTrue(system.requirespermit);
             Assert.AreEqual("Founders World", system.permitname);
+            Assert.IsTrue(system.Faction != null);
             Assert.AreEqual("Pilots Federation", system.Faction.Allegiance.invariantName);
             Assert.AreEqual("Democracy", system.Faction.Government.invariantName);
             Assert.AreEqual("Pilots Federation Local Branch", system.Faction.name);
-            Assert.AreEqual("None", system.Faction.presences.FirstOrDefault(p => p.systemName == system.systemname)?.FactionState?.invariantName);
+            Assert.AreEqual("None", system.Faction.presences.FirstOrDefault(p => p.systemAddress == system.systemAddress)?.FactionState?.invariantName);
             Assert.AreEqual(85206935, system.population);
             Assert.AreEqual("Common", system.Reserve.invariantName);
             Assert.AreEqual("High", system.securityLevel.invariantName);

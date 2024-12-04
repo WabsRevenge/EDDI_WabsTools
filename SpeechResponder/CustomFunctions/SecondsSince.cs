@@ -1,6 +1,5 @@
-﻿using Cottle.Functions;
-using Cottle.Values;
-using EddiSpeechResponder.Service;
+﻿using Cottle;
+using EddiSpeechResponder.ScriptResolverService;
 using JetBrains.Annotations;
 using System;
 using Utilities;
@@ -14,14 +13,14 @@ namespace EddiSpeechResponder.CustomFunctions
         public FunctionCategory Category => FunctionCategory.Utility;
         public string description => Properties.CustomFunctions_Untranslated.SecondsSince;
         public Type ReturnType => typeof( long? );
-        public NativeFunction function => new NativeFunction((values) =>
+        public IFunction function => Function.CreatePureMinMax( ( runtime, values ) =>
         {
-            long? date = values.Count == 1 
-                ? (long?)values[0].AsNumber 
+            var date = values.Count == 1 
+                ? (long)values[0].AsNumber 
                 : 0;
-            long? now = Dates.fromDateTimeToSeconds(DateTime.UtcNow);
+            var now = Dates.fromDateTimeToSeconds(DateTime.UtcNow);
 
-            return new ReflectionValue(now - date);
+            return Value.FromNumber( now - date );
         }, 0, 1);
     }
 }

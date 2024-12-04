@@ -286,6 +286,15 @@ namespace EddiDataDefinitions.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Concord Cannon.
+        /// </summary>
+        public static string ConcordCannon {
+            get {
+                return ResourceManager.GetString("ConcordCannon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Corrosion Resistant Cargo Rack.
         /// </summary>
         public static string CorrosionResistantCargoRack {
@@ -493,6 +502,15 @@ namespace EddiDataDefinitions.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Frame Shift Drive with Supercruise Overcharge.
+        /// </summary>
+        public static string FrameShiftDrive_SCO {
+            get {
+                return ResourceManager.GetString("FrameShiftDrive_SCO", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Frame Shift Drive Interdictor.
         /// </summary>
         public static string FrameShiftDriveInterdictor {
@@ -579,6 +597,15 @@ namespace EddiDataDefinitions.Properties {
         public static string GuardianModuleReinforcement {
             get {
                 return ResourceManager.GetString("GuardianModuleReinforcement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Guardian Nanite Torpedo Pylon.
+        /// </summary>
+        public static string GuardianNaniteTorpedoPylon {
+            get {
+                return ResourceManager.GetString("GuardianNaniteTorpedoPylon", resourceCulture);
             }
         }
         

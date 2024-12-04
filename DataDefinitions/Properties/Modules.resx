@@ -645,4 +645,16 @@
     <value>Extraction Missile</value>
     <comment>Module Human </comment>
   </data>
+  <data name="GuardianNaniteTorpedoPylon" xml:space="preserve">
+    <value>Guardian Nanite Torpedo Pylon</value>
+    <comment>Module Guardian Nanite Torpedo Pylon</comment>
+  </data>
+  <data name="FrameShiftDrive_SCO" xml:space="preserve">
+    <value>Frame Shift Drive with Supercruise Overcharge</value>
+    <comment>Module Frame Shift Drive (SCO)</comment>
+  </data>
+  <data name="ConcordCannon" xml:space="preserve">
+    <value>Concord Cannon</value>
+    <comment>Powerplay module</comment>
+  </data>
 </root>

@@ -38,18 +38,7 @@ namespace EddiEvents
         public decimal? distancefromstar { get; private set; }
 
         [PublicAPI("A list of possible station services: Dock, Autodock, BlackMarket, Commodities, Contacts, Exploration, Initiatives, Missions, Outfitting, CrewLounge, Rearm, Refuel, Repair, Shipyard, Tuning, Workshop, MissionsGenerated, Facilitator, Research, FlightController, StationOperations, OnDockMission, Powerplay, SearchAndRescue, TechBroker, MaterialTrader")]
-        public List<string> stationservices
-        {
-            get
-            {
-                List<string> services = new List<string>();
-                foreach (StationService service in stationServices)
-                {
-                    services.Add(service.localizedName);
-                }
-                return services;
-            }
-        }
+        public List<string> stationservices => stationServices.Select( s => s.localizedName ).ToList();
 
         [PublicAPI("True if landing with a breached cockpit")]
         public bool cockpitbreach { get; private set; }
@@ -66,7 +55,7 @@ namespace EddiEvents
         public string faction => controllingfaction?.name;
 
         [PublicAPI("The state of the faction controlling the station at which the commander has docked")]
-        public string factionstate => (controllingfaction?.presences.FirstOrDefault(p => p.systemName == system)?.FactionState ?? FactionState.None).localizedName;
+        public string factionstate => (controllingfaction?.presences.FirstOrDefault(p => p.systemAddress == systemAddress )?.FactionState ?? FactionState.None).localizedName;
        
         [PublicAPI("The superpower allegiance of the station at which the commander has docked")]
         public string allegiance => (controllingfaction?.Allegiance ?? Superpower.None).localizedName;

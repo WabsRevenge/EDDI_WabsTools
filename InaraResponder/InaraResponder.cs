@@ -98,6 +98,9 @@ namespace EddiInaraResponder
             return new ConfigurationWindow();
         }
 
+        public void HandleStatus ( Status status )
+        { }
+
         public void Handle(Event theEvent)
         {
             if (theEvent is null)
@@ -406,6 +409,7 @@ namespace EddiInaraResponder
 
         private void handleCarrierJumpedEvent(CarrierJumpedEvent @event)
         {
+            if ( @event.carrierId is null ) { return; } // We cannot update the carrier when carrier data is not present in the event
             var eventData = new Dictionary<string, object>()
             {
                 { "starsystemName", @event.systemname },
@@ -540,12 +544,12 @@ namespace EddiInaraResponder
 
         private void handleMissionAcceptedEvent(MissionAcceptedEvent @event)
         {
-            IDictionary<string, object> rawMissionObj = Deserializtion.DeserializeData(@event.raw);
-            string commodity = JsonParsing.getString(rawMissionObj, "Commodity");
-            int? commodityCount = JsonParsing.getOptionalInt(rawMissionObj, "Count");
-            int? killCount = JsonParsing.getOptionalInt(rawMissionObj, "KillCount");
-            int? passengerCount = JsonParsing.getOptionalInt(rawMissionObj, "PassengerCount");
-            Dictionary<string, object> eventData = new Dictionary<string, object>()
+            var rawMissionObj = Deserializtion.DeserializeData(@event.raw);
+            var commodity = JsonParsing.getString(rawMissionObj, "Commodity");
+            var commodityCount = JsonParsing.getOptionalInt(rawMissionObj, "Count");
+            var killCount = JsonParsing.getOptionalInt(rawMissionObj, "KillCount");
+            var passengerCount = JsonParsing.getOptionalInt(rawMissionObj, "PassengerCount");
+            var eventData = new Dictionary<string, object>()
             {
                 { "missionName", @event.name },
                 { "missionGameID", @event.missionid },
@@ -553,13 +557,18 @@ namespace EddiInaraResponder
                 { "influenceGain", @event.influence },
                 { "reputationGain", @event.reputation }
             };
-            if (EDDI.Instance.CurrentStarSystem != null)
+            if ( !string.IsNullOrEmpty( @event.Mission.originsystem ) )
             {
-                eventData.Add("starsystemNameOrigin", EDDI.Instance.CurrentStarSystem?.systemname);
+                eventData.Add( "starsystemNameOrigin", @event.Mission.originsystem );
             }
-            if (EDDI.Instance.CurrentStation != null)
+            else
             {
-                eventData.Add("stationNameOrigin", EDDI.Instance.CurrentStation?.name);
+                // `starsystemNameOrigin` is a required property to submit this data to Inara
+                return;
+            }
+            if ( !string.IsNullOrEmpty(@event.Mission.originstation))
+            {
+                eventData.Add("stationNameOrigin", @event.Mission.originstation);
             }
             if (!string.IsNullOrEmpty(@event.faction))
             {
@@ -1280,7 +1289,7 @@ namespace EddiInaraResponder
             inaraService.EnqueueAPIEvent(new InaraAPIEvent(@event.timestamp, "setCommanderRankPower", new Dictionary<string, object>()
             {
                 { "powerName", @event.Power?.invariantName },
-                { "rankValue", 1 }
+                { "rankValue", 0 }
             }));
         }
 
@@ -1289,7 +1298,7 @@ namespace EddiInaraResponder
             inaraService.EnqueueAPIEvent(new InaraAPIEvent(@event.timestamp, "setCommanderRankPower", new Dictionary<string, object>()
             {
                 { "powerName", @event.Power?.invariantName },
-                { "rankValue", 0 }
+                { "rankValue", -1 }
             }));
         }
 
@@ -1298,7 +1307,8 @@ namespace EddiInaraResponder
             inaraService.EnqueueAPIEvent(new InaraAPIEvent(@event.timestamp, "setCommanderRankPower", new Dictionary<string, object>()
             {
                 { "powerName", @event.Power?.invariantName },
-                { "rankValue", @event.rank }
+                { "rankValue", @event.rank },
+                { "meritsValue", @event.merits }
             }));
         }
 

@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Utilities;
 
 namespace EddiNavigationMonitor
 {
@@ -91,7 +92,7 @@ namespace EddiNavigationMonitor
             {
                 case nameof(NavWaypointCollection.GuidanceEnabled):
                 {
-                    Dispatcher.Invoke( () =>
+                    Dispatcher.InvokeAsync( () =>
                     {
                         UpdateGuidanceLock( navWaypointCollection.GuidanceEnabled );
                     } );
@@ -99,7 +100,7 @@ namespace EddiNavigationMonitor
                 }
                 case nameof(NavWaypointCollection.Waypoints):
                 {
-                    Dispatcher.Invoke( () =>
+                    Dispatcher.InvokeAsync( () =>
                     {
                         ClearRouteButton.IsEnabled = navWaypointCollection.Waypoints.Count > 0;
                     } );
@@ -123,14 +124,14 @@ namespace EddiNavigationMonitor
                 {
                     if ( NavigationService.Instance.IsWorking )
                     {
-                        Dispatcher.Invoke( () =>
+                        Dispatcher.InvokeAsync( () =>
                         {
                             SearchProgressBar.Visibility = Visibility.Visible;
                         } );
                     }
                     else
                     {
-                        Dispatcher.Invoke( () =>
+                        Dispatcher.InvokeAsync( () =>
                         {
                             SearchProgressBar.Visibility = Visibility.Collapsed;
                         } );
@@ -140,7 +141,7 @@ namespace EddiNavigationMonitor
                 case nameof( NavigationService.Instance.LastQuery ):
                 {
                     var queryType = NavigationService.Instance.LastQuery;
-                    Dispatcher.Invoke( () =>
+                    Dispatcher.InvokeAsync( () =>
                     {
                         searchGroupDropDown.SelectedItem = queryType.Group();
                         searchQueryDropDown.SelectedItem = queryType;
@@ -152,7 +153,7 @@ namespace EddiNavigationMonitor
                 case nameof( NavigationService.Instance.LastQuerySystemArg ):
                 {
                     var querySystem = NavigationService.Instance.LastQuerySystemArg;
-                    Dispatcher.Invoke( () =>
+                    Dispatcher.InvokeAsync( () =>
                     {
                         if ( searchSystemDropDown.Text != querySystem )
                         {
@@ -164,7 +165,7 @@ namespace EddiNavigationMonitor
                 case nameof( NavigationService.Instance.LastQueryStationArg ):
                 {
                     var queryStation = NavigationService.Instance.LastQueryStationArg;
-                    Dispatcher.Invoke( () =>
+                    Dispatcher.InvokeAsync( () =>
                     {
                         if ( searchStationDropDown.Text != queryStation )
                         {
@@ -495,7 +496,15 @@ namespace EddiNavigationMonitor
             {
                 if (button.DataContext is NavWaypoint navWaypoint)
                 {
-                    Clipboard.SetText(navWaypoint.systemName);
+                    try
+                    {
+                        Clipboard.Clear();
+                        Clipboard.SetData( DataFormats.Text, navWaypoint.systemName );
+                    }
+                    catch ( Exception ex )
+                    {
+                        Logging.Warn( "Failed to set clipboard", ex );
+                    }
                 }
             }
         }

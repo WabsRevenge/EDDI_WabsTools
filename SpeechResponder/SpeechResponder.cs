@@ -1,9 +1,10 @@
 ﻿using EddiConfigService;
+using EddiConfigService.Configurations;
 using EddiCore;
 using EddiDataDefinitions;
 using EddiEvents;
 using EddiJournalMonitor;
-using EddiSpeechResponder.Service;
+using EddiSpeechResponder.ScriptResolverService;
 using EddiSpeechService;
 using System;
 using System.Collections.Generic;
@@ -11,11 +12,13 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Controls;
 using Utilities;
 
+[assembly: InternalsVisibleTo( "Tests" )]
 namespace EddiSpeechResponder
 {
     /// <summary>
@@ -72,8 +75,6 @@ namespace EddiSpeechResponder
         private Personality _personality;
         private SpeechResponderConfiguration _configuration;
         private ScriptResolver _scriptResolver;
-
-        object speechresponder_quiet_was;
 
         public string ResponderName()
         {
@@ -195,7 +196,7 @@ namespace EddiSpeechResponder
             else if (sample is string s)
             {
                 // It's a string so a journal entry.  Parse it
-                sampleEvents = JournalMonitor.ParseJournalEntry(s);
+                sampleEvents = JournalMonitor.ParseJournalEntry(s, false, true);
             }
             else if (sample is Event e)
             {
@@ -274,23 +275,22 @@ namespace EddiSpeechResponder
                 }
             }
 
-            // Simulate a forced shutdown effect affecting the speech responder until the ship's system is rebooted
-            if ( @event is ShipShutdownEvent )
+            // Restore speech after a forced shutdown effect affecting the speech responder
+            if ( @event is ShipShutdownRebootEvent )
             {
-                if ( EDDI.Instance.State.TryGetValue( "speechresponder_quiet", out var stateObj ) )
-                {
-                    speechresponder_quiet_was = stateObj as bool?;
-                }
-                EDDI.Instance.State[ "speechresponder_quiet" ] = true;
-                SpeechService.Instance.speechQueue.DequeueAllSpeech();
-                SpeechService.Instance.StopCurrentSpeech();
-            }
-            else if ( @event is ShipShutdownRebootEvent )
-            {
-                EDDI.Instance.State[ "speechresponder_quiet" ] = speechresponder_quiet_was;
+                Logging.Debug( "Unpausing speech after ship shutdown." );
+                SpeechService.Instance.speechQueue.Unpause();
             }
 
             Say(@event);
+
+            // Simulate a forced shutdown effect affecting the speech responder until the ship's system is rebooted
+            if ( @event is ShipShutdownEvent shipShutdownEvent && !shipShutdownEvent.partialshutdown  )
+            {
+                Logging.Debug( "Pausing speech during ship shutdown." );
+                SpeechService.Instance.StopCurrentSpeech();
+                SpeechService.Instance.speechQueue.Pause();
+            }
         }
 
         private void Say(Event @event)
@@ -358,6 +358,11 @@ namespace EddiSpeechResponder
         public UserControl ConfigurationTabItem()
         {
             return new ConfigurationWindow(this);
+        }
+
+        public void HandleStatus ( Status status )
+        {
+            CustomFunctions.OrbitalVelocity.currentAltitudeMeters = status.altitude;
         }
 
         private static readonly object logLock = new object();

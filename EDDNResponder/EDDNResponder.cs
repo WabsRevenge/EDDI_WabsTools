@@ -5,16 +5,16 @@ using EddiDataProviderService;
 using EddiEddnResponder.Properties;
 using EddiEddnResponder.Sender;
 using EddiEvents;
-using EddiStatusService;
 using JetBrains.Annotations;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Windows.Controls;
 using Utilities;
 
+[assembly: InternalsVisibleTo( "Tests" )]
 namespace EddiEddnResponder
 {
     /// <summary>
@@ -56,10 +56,7 @@ namespace EddiEddnResponder
 
             // Populate our schemas list
             GetSchemas();
-
-            // Handle status changes
-            StatusService.StatusUpdatedEvent += StatusServiceOnStatusUpdatedEvent;
-
+            
             // Handle Companion App station data
             CompanionAppService.Instance.CombinedStationEndpoints.StationUpdatedEvent += FrontierApiOnStationUpdatedEvent;
             
@@ -80,12 +77,9 @@ namespace EddiEddnResponder
             }
         }
 
-        private void StatusServiceOnStatusUpdatedEvent(object sender, EventArgs e)
+        public void HandleStatus ( Status status )
         {
-            if (sender is Status status)
-            {
-                eddnState.Location.GetLocationInfo(status);
-            }
+            eddnState.Location.GetLocationInfo( status );
         }
 
         public void Handle(Event theEvent)

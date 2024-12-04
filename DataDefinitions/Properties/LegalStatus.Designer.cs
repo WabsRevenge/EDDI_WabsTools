@@ -61,6 +61,15 @@ namespace EddiDataDefinitions.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Allied.
+        /// </summary>
+        public static string Allied {
+            get {
+                return ResourceManager.GetString("Allied", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Clean.
         /// </summary>
         public static string Clean {

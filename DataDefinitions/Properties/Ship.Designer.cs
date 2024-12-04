@@ -19,7 +19,7 @@ namespace EddiDataDefinitions.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Ship {
@@ -324,6 +324,15 @@ namespace EddiDataDefinitions.Properties {
         /// <summary>
         ///   Looks up a localized string similar to your.
         /// </summary>
+        public static string yourMandalay {
+            get {
+                return ResourceManager.GetString("yourMandalay", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to your.
+        /// </summary>
         public static string yourOrca {
             get {
                 return ResourceManager.GetString("yourOrca", resourceCulture);
@@ -399,6 +408,15 @@ namespace EddiDataDefinitions.Properties {
         public static string yourType7 {
             get {
                 return ResourceManager.GetString("yourType7", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to your.
+        /// </summary>
+        public static string yourType8 {
+            get {
+                return ResourceManager.GetString("yourType8", resourceCulture);
             }
         }
         

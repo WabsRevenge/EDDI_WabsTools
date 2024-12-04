@@ -1,6 +1,6 @@
 ﻿using EddiSpeechResponder.AvalonEdit;
 using EddiSpeechResponder.Properties;
-using EddiSpeechResponder.Service;
+using EddiSpeechResponder.ScriptResolverService;
 using EddiSpeechService;
 using ICSharpCode.AvalonEdit.Editing;
 using ICSharpCode.AvalonEdit.Folding;
@@ -12,10 +12,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using Utilities;
+using CheckBox = System.Windows.Forms.CheckBox;
+using MessageBox = System.Windows.Forms.MessageBox;
+using TextBox = System.Windows.Controls.TextBox;
 
 namespace EddiSpeechResponder
 {
@@ -24,13 +28,14 @@ namespace EddiSpeechResponder
     /// </summary>
     public partial class EditScriptWindow : Window
     {
-        public Script script { get; private set; }
-        public Script editorScript { get; private set; }
+        [CanBeNull]
+        public Script originalScript { get; private set; }
+        public Script revisedScript { get; private set; }
 
         private readonly Dictionary<string, Script> _scripts;
         private readonly bool isNewOrRecoveredScript;
 
-        public ScriptRecoveryService ScriptRecoveryService { get; set; }
+        public ScriptRecoveryService.ScriptRecoveryService ScriptRecoveryService { get; set; }
 
 #pragma warning disable IDE0052 // Remove unused private members -- this may be used later
         private readonly DocumentHighlighter documentHighlighter;
@@ -44,31 +49,33 @@ namespace EddiSpeechResponder
         private readonly List<MetaVariable> metaVars = new List<MetaVariable>();
         private readonly List<ICustomFunction> customFunctions;
         private static readonly object metaVarLock = new object();
+        private readonly SpeechResponder speechResponder;
 
-        public EditScriptWindow ( ScriptResolver scriptResolver, Script script, Dictionary<string, Script> scripts, [NotNull][ItemNotNull] IEnumerable<MetaVariable> metaVars, [NotNull] CottleHighlighting cottleHighlighting, bool isNewOrRecoveredScript )
+        public EditScriptWindow ( SpeechResponder speechResponder, Script originalScript, Dictionary<string, Script> scripts, [NotNull][ItemNotNull] IEnumerable<MetaVariable> metaVars, [NotNull] CottleHighlighting cottleHighlighting, bool isNewOrRecoveredScript )
         {
             InitializeComponent();
             DataContext = this;
 
-            this.customFunctions = scriptResolver.GetCustomFunctions();
+            this.customFunctions = ScriptResolver.GetCustomFunctions();
             this.isNewOrRecoveredScript = isNewOrRecoveredScript;
             _scripts = scripts;
-            this.script = script;
+            this.originalScript = originalScript;
             this.metaVars.AddRange(metaVars);
+            this.speechResponder = speechResponder;
 
-            if ( script == null )
+            if ( originalScript == null )
             {
                 // This is a new script
-                editorScript = new Script( "New script", null, false, null );
+                revisedScript = new Script( "New script", null, false, null );
             }
             else
             {
                 // This is an existing script
-                editorScript = script.Copy();
+                revisedScript = originalScript.Copy();
             }
 
             // See if there is the default value for this script is empty
-            if ( string.IsNullOrWhiteSpace( editorScript.defaultValue ) )
+            if ( string.IsNullOrWhiteSpace( revisedScript.defaultValue ) )
             {
                 // No default; disable reset and show
                 showDiffButton.IsEnabled = false;
@@ -76,13 +83,13 @@ namespace EddiSpeechResponder
             }
 
             // Set our editor content
-            scriptView.Text = editorScript.Value;
+            scriptView.Text = revisedScript.Value;
 
             // Convert tabs to spaces
             scriptView.Options.ConvertTabsToSpaces = true;
 
             // Set up our Script Recovery Service
-            ScriptRecoveryService = new ScriptRecoveryService( this );
+            ScriptRecoveryService = new ScriptRecoveryService.ScriptRecoveryService( this );
             ScriptRecoveryService.BeginScriptRecovery();
             scriptView.TextChanged += ScriptView_TextChanged;
 
@@ -133,8 +140,8 @@ namespace EddiSpeechResponder
         private void EditScriptWindow_SourceInitialized ( object sender, EventArgs e )
         {
             // Validate window position on opening
-            int designedHeight = (int)MinHeight;
-            int designedWidth = (int)MinWidth;
+            var designedHeight = (int)MinHeight;
+            var designedWidth = (int)MinWidth;
 
             // WPF uses DPI scaled units rather than true pixels.
             // Retrieve the DPI scaling for the controlling monitor (where the top left pixel is located).
@@ -161,8 +168,8 @@ namespace EddiSpeechResponder
                 }
 
                 // Check whether the rectangle is completely visible on-screen
-                bool testUpperLeft = false;
-                bool testLowerRight = false;
+                var testUpperLeft = false;
+                var testLowerRight = false;
                 foreach ( Screen screen in Screen.AllScreens )
                 {
                     if ( rect.X >= applyDpiScale( screen.Bounds.X, dpi.DpiScaleX ) && rect.Y >= applyDpiScale( screen.Bounds.Y, dpi.DpiScaleY ) ) // The upper and left bounds fall on a valid screen
@@ -195,7 +202,7 @@ namespace EddiSpeechResponder
 
         private void ScriptView_TextChanged ( object sender, EventArgs e )
         {
-            editorScript.Value = scriptView.Text;
+            revisedScript.Value = scriptView.Text;
             InitializeOrUpdateFolding();
         }
 
@@ -415,22 +422,37 @@ namespace EddiSpeechResponder
 
         private void acceptButtonClick ( object sender, RoutedEventArgs e )
         {
-            if ( isNewOrRecoveredScript
-                || script?.Name != editorScript.Name
-                || script?.Description != editorScript.Description
-                || script?.Value != editorScript.Value )
+            // Validate script name before we close
+            if ( string.IsNullOrWhiteSpace( revisedScript.Name ) )
             {
-                // Update the output script
-                script = editorScript;
+                MessageBox.Show( Properties.SpeechResponder.messagebox_script_name_required, Properties.SpeechResponder.messagebox_unable_to_save_script, MessageBoxButtons.OK, MessageBoxIcon.Error );
+                return;
+            }
+            if ( revisedScript.Name.Contains(';') )
+            {
+                MessageBox.Show( Properties.SpeechResponder.messagebox_script_name_may_not_contain + @"';'.", Properties.SpeechResponder.messagebox_unable_to_save_script, MessageBoxButtons.OK, MessageBoxIcon.Error );
+                return;
+            }
+            if ( _scripts.Keys.Except( new[] { originalScript?.Name } ).Contains( revisedScript.Name ) )
+            {
+                MessageBox.Show( Properties.SpeechResponder.messagebox_script_name_already_in_use, Properties.SpeechResponder.messagebox_unable_to_save_script, MessageBoxButtons.OK, MessageBoxIcon.Error );
+                return;
+            }
 
+            if ( isNewOrRecoveredScript
+                 || originalScript?.Name != revisedScript.Name
+                 || originalScript?.Description != revisedScript.Description
+                 || originalScript?.includes != revisedScript.includes
+                 || originalScript?.Value != revisedScript.Value )
+            {
                 // Make sure default values are set as required
                 // ReSharper disable once InlineOutVariableDeclaration - Continuous Integration seems to require this variable be declared separately rather than in-line
 #pragma warning disable IDE0018 // Inline variable declaration
                 Script defaultScript = null;
 #pragma warning restore IDE0018 // Inline variable declaration
-                if ( Personality.Default().Scripts?.TryGetValue( script.Name, out defaultScript ) ?? false )
+                if ( Personality.Default().Scripts?.TryGetValue( revisedScript.Name, out defaultScript ) ?? false )
                 {
-                    script = Personality.UpgradeScript( script, defaultScript );
+                    revisedScript = Personality.UpgradeScript( revisedScript, defaultScript );
                 }
 
                 DialogResult = true;
@@ -456,15 +478,15 @@ namespace EddiSpeechResponder
 
         private void variablesButtonClick ( object sender, RoutedEventArgs e )
         {
-            VariablesWindow variablesWindow = new VariablesWindow(editorScript);
+            var variablesWindow = new VariablesWindow(revisedScript);
             variablesWindow.Show();
         }
 
         private void resetButtonClick ( object sender, RoutedEventArgs e )
         {
             // Resetting the script resets it to its value in the default personality
-            editorScript.Value = editorScript.defaultValue;
-            scriptView.Text = editorScript.Value;
+            revisedScript.Value = revisedScript.defaultValue;
+            scriptView.Text = revisedScript.Value;
         }
 
         private void testButtonClick ( object sender, RoutedEventArgs e )
@@ -477,18 +499,14 @@ namespace EddiSpeechResponder
             {
                 if ( !SpeechService.Instance.eddiSpeaking )
                 {
-                    ScriptRecoveryService.SaveRecoveryScript( editorScript );
+                    ScriptRecoveryService.SaveRecoveryScript( revisedScript );
 
-                    // Splice the new script in to the existing scripts
-                    editorScript.Value = scriptView.Text;
-                    Dictionary<string, Script> newScripts = new Dictionary<string, Script>(_scripts);
-                    Script testScript = new Script(editorScript.Name, editorScript.Description, false, editorScript.Value);
-                    newScripts.Remove( editorScript.Name );
-                    newScripts.Add( editorScript.Name, testScript );
+                    // Splice the revised script into the existing scripts
+                    var newScripts = new Dictionary<string, Script>(_scripts);
+                    newScripts.Remove( revisedScript.Name );
+                    newScripts.Add( revisedScript.Name, revisedScript );
 
-                    SpeechResponder speechResponder = new SpeechResponder();
-                    speechResponder.Start();
-                    speechResponder.TestScript( editorScript.Name, newScripts );
+                    speechResponder.TestScript( revisedScript.Name, newScripts );
                 }
                 else
                 {
@@ -500,10 +518,10 @@ namespace EddiSpeechResponder
 
         private void showDiffButtonClick ( object sender, RoutedEventArgs e )
         {
-            editorScript.Value = scriptView.Text;
-            if ( !string.IsNullOrWhiteSpace( editorScript.defaultValue ) )
+            revisedScript.Value = scriptView.Text;
+            if ( !string.IsNullOrWhiteSpace( revisedScript.defaultValue ) )
             {
-                new ShowDiffWindow( editorScript.defaultValue, editorScript.Value ).Show();
+                new ShowDiffWindow( revisedScript.defaultValue, revisedScript.Value ).Show();
             }
         }
 
@@ -536,21 +554,28 @@ namespace EddiSpeechResponder
             }
         }
 
-        // TODO: Variable descriptions on mouse hover?
-        /*
-        private void ScriptView_OnMouseHover ( object sender, MouseEventArgs e )
+        private void IncludesTextBox_OnTextChanged ( object sender, TextChangedEventArgs e )
         {
-            if ( sender is TextEditor textEditor  )
+            // TODO: Type ahead for script names?
+        }
+
+        private void IncludesTextBox_OnLostFocus ( object sender, RoutedEventArgs e )
+        {
+            if ( sender is TextBox textBox && textBox.IsLoaded )
             {
-                var mousePoint = e.GetPosition( textEditor );
-                var textLocation = textEditor.GetPositionFromPoint( mousePoint )?.Location;
-                if ( textLocation != null )
-                {
-                    if ( !textLocation.Value.IsEmpty ) { return; }
-                    var line = textEditor.TextArea.TextView.Document.GetLineByNumber( textLocation.Value.Line );
-                }
+                var separatedIncludes = textBox.Text
+                    .Split( new[] { ';' }, StringSplitOptions.RemoveEmptyEntries )
+                    .Select( t => t.Trim() ).ToList();
+                var scriptsExceptCurrent = _scripts
+                    .Where(s => s.Key != revisedScript.Name )
+                    .ToDictionary(s => s.Key, s => s.Value);
+                var validatedIncludes = scriptsExceptCurrent
+                    .Select(kv => kv.Key)
+                    .Where(k => separatedIncludes.Any( s => 
+                        s.Equals( k, StringComparison.InvariantCultureIgnoreCase ) ) )
+                    .ToList();
+                revisedScript.includes = string.Join( "; ", validatedIncludes );
             }
         }
-        */
     }
 }

@@ -457,7 +457,7 @@ To use this function in your own commands set the 'Volume' parameter then use th
 
 ## Information functions
 
-### coriolis, edshipyard, inaracarrier, inaraprofile, inarasystem, or inarastation
+### coriolis, coriolisbeta, edshipyard, inaracarrier, inaraprofile, inarasystem, or inarastation
 
 Looks up the current ship, the current starsystem, or the current station (as applicable). A web uri is written to '\{TXT: EDDI uri\}' and, unless '\{BOOL:EDDI open uri in browser\}' has been set to false, the uri is opened in the default browser.
 
@@ -561,6 +561,8 @@ For example, if you wanted to store the VoiceAttack boolean variable "Verbose" a
 This function only supports integers, booleans, decimals and strings as state values.  The name of the value will be altered if necessary to ensure that it is all lower-case, and that spaces are replace by underscores.  For example, if you attempt to store a state variable "My variable" it will be stored as "my_variable".
 
 State variables are made available in VoiceAttack with the prefix 'EDDI state'.  For example, to access the text variable stored in the last paragraph you would use '\{TXT:EDDI state my_variable\}'.
+
+Variables shall be set to as many variable types as possible, e.g. 'TXT', 'DEC', 'INT', 'SMALL', and 'BOOL' as applicable. Decimal values shall be set to their rounded values in 'INT' and 'SMALL' variable types. Non-zero numeric values and non-empty string values shall be set to 'True' in the BOOL variable type.
 
 To access the same variable from within EDDI's Speech Responder, you would call '\{state.my_variable\}'.
 

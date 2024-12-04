@@ -1,6 +1,7 @@
 ﻿using EddiDataDefinitions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Utilities;
 
 namespace EddiEvents
@@ -39,8 +40,8 @@ namespace EddiEvents
         [PublicAPI("The max unlaiden jump range of the ship")]
         public decimal maxjumprange { get; private set; }
 
-        [PublicAPI("The optimal mass value of the frame shift drive")]
-        public decimal optimalmass { get; private set; }
+        [ PublicAPI( "The optimal mass value of the frame shift drive" ) ]
+        public decimal optimalmass => Convert.ToDecimal( frameShiftDrive.GetFsdOptimalMass() );
 
         [PublicAPI("The rebuy value of the ship")]
         public long rebuy { get; private set; }
@@ -64,9 +65,11 @@ namespace EddiEvents
 
         public Ship shipDefinition => ShipDefinitions.FromEDModel(edModel);
 
+        private Module frameShiftDrive;
+
         public string edModel { get; private set; }
 
-        public ShipLoadoutEvent(DateTime timestamp, string ship, int shipId, string shipName, string shipIdent, long? hullValue, long? modulesValue, decimal hullHealth, decimal unladenmass, decimal maxjumprange, decimal optimalmass, long rebuy, bool hot, List<Compartment> compartments, List<Hardpoint> hardpoints, string paintjob) : base(timestamp, NAME)
+        public ShipLoadoutEvent(DateTime timestamp, string ship, int shipId, string shipName, string shipIdent, long? hullValue, long? modulesValue, decimal hullHealth, decimal unladenmass, decimal maxjumprange, long rebuy, bool hot, List<Compartment> compartments, List<Hardpoint> hardpoints, string paintjob) : base(timestamp, NAME)
         {
             this.edModel = ship;
             this.shipid = shipId;
@@ -77,12 +80,14 @@ namespace EddiEvents
             this.hullhealth = hullHealth;
             this.unladenmass = unladenmass;
             this.maxjumprange = maxjumprange;
-            this.optimalmass = optimalmass;
             this.rebuy = rebuy;
             this.hot = hot;
             this.paintjob = paintjob;
-            this.hardpoints = hardpoints;
-            this.compartments = compartments;
+            this.hardpoints = hardpoints ?? new List<Hardpoint>();
+            this.compartments = compartments ?? new List<Compartment>();
+
+            frameShiftDrive = this.compartments.FirstOrDefault( c =>
+                c.name?.Equals( "FrameShiftDrive", StringComparison.InvariantCultureIgnoreCase ) ?? false )?.module;
         }
     }
 }

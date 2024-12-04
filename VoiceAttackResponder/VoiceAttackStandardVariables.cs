@@ -99,54 +99,66 @@ namespace EddiVoiceAttackResponder
         }
 
         // Set values from a dictionary
-        protected static void setDictionaryValues(IDictionary<string, object> dict, string prefix, ref dynamic vaProxy)
+        public static void setDictionaryValues ( IDictionary<string, object> dict, string prefix, ref dynamic vaProxy )
         {
-            foreach (string key in dict.Keys)
+            foreach ( var key in dict.Keys )
             {
-                string varname = "EDDI " + prefix + " " + key;
-                object value = dict[key];
-                if (value == null)
-                {
-                    // No idea what it might have been so reset everything
-                    vaProxy.SetText(varname, null);
-                    vaProxy.SetInt(varname, null);
-                    vaProxy.SetDecimal(varname, null);
-                    vaProxy.SetBoolean(varname, null);
-                    continue;
-                }
-                Type valueType = value.GetType();
-                if (valueType.IsGenericType && valueType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                {
-                    valueType = Nullable.GetUnderlyingType(valueType);
-                }
+                var varname = "EDDI " + prefix + " " + key;
 
-                if (valueType == typeof(string))
+                vaProxy.SetText( varname, null );
+                vaProxy.SetInt( varname, null );
+                vaProxy.SetSmallInt( varname, null );
+                vaProxy.SetDecimal( varname, null );
+                vaProxy.SetBoolean( varname, null );
+
+                var value = dict[ key ];
+                if ( value is null ) { continue; }
+
+                var s = value.ToString();
+                vaProxy.SetText( varname, s );
+                if ( value is decimal d || decimal.TryParse( s, out d ) )
                 {
-                    vaProxy.SetText(varname, (string)value);
-                }
-                else if (valueType == typeof(int))
-                {
-                    vaProxy.SetInt(varname, (int)value);
-                }
-                else if (valueType == typeof(bool))
-                {
-                    vaProxy.SetBoolean(varname, (bool?)value);
-                }
-                else if (valueType == typeof(decimal))
-                {
-                    vaProxy.SetDecimal(varname, (decimal?)value);
-                }
-                else if (valueType == typeof(double))
-                {
-                    vaProxy.SetDecimal(varname, (decimal?)(double?)value);
-                }
-                else if (valueType == typeof(long))
-                {
-                    vaProxy.SetDecimal(varname, (decimal?)(long?)value);
+                    vaProxy.SetDecimal( varname, d );
+                    vaProxy.SetBoolean( varname, d != 0 );
+                    if ( d <= int.MaxValue )
+                    {
+                        vaProxy.SetInt( varname, Convert.ToInt32( Math.Round( d, MidpointRounding.AwayFromZero ) ) );
+                    }
+
+                    if ( d <= short.MaxValue )
+                    {
+                        vaProxy.SetSmallInt( varname, Convert.ToInt16( Math.Round( d, MidpointRounding.AwayFromZero ) ) );
+                    }
                 }
                 else
                 {
-                    Logging.Debug("Not handling state value type " + valueType);
+                    vaProxy.SetDecimal( varname, null );
+                }
+
+                if ( value is int i || int.TryParse( s, out i ) )
+                {
+                    vaProxy.SetInt( varname, i );
+                }
+
+                if ( value is short sh || short.TryParse( s, out sh ) )
+                {
+                    vaProxy.SetSmallInt( varname, sh );
+                }
+
+                if ( value is bool b || bool.TryParse( s, out b ) )
+                {
+                    vaProxy.SetBoolean( varname, b );
+                    vaProxy.SetDecimal( varname, (decimal?)( b ? 1 : 0 ) );
+                    vaProxy.SetInt( varname, (int?)( b ? 1 : 0 ) );
+                    vaProxy.SetSmallInt( varname, (short?)( b ? 1 : 0 ) );
+                }
+                else if ( !decimal.TryParse( s, out _ ) )
+                {
+                    b = !string.IsNullOrEmpty( s );
+                    vaProxy.SetBoolean( varname, b );
+                    vaProxy.SetDecimal( varname, (decimal?)(b ? 1 : 0) );
+                    vaProxy.SetInt( varname, (int?)(b ? 1 : 0) );
+                    vaProxy.SetSmallInt( varname, (short?)(b ? 1 : 0) );
                 }
             }
         }
@@ -162,7 +174,7 @@ namespace EddiVoiceAttackResponder
             vaProxy.SetText(prefix + " allegiance", (station?.Faction?.Allegiance ?? Superpower.None).localizedName);
             vaProxy.SetText(prefix + " faction", station?.Faction?.name);
             vaProxy.SetText(prefix + " state", (station?.Faction?.presences
-                .FirstOrDefault(p => p.systemName == station.systemname)?.FactionState ?? FactionState.None).localizedName);
+                .FirstOrDefault(p => p.systemAddress == station.systemAddress)?.FactionState ?? FactionState.None).localizedName);
             vaProxy.SetText(prefix + " primary economy", station?.primaryeconomy);
             vaProxy.SetText(prefix + " secondary economy", station?.secondaryeconomy);
             // Services
@@ -440,7 +452,7 @@ namespace EddiVoiceAttackResponder
                 vaProxy.SetText(prefix + " faction", system?.Faction?.name);
                 vaProxy.SetText(prefix + " primary economy", system?.primaryeconomy);
                 vaProxy.SetText(prefix + " state", (system?.Faction?.presences
-                    .FirstOrDefault(p => p.systemName == system.systemname)?.FactionState ?? FactionState.None).localizedName);
+                    .FirstOrDefault(p => p.systemAddress == system.systemAddress)?.FactionState ?? FactionState.None).localizedName);
                 vaProxy.SetText(prefix + " security", system?.security);
                 vaProxy.SetText(prefix + " power", system?.power);
                 vaProxy.SetText(prefix + " power (spoken)", Translations.getPhoneticPower(EDDI.Instance.CurrentStarSystem?.power));
@@ -634,7 +646,7 @@ namespace EddiVoiceAttackResponder
             }
         }
 
-        protected static void setStatusValues(Status status, string prefix, ref dynamic vaProxy)
+        public static void setStatusValues(Status status, string prefix, ref dynamic vaProxy)
         {
             if (status == null)
             {
@@ -644,70 +656,71 @@ namespace EddiVoiceAttackResponder
             try
             {
                 // Variables set from status flags
-                vaProxy.SetText(prefix + " vehicle", status?.vehicle);
-                vaProxy.SetBoolean(prefix + " being interdicted", status?.being_interdicted);
-                vaProxy.SetBoolean(prefix + " in danger", status?.in_danger);
-                vaProxy.SetBoolean(prefix + " near surface", status?.near_surface);
-                vaProxy.SetBoolean(prefix + " overheating", status?.overheating);
-                vaProxy.SetBoolean(prefix + " low fuel", status?.low_fuel);
-                vaProxy.SetText(prefix + " fsd status", status?.fsd_status);
-                vaProxy.SetBoolean(prefix + " srv drive assist", status?.srv_drive_assist);
-                vaProxy.SetBoolean(prefix + " srv under ship", status?.srv_under_ship);
-                vaProxy.SetBoolean(prefix + " srv turret deployed", status?.srv_turret_deployed);
-                vaProxy.SetBoolean(prefix + " srv handbrake activated", status?.srv_handbrake_activated);
-                vaProxy.SetBoolean(prefix + " srv high beams", status?.srv_high_beams);
-                vaProxy.SetBoolean(prefix + " scooping fuel", status?.scooping_fuel);
-                vaProxy.SetBoolean(prefix + " silent running", status?.silent_running);
-                vaProxy.SetBoolean(prefix + " cargo scoop deployed", status?.cargo_scoop_deployed);
-                vaProxy.SetBoolean(prefix + " lights on", status?.lights_on);
-                vaProxy.SetBoolean(prefix + " in wing", status?.in_wing);
-                vaProxy.SetBoolean(prefix + " hardpoints deployed", status?.hardpoints_deployed);
-                vaProxy.SetBoolean(prefix + " flight assist off", status?.flight_assist_off);
-                vaProxy.SetBoolean(prefix + " supercruise", status?.supercruise);
-                vaProxy.SetBoolean(prefix + " hyperspace", status?.hyperspace);
-                vaProxy.SetBoolean(prefix + " shields up", status?.shields_up);
-                vaProxy.SetBoolean(prefix + " landing gear down", status?.landing_gear_down);
-                vaProxy.SetBoolean(prefix + " landed", status?.landed);
-                vaProxy.SetBoolean(prefix + " docked", status?.docked);
-                vaProxy.SetBoolean(prefix + " analysis mode", status?.analysis_mode);
-                vaProxy.SetBoolean(prefix + " night vision", status?.night_vision);
+                vaProxy.SetText(prefix + " vehicle", status.vehicle);
+                vaProxy.SetBoolean(prefix + " being interdicted", status.being_interdicted);
+                vaProxy.SetBoolean(prefix + " in danger", status.in_danger);
+                vaProxy.SetBoolean(prefix + " near surface", status.near_surface);
+                vaProxy.SetBoolean(prefix + " overheating", status.overheating);
+                vaProxy.SetBoolean(prefix + " low fuel", status.low_fuel);
+                vaProxy.SetText(prefix + " fsd status", status.fsd_status);
+                vaProxy.SetBoolean(prefix + " srv drive assist", status.srv_drive_assist);
+                vaProxy.SetBoolean(prefix + " srv under ship", status.srv_under_ship);
+                vaProxy.SetBoolean(prefix + " srv turret deployed", status.srv_turret_deployed);
+                vaProxy.SetBoolean(prefix + " srv handbrake activated", status.srv_handbrake_activated);
+                vaProxy.SetBoolean(prefix + " srv high beams", status.srv_high_beams);
+                vaProxy.SetBoolean(prefix + " scooping fuel", status.scooping_fuel);
+                vaProxy.SetBoolean(prefix + " silent running", status.silent_running);
+                vaProxy.SetBoolean(prefix + " cargo scoop deployed", status.cargo_scoop_deployed);
+                vaProxy.SetBoolean(prefix + " lights on", status.lights_on);
+                vaProxy.SetBoolean(prefix + " in wing", status.in_wing);
+                vaProxy.SetBoolean(prefix + " hardpoints deployed", status.hardpoints_deployed);
+                vaProxy.SetBoolean(prefix + " flight assist off", status.flight_assist_off);
+                vaProxy.SetBoolean(prefix + " supercruise", status.supercruise);
+                vaProxy.SetBoolean(prefix + " hyperspace", status.hyperspace);
+                vaProxy.SetBoolean(prefix + " shields up", status.shields_up);
+                vaProxy.SetBoolean(prefix + " landing gear down", status.landing_gear_down);
+                vaProxy.SetBoolean(prefix + " landed", status.landed);
+                vaProxy.SetBoolean(prefix + " docked", status.docked);
+                vaProxy.SetBoolean(prefix + " analysis mode", status.analysis_mode);
+                vaProxy.SetBoolean(prefix + " night vision", status.night_vision);
 
                 // Variables set from pips (these are not always present in the event)
-                vaProxy.SetDecimal(prefix + " system pips", status?.pips_sys);
-                vaProxy.SetDecimal(prefix + " engine pips", status?.pips_eng);
-                vaProxy.SetDecimal(prefix + " weapon pips", status?.pips_wea);
+                vaProxy.SetDecimal(prefix + " system pips", status.pips_sys);
+                vaProxy.SetDecimal(prefix + " engine pips", status.pips_eng);
+                vaProxy.SetDecimal(prefix + " weapon pips", status.pips_wea);
 
                 // Variables set directly from the event (these are not always present in the event)
-                vaProxy.SetInt(prefix + " firegroup", status?.firegroup);
-                vaProxy.SetText(prefix + " gui focus", status?.gui_focus);
-                vaProxy.SetDecimal(prefix + " latitude", status?.latitude);
-                vaProxy.SetDecimal(prefix + " longitude", status?.longitude);
-                vaProxy.SetDecimal(prefix + " altitude", status?.altitude);
-                vaProxy.SetDecimal(prefix + " heading", status?.heading);
-                vaProxy.SetDecimal(prefix + " slope", status?.slope);
-                vaProxy.SetDecimal(prefix + " fuel", status?.fuel);
-                vaProxy.SetDecimal(prefix + " fuel percent", status?.fuel_percent);
-                vaProxy.SetInt(prefix + " fuel rate", status?.fuel_seconds);
-                vaProxy.SetInt(prefix + " cargo carried", status?.cargo_carried);
-                vaProxy.SetText(prefix + " legal status", status?.legalstatus);
-                vaProxy.SetText(prefix + " body name", status?.bodyname);
-                vaProxy.SetDecimal(prefix + " planet radius", status?.planetradius);
-                vaProxy.SetBoolean(prefix + " altitude from average radius", status?.altitude_from_average_radius);
-                vaProxy.SetBoolean(prefix + " on foot in station", status?.on_foot_in_station);
-                vaProxy.SetBoolean(prefix + " on foot on planet", status?.on_foot_on_planet);
-                vaProxy.SetBoolean(prefix + " aim down sight", status?.aim_down_sight);
-                vaProxy.SetBoolean(prefix + " low oxygen", status?.low_oxygen);
-                vaProxy.SetBoolean(prefix + " low health", status?.low_health);
-                vaProxy.SetText(prefix + " on foot temperature", status?.on_foot_temperature);
-                vaProxy.SetText(prefix + " destination", status?.destination_name);
-                vaProxy.SetText(prefix + " localized destination", status?.destination_localized_name);
+                vaProxy.SetInt(prefix + " firegroup", status.firegroup);
+                vaProxy.SetText(prefix + " gui focus", status.gui_focus);
+                vaProxy.SetDecimal(prefix + " latitude", status.latitude);
+                vaProxy.SetDecimal(prefix + " longitude", status.longitude);
+                vaProxy.SetDecimal(prefix + " altitude", status.altitude);
+                vaProxy.SetDecimal(prefix + " heading", status.heading);
+                vaProxy.SetDecimal(prefix + " slope", status.slope);
+                vaProxy.SetDecimal(prefix + " fuel", status.fuel);
+                vaProxy.SetDecimal(prefix + " fuel percent", status.fuel_percent);
+                vaProxy.SetInt(prefix + " fuel rate", status.fuel_seconds);
+                vaProxy.SetInt(prefix + " cargo carried", status.cargo_carried);
+                vaProxy.SetText(prefix + " legal status", status.legalstatus);
+                vaProxy.SetText(prefix + " body name", status.bodyname);
+                vaProxy.SetDecimal(prefix + " planet radius", status.planetradius);
+                vaProxy.SetBoolean(prefix + " altitude from average radius", status.altitude_from_average_radius);
+                vaProxy.SetBoolean(prefix + " on foot in station", status.on_foot_in_station);
+                vaProxy.SetBoolean(prefix + " on foot on planet", status.on_foot_on_planet);
+                vaProxy.SetBoolean(prefix + " aim down sight", status.aim_down_sight);
+                vaProxy.SetBoolean(prefix + " low oxygen", status.low_oxygen);
+                vaProxy.SetBoolean(prefix + " low health", status.low_health);
+                vaProxy.SetText(prefix + " on foot temperature", status.on_foot_temperature);
+                vaProxy.SetText(prefix + " destination", status.destination_name);
+                vaProxy.SetText(prefix + " localized destination", status.destination_localized_name);
+
+                Logging.Debug( "Set real-time status information" );
             }
             catch (Exception e)
             {
                 setStatus(ref vaProxy, "Failed to set real-time status information", e);
+                Logging.Error( "Failed to set real-time status information", e );
             }
-
-            Logging.Debug("Set real-time status information");
         }
 
         protected static void setCargo(CargoMonitor cargoMonitor, ref dynamic vaProxy)

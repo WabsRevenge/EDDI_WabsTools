@@ -40,7 +40,7 @@ namespace EddiCompanionAppService.Endpoints
                 {
                     return null;
                 }
-                if (!result.DeepEquals(cachedFleetCarrierJson))
+                if (!JToken.DeepEquals(result, cachedFleetCarrierJson))
                 {
                     cachedFleetCarrierJson = result;
                     cachedFleetCarrierTimeStamp = result["timestamp"]?.ToObject<DateTime?>() ?? DateTime.MinValue;

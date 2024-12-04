@@ -641,5 +641,16 @@
     <value>Impulswellen-Xeno-Scanner</value>
     <comment>Module PulseWaveXenoScanner</comment>
   </data>
-  
+  <data name="Extraction_Missile" xml:space="preserve">
+    <value>Abbaurakete</value>
+    <comment>Module Human </comment>
+  </data>
+  <data name="GuardianNaniteTorpedoPylon" xml:space="preserve">
+    <value>Guardian Nanit-Torpedopylon</value>
+    <comment>Module Guardian Nanite Torpedo Pylon</comment>
+  </data>
+  <data name="FrameShiftDrive_SCO" xml:space="preserve">
+    <value>Frame Shift Drive mit Supercruise Überladung</value>
+    <comment>Module Frame Shift Drive (SCO)</comment>
+  </data>
 </root>

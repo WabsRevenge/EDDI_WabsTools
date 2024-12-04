@@ -239,7 +239,7 @@ namespace EddiDataDefinitions
                 try
                 {
                     stationToUpdate.commodities = eddnCommodityMarketQuotes.Select(c => c.ToCommodityMarketQuote()).Where(c => c != null).ToList();
-                    stationToUpdate.prohibited = prohibitedCommodities.Select(p => CommodityDefinition.CommodityDefinitionFromEliteID(p.Key) ?? CommodityDefinition.FromEDName(p.Value)).ToList();
+                    stationToUpdate.prohibited = prohibitedCommodities.Select(p => CommodityDefinition.CommodityDefinitionFromEliteID(p.Key, p.Value) ?? CommodityDefinition.FromEDName(p.Value)).ToList();
                     stationToUpdate.commoditiesupdatedat = Dates.fromDateTimeToSeconds(commoditiesupdatedat);
                 }
                 catch (Exception e)

@@ -646,7 +646,7 @@
     <comment>Material tg_propulsionelement</comment>
   </data>
   <data name="tg_biomechanicalconduits" xml:space="preserve">
-    <value>八角生物机械组件</value>
+    <value>八角生物机械管线</value>
     <comment>Material tg_biomechanicalconduits</comment>
   </data>
   <data name="tg_weaponparts" xml:space="preserve">
@@ -701,4 +701,5 @@
     <value>战术核心芯片</value>
     <comment>Material unknowncorechip</comment>
   </data>
+  
 </root>

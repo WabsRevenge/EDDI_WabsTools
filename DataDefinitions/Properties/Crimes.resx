@@ -269,4 +269,8 @@
     <value>Attempting to discharge your Energylink in overload mode</value>
     <comment>Crime onFoot_overchargeIntent</comment>
   </data>
+  <data name="stationTamperingMinor" xml:space="preserve">
+    <value>Station tampering</value>
+    <comment>Powerplay (Holoscreen Hacking)</comment>
+  </data>
 </root>

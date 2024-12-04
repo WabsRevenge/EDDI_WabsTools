@@ -126,7 +126,7 @@
     <comment>Compromised nav beacon</comment>
   </data>
   <data name="USS" xml:space="preserve">
-    <value>Unbekannte Signalquelle</value>
+    <value>Unidentifizierte Signalquelle</value>
     <comment>Unidentified Signal Source</comment>
   </data>
   <data name="Warzone_PointRace_High" xml:space="preserve">
@@ -416,5 +416,13 @@
   <data name="Wreckage_AncientProbe" xml:space="preserve">
     <value>Kleinere Wrackteile</value>
     <comment>Minor Wreckage</comment>
+  </data>
+  <data name="Settlement_Unflattened_TGMegaBarnacle" xml:space="preserve">
+    <value>Thargoiden Hauptstandort</value>
+    <comment>Thargoid Spire Site</comment>
+  </data>
+  <data name="FIXED_EVENT_PROBE" xml:space="preserve">
+    <value>Uralte Sonde</value>
+    <comment>Ancient Probe</comment>
   </data>
 </root>

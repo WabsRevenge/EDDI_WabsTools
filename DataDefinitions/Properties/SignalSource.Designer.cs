@@ -268,6 +268,15 @@ namespace EddiDataDefinitions.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ancient Probe.
+        /// </summary>
+        public static string FIXED_EVENT_PROBE {
+            get {
+                return ResourceManager.GetString("FIXED_EVENT_PROBE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Signal Source.
         /// </summary>
         public static string GenericSignalSource {
@@ -439,6 +448,15 @@ namespace EddiDataDefinitions.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Thargoid Spire Site.
+        /// </summary>
+        public static string Settlement_Unflattened_TGMegaBarnacle {
+            get {
+                return ResourceManager.GetString("Settlement_Unflattened_TGMegaBarnacle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Thargoid Barnacle.
         /// </summary>
         public static string Settlement_Unflattened_Unknown {
@@ -552,6 +570,33 @@ namespace EddiDataDefinitions.Properties {
         public static string USS_Type_NonHuman {
             get {
                 return ResourceManager.GetString("USS_Type_NonHuman", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Power Convoy.
+        /// </summary>
+        public static string USS_Type_PowerConvoy {
+            get {
+                return ResourceManager.GetString("USS_Type_PowerConvoy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Power Wreckage Signature.
+        /// </summary>
+        public static string USS_Type_PowerEmissions {
+            get {
+                return ResourceManager.GetString("USS_Type_PowerEmissions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Power Convoy Distress Signal.
+        /// </summary>
+        public static string USS_Type_PowerplayConvoyDistressSignal {
+            get {
+                return ResourceManager.GetString("USS_Type_PowerplayConvoyDistressSignal", resourceCulture);
             }
         }
         

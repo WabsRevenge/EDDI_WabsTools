@@ -85,8 +85,12 @@ namespace EddiSpeechResponder
         [JsonIgnore]
         private string dataPath;
 
+        [ JsonIgnore ] 
+        private static Personality _defaultPersonality;
+
         private static readonly string[] obsoleteScriptKeys = 
         {
+            "Entered signal source", // Replaced by "Destination arrived" script
             "Jumping", // Replaced by "FSD engaged" script
             "Crew member role change", // This name is mismatched to the key (should be "changed"), so EDDI couldn't match the script name to the .json key correctly. The default script has been corrected.
             "Ship low fuel", // Accidental duplicate. The real event is called 'Low fuel'
@@ -97,21 +101,25 @@ namespace EddiSpeechResponder
             "Exploration promotion", // Replaced by "Commander promotion" script
             "Federation promotion", // Replaced by "Commander promotion" script
             "Trade promotion", // Replaced by "Commander promotion" script
-            "Ship repurchased" // Replaced by "Respawned" script
+            "Ship repurchased", // Replaced by "Respawned" script
+            "Power commodity fast tracked", // Made obsolete in Powerplay 2.0 which no longer allows fast tracking commodity allocations
+            "Power defected", // Made obsolete in Powerplay 2.0 which no longer includes a defection mechanic.
+            "Power expansion vote cast", // Made obsolete in Powerplay 2.0 which no longer includes a voting system
+            "Power preparation vote cast" // Made obsolete in Powerplay 2.0 which no longer includes a voting system
         };
 
         private static readonly string[] ignoredEventKeys =
         {
             // Shares updates with monitors / responders but are not intended to be user facing
-            "Cargo",
-            "Fleet carrier materials",
-            "Market",
-            "Outfitting",
-            "Shipyard",
-            "Squadron startup",
-            "Stored ships",
-            "Stored modules",
-            "Unhandled event"
+            CargoEvent.NAME,
+            FleetCarrierMaterialsEvent.NAME,
+            MarketEvent.NAME,
+            OutfittingEvent.NAME,
+            ShipyardEvent.NAME,
+            SquadronStartupEvent.NAME,
+            StoredShipsEvent.NAME,
+            StoredModulesEvent.NAME,
+            UnhandledEvent.NAME
         };
 
         private static readonly string DIRECTORYPATH = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -173,7 +181,7 @@ namespace EddiSpeechResponder
         /// </summary>
         public static Personality Default()
         {
-            return FromFile(DEFAULT_PATH, true);
+            return _defaultPersonality ?? ( _defaultPersonality = FromFile( DEFAULT_PATH, true ) );
         }
 
         /// <summary>
@@ -221,7 +229,17 @@ namespace EddiSpeechResponder
             {
                 personality.dataPath = filename;
                 personality.IsCustom = !isDefault;
-                fixPersonalityInfo(personality);
+                if ( !isDefault )
+                {
+                    fixPersonalityInfo( personality );
+                }
+                else
+                {
+                    foreach ( var script in personality.Scripts.Values )
+                    {
+                        script.defaultValue = script.Value;
+                    }
+                }
             }
 
             return personality;
@@ -347,64 +365,59 @@ namespace EddiSpeechResponder
             incrementPersonalityBackups(personality);
 
             // Default personality for reference scripts
-            var defaultPersonality = !personality.IsCustom ? null : Default();
-
+            var defaultPersonality = Default();
             var fixedScripts = new Dictionary<string, Script>();
             var upgradeableScripts = new Dictionary<string, Script>();
 
-            // First, iterate through our default event scripts. Ensure that every required event script is present.
-            List<string> missingScripts = new List<string>();
-            foreach (var defaultEvent in Events.DESCRIPTIONS)
+            void SortScripts ( IEnumerable<string> keys, bool isResponderScripts )
             {
-                if ( personality.Scripts.TryGetValue( defaultEvent.Key, out var personalityScript ) )
+                foreach ( var key in keys )
                 {
-                    upgradeableScripts.Add( defaultEvent.Key, personalityScript );
-                }
-                else
-                {
-                    if ( !obsoleteScriptKeys.Contains( defaultEvent.Key ) && 
-                         !ignoredEventKeys.Contains( defaultEvent.Key ) )
+                    // If the script is present in the target personality, upgrade the script from the target personality
+                    if ( personality.Scripts.TryGetValue( key, out var personalityScript ) )
                     {
-                        missingScripts.Add( defaultEvent.Key );
+                        personalityScript.Responder = isResponderScripts;
+                        upgradeableScripts.Add( key, personalityScript );
+                    }
+                    else
+                    {
+                        // If the script is not present in the target personality then add the default script to the output
+                        if ( defaultPersonality.Scripts.TryGetValue( key, out var defaultScript ) )
+                        {
+                            defaultScript.Responder = isResponderScripts;
+                            fixedScripts.Add( key, defaultScript );
+                        }
                     }
                 }
             }
 
-            // Report missing event scripts, except those we have specifically named.
-            if (missingScripts.Count > 0)
-            {
-                Logging.Info("Failed to find scripts" + string.Join(";", missingScripts));
-            }
+            // First, iterate through our event keys, less any we have chosen to omit.
+            // Ensure that every required event script is present.
+            // Identify as "responder" scripts.
+            SortScripts( Events.TYPES.Keys.Except(ignoredEventKeys), true );
 
-            // Next, add any secondary scripts present in the default personality but which were not found amongst our event scripts.
-            if (defaultPersonality?.Scripts != null)
-            {
-                foreach (var defaultScriptKV in defaultPersonality.Scripts.Where(s => !upgradeableScripts.Keys.Contains(s.Key)))
-                {
-                    if ((defaultPersonality.Scripts?.TryGetValue(defaultScriptKV.Key, out var defaultScript) ?? false) && 
-                        !obsoleteScriptKeys.Contains(defaultScriptKV.Key))
-                    {
-                        upgradeableScripts.Add(defaultScriptKV.Key, defaultScript );
-                    }
-                }
-            }
+            // Next, iterate through remaining default scripts which are not tied to an event.
+            // Ensure that every required non-event script is present.
+            // Identify as "non-responder" scripts.
+            SortScripts( defaultPersonality.Scripts.Keys.Where( key =>
+                !upgradeableScripts.ContainsKey( key ) &&
+                !fixedScripts.ContainsKey( key ) ), false );
 
-            // Next, try to upgrade each personality script referencing the matching script in the default personality.
-            // Set the `PersonalityIsCustom` property.
+            // Next, try to upgrade each personality script referencing a matching script in the default personality.
             foreach ( var kv in upgradeableScripts )
             {
-                if ( ( defaultPersonality?.Scripts?.TryGetValue( kv.Key, out var defaultScript ) ?? false ) && defaultScript != null )
+                if ( defaultPersonality.Scripts.TryGetValue( kv.Key, out var defaultScript ) && defaultScript != null )
                 {
                     var script = UpgradeScript(kv.Value, defaultScript);
-                    script.PersonalityIsCustom = personality.IsCustom;
                     fixedScripts.Add( kv.Key, script );
                 }
             }
 
-            // Finally, iterate through the personality's scripts.
+            // Finally, iterate through the personality's scripts and add any
+            // non-obsolete and non-default secondary scripts from the personality
+            // which do not have a match in the default personality and which are not obsolete script names.
             foreach ( var kv in personality.Scripts )
             {
-                // Add any non-obsolete and non-default secondary scripts from the personality.
                 if ( !fixedScripts.ContainsKey( kv.Key ) && 
                      !obsoleteScriptKeys.Contains( kv.Key ) && 
                      !kv.Value.Default )
@@ -415,8 +428,14 @@ namespace EddiSpeechResponder
                 }
             }
 
-            // Sort scripts and save to file
-            personality.Scripts = fixedScripts.OrderBy(s => s.Key).ToDictionary(s => s.Key, s => s.Value);
+            // Sort scripts and save to file. Set the `PersonalityIsCustom` property.
+            foreach ( var kv in fixedScripts )
+            {
+                kv.Value.PersonalityIsCustom = personality.IsCustom;
+            }
+            personality.Scripts = fixedScripts
+                .OrderBy(s => s.Key)
+                .ToDictionary(s => s.Key, s => s.Value);
             personality.ToFile();
             upgradedPersonalities.Add(personality.dataPath);
         }

@@ -38,6 +38,7 @@ namespace EddiMissionMonitor
 
         private void warningChanged(object sender, TextChangedEventArgs e)
         {
+            if ( sender is TextBox textBox && !textBox.IsLoaded ) { return; }
             try
             {
                 var missionsConfig = ConfigService.Instance.missionMonitorConfiguration;
@@ -80,6 +81,11 @@ namespace EddiMissionMonitor
                     }
                 }
             }
+        }
+
+        private void MissionNotes_OnTextChanged ( object sender, TextChangedEventArgs e )
+        {
+            missionMonitor().writeMissions();
         }
     }
 }

@@ -1,6 +1,6 @@
-﻿using Cottle.Functions;
+﻿using Cottle;
 using EddiCore;
-using EddiSpeechResponder.Service;
+using EddiSpeechResponder.ScriptResolverService;
 using JetBrains.Annotations;
 using System;
 
@@ -14,9 +14,9 @@ namespace EddiSpeechResponder.CustomFunctions
         public FunctionCategory Category => FunctionCategory.Hidden;
         public string description => Properties.CustomFunctions_Untranslated.RefreshProfile;
         public Type ReturnType => typeof( string );
-        public NativeFunction function => new NativeFunction((values) =>
+        public IFunction function => Function.CreatePureMinMax( ( runtime, values ) =>
         {
-            bool stationRefresh = (values.Count != 0 && values[0].AsBoolean);
+            var stationRefresh = (values.Count != 0 && values[0].AsBoolean);
             EDDI.Instance.refreshProfile(stationRefresh);
             return "";
         }, 0, 1);

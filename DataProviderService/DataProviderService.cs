@@ -29,6 +29,15 @@ namespace EddiDataProviderService
             return starSystem ?? new StarSystem() { systemname = system };
         }
 
+        public StarSystem GetSystemData ( ulong systemAddress, bool showCoordinates = true, bool showBodies = true, bool showStations = true, bool showFactions = true )
+        {
+            if ( systemAddress == 0 ) { return null; }
+
+            StarSystem starSystem = edsmService.GetStarMapSystem(systemAddress, showCoordinates);
+            starSystem = GetSystemExtras( starSystem, showBodies, showStations, showFactions );
+            return starSystem ?? new StarSystem() { systemAddress = systemAddress };
+        }
+
         public List<StarSystem> GetSystemsData(string[] systemNames, bool showCoordinates = true, bool showBodies = true, bool showStations = true, bool showFactions = true)
         {
             if (systemNames == null || systemNames.Length == 0) { return new List<StarSystem>(); }
@@ -54,8 +63,8 @@ namespace EddiDataProviderService
             {
                 if (showBodies)
                 {
-                    List<Body> bodies = edsmService.GetStarMapBodies(starSystem.systemname) ?? new List<Body>();
-                    foreach (Body body in bodies)
+                    var bodies = edsmService.GetStarMapBodies(starSystem.systemAddress) ?? new List<Body>();
+                    foreach (var body in bodies)
                     {
                         body.systemname = starSystem.systemname;
                         body.systemAddress = starSystem.systemAddress;
@@ -65,16 +74,16 @@ namespace EddiDataProviderService
 
                 if (starSystem.population > 0)
                 {
-                    List<Faction> factions = new List<Faction>();
-                    List<Station> stations = new List<Station>();
+                    var factions = new List<Faction>();
+                    var stations = new List<Station>();
                     if (showFactions)
                     {
-                        factions = edsmService.GetStarMapFactions(starSystem.systemname) ?? factions;
+                        factions = edsmService.GetStarMapFactions(starSystem.systemAddress) ?? factions;
                         starSystem.factions = factions;
                     }
                     if (showStations)
                     {
-                        stations = edsmService.GetStarMapStations(starSystem.systemname) ?? stations;
+                        stations = edsmService.GetStarMapStations(starSystem.systemAddress) ?? stations;
                         starSystem.stations = showFactions 
                             ? SetStationFactionData( stations, factions ) 
                             : stations;
@@ -145,7 +154,7 @@ namespace EddiDataProviderService
                     }
                     else
                     {
-                        Logging.Warn("No flight logs received.");
+                        Logging.Debug( "EDSM flight logs are already synchronized, no new flight logs since last sync." );
                     }
                 }
                 catch (EDSMException edsme)
@@ -167,7 +176,7 @@ namespace EddiDataProviderService
                 try
                 {
                     Logging.Debug( $"Syncing flight logs from EDSM for {starSystems.Count} system(s)." );
-                    List<StarMapResponseLogEntry> flightLogs = edsmService.getStarMapLog(null, starSystems.Select(s => s.systemname).ToArray());
+                    List<StarMapResponseLogEntry> flightLogs = edsmService.getStarMapLog(null, starSystems.Select(s => s.systemAddress).ToArray());
                     Dictionary<string, string> comments = edsmService.getStarMapComments();
 
                     if (flightLogs?.Count > 0)

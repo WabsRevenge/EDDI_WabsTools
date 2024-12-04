@@ -2,15 +2,16 @@
 
 namespace EddiSpeechService
 {
-    public partial class Translations
+    public static partial class Translations
     {
         public static string getPhoneticShipModel(string val)
         {
-            Ship ship = ShipDefinitions.FromModel(val);
-            if (ship != null && ship.EDID > 0)
+            var ship = ShipDefinitions.FromModel( val );
+            if ( ship != null && !string.IsNullOrEmpty( ship.model ) )
             {
                 return ship.SpokenModel().Trim();
             }
+
             return val;
         }
     }

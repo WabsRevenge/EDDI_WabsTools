@@ -2,6 +2,7 @@
 using EddiConfigService;
 using EddiConfigService.Configurations;
 using EddiCore;
+using EddiCore.Upgrader;
 using EddiDataDefinitions;
 using EddiDataProviderService;
 using EddiSpeechService;
@@ -976,10 +977,10 @@ namespace Eddi
         private void companionApiStatusChanged(CompanionAppService.State oldState, CompanionAppService.State newState)
         {
             // The calling thread for this method may not have direct access to the MainWindow dispatcher so we invoke the dispatcher here.
-            Application.Current?.Dispatcher?.Invoke(() =>
+            Application.Current?.Dispatcher?.InvokeAsync( () =>
             {
                 MainWindow mainwindow = (MainWindow)Application.Current?.MainWindow;
-                mainwindow?.Dispatcher?.Invoke(setStatusInfo);
+                mainwindow?.Dispatcher?.InvokeAsync( setStatusInfo);
             });
 
             if (oldState == CompanionAppService.State.AwaitingCallback &&
@@ -1322,7 +1323,7 @@ namespace Eddi
 
         private void createGithubIssue()
         {
-            Process.Start("https://github.com/EDCD/EDDI/issues/new");
+            Process.Start( "https://github.com/EDCD/EDDI/issues/new?template=bug_report.md" );
         }
 
         private void upgradeClicked(object sender, RoutedEventArgs e)

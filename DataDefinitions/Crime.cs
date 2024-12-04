@@ -40,6 +40,7 @@
         public static readonly Crime RecklessWeaponsDischarge = new Crime("recklessWeaponsDischarge");
         public static readonly Crime PassengerWanted = new Crime("passengerWanted");
         public static readonly Crime MissionFine = new Crime("missionFine");
+        public static readonly Crime StationTamperingMinor = new Crime( "stationTamperingMinor" );
 
         // On Foot Crimes
         public static readonly Crime onFootArcCutterUse = new Crime("onFoot_arcCutterUse");

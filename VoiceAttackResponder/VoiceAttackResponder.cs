@@ -1,5 +1,6 @@
 ﻿using Eddi;
 using EddiCore;
+using EddiDataDefinitions;
 using EddiEvents;
 using System;
 using System.Windows.Controls;
@@ -41,7 +42,7 @@ namespace EddiVoiceAttackResponder
 
         public void Handle(Event @event)
         {
-            if (@event.fromLoad)
+            if ( !App.FromVA || @event.fromLoad || @event is UnhandledEvent )
             {
                 return;
             }
@@ -62,16 +63,25 @@ namespace EddiVoiceAttackResponder
         }
 
         public void Stop()
-        {
-        }
+        { }
 
         public void Reload()
-        {
-        }
+        { }
 
         public UserControl ConfigurationTabItem()
         {
             return new ConfigurationWindow();
+        }
+
+        public void HandleStatus ( Status status )
+        {
+            if ( App.FromVA )
+            {
+                lock ( VoiceAttackPlugin.vaProxyLock )
+                {
+                    VoiceAttackVariables.setStatusValues( status, "Status", ref App.vaProxy );
+                }
+            }
         }
     }
 }

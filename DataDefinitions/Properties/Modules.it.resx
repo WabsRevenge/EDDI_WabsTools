@@ -645,4 +645,12 @@
     <value>Missile da estrazione</value>
     <comment>Module Human </comment>
   </data>
+  <data name="GuardianNaniteTorpedoPylon" xml:space="preserve">
+    <value>Pilone per Siluro a naniti dei Guardiani</value>
+    <comment>Module Guardian Nanite Torpedo Pylon</comment>
+  </data>
+  <data name="FrameShiftDrive_SCO" xml:space="preserve">
+    <value>Motore a Modulazione con Sovraccarico all'Iperguida</value>
+    <comment>Module Frame Shift Drive (SCO)</comment>
+  </data>
 </root>

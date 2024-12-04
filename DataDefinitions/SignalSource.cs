@@ -47,6 +47,9 @@ namespace EddiDataDefinitions
             var NonHuman = new SignalSource("USS_Type_NonHuman", "USS_NonHumanSignalSource");
             var TradingBeacon = new SignalSource("USS_Type_TradingBeacon", "USS_TradingBeacon");
             var WeaponsFire = new SignalSource("USS_Type_WeaponsFire", "USS_WeaponsFire");
+            var PowerConvoy = new SignalSource( "USS_Type_PowerConvoy", "USS_PowerConvoy" );
+            var __ = new SignalSource( "USS_Type_PowerplayConvoyDistressSignal", "USS_PowerplayConvoyDistressSignal" );
+            var PowerEmmissions = new SignalSource( "USS_Type_PowerEmissions", "USS_PowerEmissions" );
 
             var UnregisteredCommsBeacon = new SignalSource("NumberStation");
             var ListeningPost = new SignalSource("ListeningPost");
@@ -61,6 +64,7 @@ namespace EddiDataDefinitions
             var PirateAttackT7 = new SignalSource("FIXED_EVENT_HIGHTHREATSCENARIO_T7");
             var NotableStellarPhenomenaCloud = new SignalSource("Fixed_Event_Life_Cloud");
             var NotableStellarPhenomenaRing = new SignalSource("Fixed_Event_Life_Ring");
+            var AncientProbe = new SignalSource("FIXED_EVENT_PROBE");
 
             var AttackAftermath = new SignalSource("AttackAftermath");
             var AftermathLarge = new SignalSource("Aftermath_Large");
@@ -79,6 +83,7 @@ namespace EddiDataDefinitions
             var GuardianStructureMedium = new SignalSource("Ancient_Medium");
             var ThargoidBarnacle = new SignalSource("Settlement_Unflattened_Unknown");
             var ThargoidCrashSite = new SignalSource("Settlement_Unflattened_WreckedUnknown");
+            var ThargoidSpireSite = new SignalSource( "Settlement_Unflattened_TGMegaBarnacle" );
 
             var AbandonedBuggy = new SignalSource("Abandoned_Buggy");
             var ActivePowerSource = new SignalSource("Perimeter");
@@ -105,12 +110,37 @@ namespace EddiDataDefinitions
         public static readonly SignalSource UnidentifiedSignalSource;
         public static readonly SignalSource GenericSignalSource;
 
+        [PublicAPI]
+        public SignalType signalType { get; set; }
+        
         public int index;
+
+        [PublicAPI]
         public string spawningFaction { get; set; }
+
+        [PublicAPI]
+        public string spawningPower => SpawningPower?.localizedName ?? Power.None.localizedName;
+
+        [PublicAPI]
+        public Power SpawningPower { get; set; }
+
+        [ PublicAPI ] 
+        public string opposingPower => OpposingPower?.localizedName ?? Power.None.localizedName;
+
+        [PublicAPI]
+        public Power OpposingPower { get; set; }
+
         public DateTime? expiry { get; set; }
+
+        [PublicAPI]
         public int? threatLevel { get; set; }
+
+        [PublicAPI]
         public bool? isStation { get; set; }
+
+        [PublicAPI]
         public FactionState spawningState { get; set; }
+
         public long? systemAddress { get; set; }
 
         // Not intended to be user facing
@@ -259,23 +289,33 @@ namespace EddiDataDefinitions
             return result;
         }
 
-        public static SignalSource FromStationEDName(string from)
+        public static SignalSource FromStationEDName(string from, string signalTypeEdName)
         {
             if (string.IsNullOrEmpty(from)) { return null; }
 
-            // Signal might be a fleet carrier with name and carrier id in a single string. If so, we break them apart
-            var fleetCarrierRegex = new Regex("^(.+)(?> )([A-Za-z0-9]{3}-[A-Za-z0-9]{3})$");
-            if (fleetCarrierRegex.IsMatch(from))
+            if ( signalTypeEdName == SignalType.FleetCarrier.edname )
             {
-                // Fleet carrier names include both the carrier name and carrier ID, we need to separate them
-                var fleetCarrierParts = fleetCarrierRegex.Matches(from)[0].Groups;
-                if (fleetCarrierParts.Count == 3)
+                // Signal might be a fleet carrier with name and carrier id in a single string. If so, we break them apart
+                var fleetCarrierRegex = new Regex("^(.+)(?> )([A-Za-z0-9]{3}-[A-Za-z0-9]{3})$");
+                if ( fleetCarrierRegex.IsMatch( from ) )
                 {
-                    var fleetCarrierName = fleetCarrierParts[2].Value;
-                    var fleetCarrierLocalizedName = fleetCarrierParts[1].Value;
-                    return new SignalSource(fleetCarrierName) { fallbackLocalizedName = fleetCarrierLocalizedName, isStation = true};
+                    // Fleet carrier names include both the carrier name and carrier ID, we need to separate them
+                    var fleetCarrierParts = fleetCarrierRegex.Matches(from)[0].Groups;
+                    if ( fleetCarrierParts.Count == 3 )
+                    {
+                        var fleetCarrierName = fleetCarrierParts[2].Value;
+                        var fleetCarrierLocalizedName = fleetCarrierParts[1].Value;
+                        return new SignalSource( fleetCarrierName ) { fallbackLocalizedName = fleetCarrierLocalizedName, isStation = true };
+                    }
                 }
             }
+            else if ( signalTypeEdName == SignalType.StationMegaShip.edname )
+            {
+                // Normalize Powerplay Stronghold Carrier names
+                var invariantName = Regex.Replace( from, @"/^(Stronghold Carrier|Porte-vaisseaux de forteresse|Transportadora da potência|Носитель-база|Hochburg-Carrier|Portanaves bastión|\$ShipName_StrongholdCarrier(.*?))$/i", "Stronghold Carrier" );
+                return new SignalSource( invariantName ) { isStation = true };
+            }
+
             return new SignalSource(from) {isStation = true};
         }
     }

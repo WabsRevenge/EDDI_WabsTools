@@ -1576,10 +1576,7 @@
     <value>Equipo industrial de Sirius</value>
     <comment>Commodity SiriusIndustrialEquipment</comment>
   </data>
-  <data name="ThargoidScoutTissueSample" xml:space="preserve">
-    <value>Muestra de tejido de explorador Thargoide </value>
-    <comment>Commodity ThargoidScoutTissueSample</comment>
-  </data>
+  
   <data name="UnmarkedWeapons" xml:space="preserve">
     <value>Suministros militares sin marcar</value>
     <comment>Commodity UnmarkedWeapons</comment>
@@ -1762,6 +1759,11 @@
     <value>Cepa gamma de Cebollazo</value>
     <comment>Commodity Onionhead Gamma Strain</comment>
   </data>
+  
+  
+  
+  
+  
   
   
   

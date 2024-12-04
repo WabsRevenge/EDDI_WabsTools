@@ -401,5 +401,14 @@ namespace EddiDataDefinitions.Properties {
                 return ResourceManager.GetString("recklessWeaponsDischarge", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Station tampering.
+        /// </summary>
+        public static string stationTamperingMinor {
+            get {
+                return ResourceManager.GetString("stationTamperingMinor", resourceCulture);
+            }
+        }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using EddiCore;
 using EddiDataDefinitions;
 using EddiDataProviderService;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -14,11 +13,11 @@ namespace EddiEddnResponder.Toolkit
         // We keep track of location information locally to minimize influence from other EDDI systems
 
         // Star System
-        public string systemName { get; private set; }
-        public ulong? systemAddress { get; private set; }
-        public decimal? systemX { get; private set; }
-        public decimal? systemY { get; private set; }
-        public decimal? systemZ { get; private set; }
+        public string systemName { get; internal set; }
+        public ulong? systemAddress { get; internal set; }
+        public decimal? systemX { get; internal set; }
+        public decimal? systemY { get; internal set; }
+        public decimal? systemZ { get; internal set; }
 
         // Station (Market)
         public string stationName { get; private set; }
@@ -51,7 +50,14 @@ namespace EddiEddnResponder.Toolkit
         {
             "CarrierJumpRequest", // CarrierJumpRequest events describing the system the carrier is jumping too rather than the system we are in
             "FSDTarget", // FSDTarget events describing the system we are targeting rather than the system we are in
-            "FSSSignalDiscovered"  // Scan events from the destination system can register after StartJump and before we actually leave the originating system
+            "FSSSignalDiscovered",  // Scan events from the destination system can register after StartJump and before we actually leave the originating system
+            "Outfitting", // Relies on an exterior file and contains `StarSystem` field without `SystemAddress` field. Safer to ignore.
+            "Market", // Relies on an exterior file and contains `StarSystem` field without `SystemAddress` field. Safer to ignore.
+            "ScanOrganic", // May report incorrect location info if the player does not allow the animation to complete before boarding a ship.
+            "Shipyard", // Relies on an exterior file and contains `StarSystem` field without `SystemAddress` field. Safer to ignore.
+            "StartJump", // `StartJump` events list the destination star system name.
+            "StoredModules", // Contains `StarSystem` field without `SystemAddress` field. Safer to ignore.
+            "StoredShips" // Contains `StarSystem` field without `SystemAddress` field. Safer to ignore.
         };
 
         internal void GetLocationInfo(Status status)
@@ -270,13 +276,14 @@ namespace EddiEddnResponder.Toolkit
                 if (!invalidState)
                 {
                     invalidState = true;
-                    Logging.Warn("The EDDN responder is in an invalid state and is unable to send messages.", JsonConvert.SerializeObject(this) + " Event: " + JsonConvert.SerializeObject(data));
+                    Logging.Warn( "The EDDN responder is in an invalid state and is unable to send messages.",
+                        new Dictionary<string, object> { { "EDDN State", this }, { "Event", data } } );
                 }
             }
             return false;
         }
 
-        private bool ConfirmAddressAndCoordinates()
+        internal bool ConfirmAddressAndCoordinates()
         {
             if (systemName != null)
             {
@@ -287,7 +294,7 @@ namespace EddiEddnResponder.Toolkit
                 }
                 else
                 {
-                    system = StarSystemRepository.GetOrCreateStarSystem(systemName);
+                    system = StarSystemRepository.GetOrFetchStarSystem( systemName, true, true, false, false, false );
                 }
                 if (system != null)
                 {
@@ -310,7 +317,7 @@ namespace EddiEddnResponder.Toolkit
             return systemAddress != null && systemX != null && systemY != null && systemZ != null;
         }
 
-        private bool ConfirmScan(string scannedBodyName)
+        internal bool ConfirmScan(string scannedBodyName)
         {
             if (scannedBodyName != null && systemName != null)
             {

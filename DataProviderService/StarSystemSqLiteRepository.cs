@@ -242,7 +242,7 @@ namespace EddiDataProviderService
                 else
                 {
                     // Deserialize the old result
-                    var result = DeserializeStarSystem(dbStarSystem.systemName, dbStarSystem.systemJson, ref needToUpdate);
+                    var result = DeserializeStarSystem(dbStarSystem.systemAddress, dbStarSystem.systemJson, ref needToUpdate);
                     if (result != null)
                     {
                         results.Add(result);
@@ -301,7 +301,7 @@ namespace EddiDataProviderService
             {
                 foreach (DatabaseStarSystem systemToUpdate in systemsToUpdate)
                 {
-                    if (updatedSystem.systemname == systemToUpdate.systemName)
+                    if (updatedSystem.systemAddress == systemToUpdate.systemAddress)
                     {
                         IDictionary<string, object> oldStarSystem = Deserializtion.DeserializeData(systemToUpdate.systemJson);
 
@@ -527,14 +527,14 @@ namespace EddiDataProviderService
             };
         }
 
-        private StarSystem DeserializeStarSystem(string systemName, string data, ref bool needToUpdate)
+        private StarSystem DeserializeStarSystem(ulong systemAddress, string data, ref bool needToUpdate)
         {
-            if (systemName == string.Empty || data == string.Empty) { return null; }
+            if ( systemAddress == 0 || data == string.Empty) { return null; }
 
             // Check our short term star system cache for a previously deserialized star system and return that if it is available.
-            if (starSystemCache.Contains(systemName))
+            if (starSystemCache.Contains( systemAddress ) )
             {
-                return starSystemCache.Get(systemName);
+                return starSystemCache.Get(systemAddress);
             }
 
             // Not found in memory, proceed with deserialization
@@ -544,16 +544,16 @@ namespace EddiDataProviderService
                 result = JsonConvert.DeserializeObject<StarSystem>(data);
                 if (result == null)
                 {
-                    Logging.Info("Failed to obtain system for " + systemName + " from the SQLiteRepository");
+                    Logging.Info("Failed to obtain system for address " + systemAddress + " from the SQLiteRepository");
                     needToUpdate = true;
                 }
             }
             catch (Exception)
             {
-                Logging.Warn("Problem reading data for star system '" + systemName + "' from database, re-obtaining from source.");
+                Logging.Warn($"Problem reading data for star system address {systemAddress} from database, re-obtaining from source.");
                 try
                 {
-                    result = dataProviderService.GetSystemData(systemName);
+                    result = dataProviderService.GetSystemData( systemAddress );
                     result = dataProviderService.syncFromStarMapService(new List<StarSystem> { result })?.FirstOrDefault(); // Synchronize EDSM visits and comments
                     needToUpdate = true;
                 }
@@ -586,7 +586,7 @@ namespace EddiDataProviderService
             // Update any star systems in our short term star system cache to minimize repeat deserialization
             foreach (var starSystem in starSystems)
             {
-                starSystemCache.Remove(starSystem.systemname);
+                starSystemCache.Remove(starSystem.systemAddress);
                 starSystemCache.Add(starSystem);
             }
 
@@ -596,14 +596,22 @@ namespace EddiDataProviderService
             var insert = new List<StarSystem>();
 
             var dbSystems = Instance.ReadStarSystems(starSystems);
-            foreach (StarSystem system in starSystems)
+
+            // Determine whether to insert + delete or update the SQL record.
+            // Skip records with a zero value for the systemAddress
+            foreach (var system in starSystems)
             {
-                DatabaseStarSystem dbSystem = dbSystems.FirstOrDefault(s =>
+                if ( system.systemAddress == 0 )
+                {
+                    Logging.Warn($"{system.systemname} has an invalid system address ({system.systemAddress}) and can't be recorded in EDDI's star system database.");
+                    continue;
+                }
+
+                var dbSystem = dbSystems.FirstOrDefault(s =>
                     s.systemAddress == system.systemAddress ||
                     s.systemName == system.systemname);
 
-                if (dbSystem?.systemJson is null ||
-                    dbSystem.systemAddress is 0)
+                if (dbSystem?.systemJson is null)
                 {
                     // Use our delete method to purge all obsolete copies of the star system from the database,
                     // then re-add the star system.
@@ -653,9 +661,8 @@ namespace EddiDataProviderService
                             {
                                 foreach ( StarSystem system in systems )
                                 {
-                                    Logging.Debug( "Inserting new starsystem " + system.systemname );
-                                    cmd.CommandText = INSERT_SQL + VALUES_SQL;
                                     cmd.Prepare();
+                                    cmd.CommandText = INSERT_SQL + VALUES_SQL;
                                     cmd.Parameters.AddWithValue( "@name", system.systemname );
                                     cmd.Parameters.AddWithValue( "@systemaddress", system.systemAddress );
                                     cmd.Parameters.AddWithValue( "@totalvisits", system.visits );
@@ -663,6 +670,7 @@ namespace EddiDataProviderService
                                     cmd.Parameters.AddWithValue( "@starsystem", JsonConvert.SerializeObject( system ) );
                                     cmd.Parameters.AddWithValue( "@starsystemlastupdated", system.lastupdated );
                                     cmd.Parameters.AddWithValue( "@comment", system.comment );
+                                    Logging.Debug( "Inserting new starsystem " + system.systemAddress, system );
                                     cmd.ExecuteNonQuery();
                                 }
 
@@ -718,6 +726,7 @@ namespace EddiDataProviderService
                                     cmd.Parameters.AddWithValue( "@starsystemlastupdated", system.lastupdated );
                                     cmd.Parameters.AddWithValue( "@comment", system.comment );
                                     cmd.Parameters.AddWithValue( "@systemaddress", system.systemAddress );
+                                    Logging.Debug( "Updating starsystem " + system.systemAddress, system );
                                     cmd.ExecuteNonQuery();
                                 }
 
@@ -759,14 +768,15 @@ namespace EddiDataProviderService
                                         cmd.CommandText = DELETE_SQL + WHERE_SYSTEMADDRESS;
                                         cmd.Prepare();
                                         cmd.Parameters.AddWithValue( "@systemaddress", system.systemAddress );
+                                        Logging.Debug( "Deleting starsystem " + system.systemAddress );
                                         cmd.ExecuteNonQuery();
                                     }
-
-                                    if ( !string.IsNullOrEmpty( system.systemname ) )
+                                    else if ( !string.IsNullOrEmpty( system.systemname ) )
                                     {
                                         cmd.CommandText = DELETE_SQL + WHERE_NAME;
                                         cmd.Prepare();
                                         cmd.Parameters.AddWithValue( "@name", system.systemname );
+                                        Logging.Debug( "Deleting starsystem " + system.systemname );
                                         cmd.ExecuteNonQuery();
                                     }
                                 }

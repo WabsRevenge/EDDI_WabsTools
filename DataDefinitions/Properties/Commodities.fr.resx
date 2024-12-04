@@ -1578,10 +1578,7 @@
     <value>Équipements industriels de Sirius</value>
     <comment>Commodity SiriusIndustrialEquipment</comment>
   </data>
-  <data name="ThargoidScoutTissueSample" xml:space="preserve">
-    <value>Échantillon de tissu Thargoïd - Éclaireur</value>
-    <comment>Commodity ThargoidScoutTissueSample</comment>
-  </data>
+  
   <data name="UnmarkedWeapons" xml:space="preserve">
     <value>Surplus militaire banalisé</value>
     <comment>Commodity UnmarkedWeapons</comment>
@@ -1763,6 +1760,11 @@
     <value>Ailes à faible gravité Uzumoku</value>
     <comment>Commodity UzumokuLowGWings</comment>
   </data>
+  
+  
+  
+  
+  
   
   
   

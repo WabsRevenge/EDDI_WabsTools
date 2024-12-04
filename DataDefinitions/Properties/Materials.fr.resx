@@ -645,10 +645,7 @@
     <value>Élément de propulsion Thargoïd</value>
     <comment>Material tg_propulsionelement</comment>
   </data>
-  <data name="tg_biomechanicalconduits" xml:space="preserve">
-    <value>Conduits biomécaniques Thargoïds</value>
-    <comment>Material tg_biomechanicalconduits</comment>
-  </data>
+  
   <data name="tg_weaponparts" xml:space="preserve">
     <value>Pièces d'armement Thargoïdes</value>
     <comment>Material tg_weaponparts</comment>
@@ -666,6 +663,10 @@
   
   
   
+  <data name="tg_shutdowndata" xml:space="preserve">
+    <value>Analyse de surcharge d'énergie massive</value>
+    <comment>Material tg_shutdowndata</comment>
+  </data>
   
   
 </root>

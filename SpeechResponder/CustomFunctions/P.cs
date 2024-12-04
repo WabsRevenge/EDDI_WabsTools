@@ -1,5 +1,5 @@
-﻿using Cottle.Functions;
-using EddiSpeechResponder.Service;
+﻿using Cottle;
+using EddiSpeechResponder.ScriptResolverService;
 using EddiSpeechService;
 using JetBrains.Annotations;
 using System;
@@ -13,11 +13,11 @@ namespace EddiSpeechResponder.CustomFunctions
         public FunctionCategory Category => FunctionCategory.Phonetic;
         public string description => Properties.CustomFunctions_Untranslated.P;
         public Type ReturnType => typeof( string );
-        public NativeFunction function => new NativeFunction((values) =>
+        public IFunction function => Function.CreateNativeMinMax( ( runtime, values, writer) =>
         {
-            string val = values[0].AsString;
-            string type = values.Count > 1 ? values[1].AsString : null;
-            bool useICAO = SpeechServiceConfiguration.FromFile().EnableIcao;
+            var val = values[0].AsString;
+            var type = values.Count > 1 ? values[1].AsString : null;
+            var useICAO = SpeechServiceConfiguration.FromFile().EnableIcao;
             return Translations.GetTranslation(val, useICAO, type);
         }, 1, 2);
     }

@@ -2,7 +2,7 @@
 using EddiDataDefinitions;
 using EddiSpeechResponder;
 using EddiSpeechResponder.CustomFunctions;
-using EddiSpeechResponder.Service;
+using EddiSpeechResponder.ScriptResolverService;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ namespace UnitTests
 
         private string ResolveScript(string script, Dictionary<string, Tuple<Type, Value>> vars = null)
         {
-            return resolver.resolveFromValue(script, resolver.buildStore(vars), true);
+            return ScriptResolver.resolveFromValue(script, ScriptResolver.buildContext(vars), true);
         }
 
         [DataTestMethod]

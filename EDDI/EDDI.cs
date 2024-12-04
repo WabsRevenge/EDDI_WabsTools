@@ -29,6 +29,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Utilities;
 
+[assembly: InternalsVisibleTo( "Tests" )]
 namespace EddiCore
 {
     /// <summary>
@@ -68,7 +69,7 @@ namespace EddiCore
         } 
         private bool _inOdyssey = true;
 
-        public bool gameIsBeta { get; private set; } = false;
+        public bool gameIsBeta { get; internal set; } = false;
 
         public string gameVersion
         {
@@ -152,14 +153,14 @@ namespace EddiCore
         private static readonly object instanceLock = new object();
 
         public List<IEddiMonitor> monitors = new List<IEddiMonitor>();
-        private ConcurrentBag<IEddiMonitor> activeMonitors = new ConcurrentBag<IEddiMonitor>();
+        internal ConcurrentBag<IEddiMonitor> activeMonitors = new ConcurrentBag<IEddiMonitor>();
         private static readonly object monitorLock = new object();
 
         public List<IEddiResponder> responders = new List<IEddiResponder>();
         private ConcurrentBag<IEddiResponder> activeResponders = new ConcurrentBag<IEddiResponder>();
         private static readonly object responderLock = new object();
 
-        public string vaVersion { get; set; }
+        public System.Version vaVersion { get; set; }
 
         // Information obtained from the configuration
         [CanBeNull]
@@ -281,8 +282,8 @@ namespace EddiCore
         [CanBeNull]
         public StarSystem CurrentStarSystem 
         { 
-            get => currentStarSystem; 
-            private set
+            get => currentStarSystem;
+            internal set
             {
                 setSystemDistanceFromHome(value);
                 setSystemDistanceFromDestination(value);
@@ -321,7 +322,7 @@ namespace EddiCore
         public StarSystem NextStarSystem
         {
             get => nextStarSystem;
-            private set
+            internal set
             {
                 setSystemDistanceFromHome(value);
                 void childPropertyChangedHandler(object sender, PropertyChangedEventArgs e)
@@ -381,7 +382,14 @@ namespace EddiCore
         [CanBeNull]
         public FleetCarrier FleetCarrier
         {
-            get => fleetCarrier;
+            get
+            {
+                if ( fleetCarrier is null )
+                {
+                    RefreshFleetCarrierFromFrontierAPI( true );
+                }
+                return fleetCarrier;
+            }
             set
             {
                 void childPropertyChangedHandler(object sender, PropertyChangedEventArgs e)
@@ -419,7 +427,7 @@ namespace EddiCore
         public DateTime JournalTimeStamp { get; set; } = DateTime.MinValue;
 
         // Information from the last events of each type that we've received (for reference)
-        private SortedDictionary<string, Event> lastEvents { get; set; } = new SortedDictionary<string, Event>();
+        public ConcurrentDictionary<string, Event> lastEventOfType { get; set; } = new ConcurrentDictionary<string, Event>();
 
         // Current vehicle of player
         public string Vehicle
@@ -478,8 +486,8 @@ namespace EddiCore
                     // Tasks we can start asynchronously but need to complete before other dependent code is called
                     essentialAsyncTasks.AddRange(new List<Task>()
                     {
-                        Task.Run(() => responders = findResponders()), // Set up responders
-                        Task.Run(() => monitors = findMonitors()), // Set up monitors 
+                        Task.Run(() => responders = findResponders(), eventHandlerTS.Token), // Set up responders
+                        Task.Run(() => monitors = findMonitors(), eventHandlerTS.Token), // Set up monitors 
                     });
                 }
                 else
@@ -488,7 +496,7 @@ namespace EddiCore
                 }
 
                 // Make sure that our essential tasks have completed before we start
-                Task.WaitAll(essentialAsyncTasks.ToArray());
+                Task.WaitAll(essentialAsyncTasks.ToArray(), eventHandlerTS.Token );
 
                 // Tasks we can start asynchronously and don't need to wait for
 
@@ -505,16 +513,16 @@ namespace EddiCore
                 if (configuration.HomeSystem == configuration.SquadronSystem)
                 {
                     // Run both actions on the same thread
-                    Task.Run((Action)ActionUpdateHomeSystemStation + ActionUpdateSquadronSystem).ConfigureAwait(false);
+                    Task.Run((Action)ActionUpdateHomeSystemStation + ActionUpdateSquadronSystem, eventHandlerTS.Token ).ConfigureAwait(false);
                 }
                 else
                 {
                     // Run both actions on distinct threads
-                    Task.Run(() => ActionUpdateHomeSystemStation()).ConfigureAwait(false);
-                    Task.Run(() => ActionUpdateSquadronSystem()).ConfigureAwait(false);
+                    Task.Run(() => ActionUpdateHomeSystemStation(), eventHandlerTS.Token).ConfigureAwait(false);
+                    Task.Run(() => ActionUpdateSquadronSystem(), eventHandlerTS.Token ).ConfigureAwait(false);
                 }
 
-                Task.Run(() => updateDestinationSystem(configuration.DestinationSystem)).ConfigureAwait(false);
+                Task.Run(() => updateDestinationSystem(configuration.DestinationSystem), eventHandlerTS.Token).ConfigureAwait(false);
                 Task.Run(() =>
                 {
                     // Set up the Frontier API service
@@ -537,15 +545,61 @@ namespace EddiCore
                     {
                         Logging.Info("EDDI access to the Frontier API is not enabled.");
                     }
-                }).ConfigureAwait(false);
+                }, eventHandlerTS.Token ).ConfigureAwait(false);
 
                 CompanionAppService.Instance.StateChanged += OnCompanionAppServiceStateChanged;
+                StatusService.Instance.StatusChanged += OnStatusChangedAsync;
 
                 Logging.Info(Constants.EDDI_NAME + " " + Constants.EDDI_VERSION + " initialised");
             }
             catch (Exception ex)
             {
                 Logging.Error("Failed to initialise", ex);
+            }
+        }
+
+        private async void OnStatusChangedAsync ( object sender, EventArgs e )
+        {
+            if ( sender is Status status )
+            {
+                foreach ( var monitor in activeMonitors )
+                {
+                    await Task.Run( () =>
+                    {
+                        try
+                        {
+                            monitor.HandleStatus( status );
+                        }
+                        catch ( Exception exception )
+                        {
+                            var dict = new Dictionary<string, object>
+                            {
+                                [ "status" ] = status, [ "exception" ] = exception
+                            };
+                            Logging.Error( $"{monitor.MonitorName()} failed to handle status", dict );
+                        }
+                    } ).ConfigureAwait( false );
+                }
+
+                foreach ( var responder in activeResponders )
+                {
+                    await Task.Run( () =>
+                    {
+                        try
+                        {
+                            responder.HandleStatus( status );
+                        }
+                        catch ( Exception exception )
+                        {
+                            var dict = new Dictionary<string, object>
+                            {
+                                [ "status" ] = status,
+                                [ "exception" ] = exception
+                            };
+                            Logging.Error( $"{responder.ResponderName()} failed to handle status", dict );
+                        }
+                    } ).ConfigureAwait(false );
+                }
             }
         }
 
@@ -599,6 +653,7 @@ namespace EddiCore
                                 IsBackground = true
                             };
                             Logging.Info("Starting keepalive for " + monitor.MonitorName());
+                            monitorThread.Name = monitor.MonitorName();
                             monitorThread.Start();
                         }
                     }
@@ -651,20 +706,17 @@ namespace EddiCore
         public void Stop()
         {
             running = false; // Otherwise keepalive restarts them
-            if (started)
+            Utilities.TelemetryService.Telemetry.Stop();
+            eventHandlerTS.Cancel();
+            foreach ( IEddiResponder responder in responders )
             {
-                eventHandlerTS.Cancel();
-                foreach (IEddiResponder responder in responders)
-                {
-                    DisableResponder(responder.ResponderName());
-                }
-                foreach (IEddiMonitor monitor in monitors)
-                {
-                    DisableMonitor(monitor.MonitorName());
-                }
+                DisableResponder( responder.ResponderName() );
+            }
+            foreach ( IEddiMonitor monitor in monitors )
+            {
+                DisableMonitor( monitor.MonitorName() );
             }
 
-            started = false;
             Logging.Info(Constants.EDDI_NAME + " " + Constants.EDDI_VERSION + " stopped");
         }
 
@@ -781,6 +833,7 @@ namespace EddiCore
                             IsBackground = true
                         };
                         Logging.Info("Starting keepalive for " + monitor.MonitorName());
+                        monitorThread.Name = monitor.MonitorName();
                         monitorThread.Start();
                     }
                 }
@@ -871,7 +924,8 @@ namespace EddiCore
             }
 
             // Start (or restart) our event handler thread
-            if (eventConsumerThread?.Status != TaskStatus.Running)
+            if ( !eventHandlerTS.Token.IsCancellationRequested && 
+                 eventConsumerThread?.Status != TaskStatus.Running )
             {
                 eventConsumerThread = Task.Run(dequeueEvents, eventHandlerTS.Token);
             }
@@ -893,7 +947,7 @@ namespace EddiCore
             }
         }
 
-        private void eventHandler(Event @event)
+        internal void eventHandler(Event @event)
         {
             if (@event != null)
             {
@@ -1046,10 +1100,6 @@ namespace EddiCore
                     {
                         passEvent = eventPowerplay(powerplayEvent);
                     }
-                    else if (@event is PowerDefectedEvent powerDefectedEvent)
-                    {
-                        passEvent = eventPowerDefected(powerDefectedEvent);
-                    }
                     else if (@event is PowerJoinedEvent powerJoinedEvent)
                     {
                         passEvent = eventPowerJoined(powerJoinedEvent);
@@ -1057,10 +1107,6 @@ namespace EddiCore
                     else if (@event is PowerLeftEvent powerLeftEvent)
                     {
                         passEvent = eventPowerLeft();
-                    }
-                    else if (@event is PowerPreparationVoteCast powerPreparationVoteCast)
-                    {
-                        passEvent = eventPowerPreparationVoteCast(powerPreparationVoteCast);
                     }
                     else if (@event is PowerSalaryClaimedEvent powerSalaryClaimedEvent)
                     {
@@ -1098,6 +1144,10 @@ namespace EddiCore
                     {
                         passEvent = eventCarrierJumped(carrierJumpedEvent);
                     }
+                    else if ( @event is CarrierJumpRequestEvent carrierJumpRequestEvent )
+                    {
+                        passEvent = eventCarrierJumpRequest( carrierJumpRequestEvent );
+                    }
                     else if (@event is CarrierFinanceEvent carrierFinanceEvent)
                     {
                         passEvent = eventCarrierFinance(carrierFinanceEvent);
@@ -1130,12 +1180,18 @@ namespace EddiCore
                     {
                         passEvent = eventSettlementApproached(settlementApproachedEvent);
                     }
+                    else if ( @event is SignalDetectedEvent signalDetectedEvent )
+                    {
+                        passEvent = eventSignalDetected( signalDetectedEvent );
+                    }
 
                     // Additional processing is over, send to the event monitors and responders if required
                     if (passEvent)
                     {
                         OnEvent(@event);
                     }
+
+                    lastEventOfType[ @event.type ] = @event;
                 }
                 catch (Exception ex)
                 {
@@ -1148,6 +1204,59 @@ namespace EddiCore
                     Instance.ObtainResponder( "Inara Responder" ).Handle( @event );
                 }
             }
+        }
+
+        internal bool eventSignalDetected ( SignalDetectedEvent @event )
+        {
+            if ( Instance.CurrentStarSystem != null && Instance.CurrentStarSystem.systemAddress == @event.systemAddress )
+            {
+                @event.unique = !Instance.CurrentStarSystem.signalsources.Contains( @event.signalSource.localizedName );
+                Instance.CurrentStarSystem.AddOrUpdateSignalSource( @event.signalSource );
+
+                if ( @event.signalSource.isStation ?? false )
+                {
+                    // Add station signals to the current star system if they are not already present.
+                    if ( Instance.CurrentStarSystem.stations.All( s => s.name != @event.signalSource.edname ) )
+                    {
+                        var station = new Station { name = @event.signalSource.edname, systemAddress = @event.systemAddress };
+                        if ( @event.signalSource.signalType == SignalType.StationAsteroid )
+                        {
+                            station.Model = StationModel.AsteroidBase;
+                        }
+                        else if ( @event.signalSource.signalType == SignalType.StationBernalSphere )
+                        {
+                            station.Model = StationModel.Bernal;
+                        }
+                        else if ( @event.signalSource.signalType == SignalType.StationCoriolis )
+                        {
+                            station.Model = StationModel.Coriolis;
+                        }
+                        else if ( @event.signalSource.signalType == SignalType.StationONeilCylinder )
+                        {
+                            station.Model = StationModel.Orbis;
+                        }
+                        else if ( @event.signalSource.signalType == SignalType.StationONeilOrbis )
+                        {
+                            station.Model = StationModel.Orbis;
+                        }
+                        else if ( @event.signalSource.signalType == SignalType.StationMegaShip )
+                        {
+                            station.Model = StationModel.Megaship;
+                        }
+                        else if ( @event.signalSource.signalType == SignalType.FleetCarrier )
+                        {
+                            station.Model = StationModel.FleetCarrier;
+                        }
+                        else if ( @event.signalSource.signalType == SignalType.Outpost )
+                        {
+                            station.Model = StationModel.Outpost;
+                        }
+                        Instance.CurrentStarSystem.stations.Add( station );
+                    }
+                }
+            }
+
+            return true;
         }
 
         private bool eventCarrierStats(CarrierStatsEvent carrierStatsEvent)
@@ -1263,7 +1372,8 @@ namespace EddiCore
 
         private bool eventSettlementApproached(SettlementApproachedEvent settlementApproachedEvent)
         {
-            if (CurrentStarSystem?.systemAddress == settlementApproachedEvent.systemAddress)
+            if (CurrentStarSystem?.systemAddress == settlementApproachedEvent.systemAddress
+                && settlementApproachedEvent.marketId != null )
             {
                 var station = CurrentStarSystem?.stations.FirstOrDefault(s => s.marketId == settlementApproachedEvent.marketId);
                 if (station is null)
@@ -1278,27 +1388,22 @@ namespace EddiCore
                     };
                     CurrentStarSystem?.stations.Add(station);
                 }
+                station.Faction = settlementApproachedEvent.controllingFaction;
+                station.stationServices = settlementApproachedEvent.stationServices;
+                station.economyShares = settlementApproachedEvent.economyShares;
             }
             return true;
         }
 
         private bool eventUnderAttack(UnderAttackEvent underAttackEvent)
         {
-            bool passEvent = true;
             // Suppress repetitious `Under attack` events when loading or
             // when the target has already been reported as under attack within the last 10 seconds.
-            var lastEvent = lastEvents.TryGetValue(nameof(UnderAttackEvent), out Event ev) 
-                ? (UnderAttackEvent)ev 
-                : null;
-            if (underAttackEvent.fromLoad || (
-                lastEvent != null 
-                && lastEvent.target == underAttackEvent.target 
-                && (underAttackEvent.timestamp - lastEvent.timestamp).TotalSeconds < 10 
-                ))
-            {
-                passEvent = false;
-            }
-            lastEvents[nameof(UnderAttackEvent)] = underAttackEvent;
+            var passEvent = !(underAttackEvent.fromLoad || (
+                lastEventOfType.TryGetValue( underAttackEvent.type, out var ev ) && ev is UnderAttackEvent lastEvent
+                && lastEvent.target == underAttackEvent.target
+                && ( underAttackEvent.timestamp - lastEvent.timestamp ).TotalSeconds < 10
+            ));
             return passEvent;
         }
 
@@ -1388,6 +1493,12 @@ namespace EddiCore
 
         private bool eventCarrierJumpEngaged(CarrierJumpEngagedEvent @event)
         {
+            if ( FleetCarrier != null )
+            {
+                FleetCarrier.currentStarSystem = @event.systemname;
+                FleetCarrier.nextStarSystem = null;
+            }
+
             // Only update our information if we are still docked at the carrier
             if (Environment == Constants.ENVIRONMENT_DOCKED && @event.carrierId == CurrentStation?.marketId)
             {
@@ -1430,7 +1541,7 @@ namespace EddiCore
                 {
                     carrier.systemname = @event.systemname;
                     carrier.systemAddress = @event.systemAddress;
-                    if (@event.systemname == CurrentStarSystem?.systemname)
+                    if (@event.systemAddress == CurrentStarSystem?.systemAddress)
                     {
                         CurrentStarSystem?.stations.Add(carrier);
                         StarSystemSqLiteRepository.Instance.SaveStarSystem(starSystem);
@@ -1453,6 +1564,11 @@ namespace EddiCore
         private bool eventCarrierJumped(CarrierJumpedEvent @event)
         {
             Logging.Info( "Carrier jumped to: " + @event.systemname );
+            if ( FleetCarrier != null )
+            {
+                FleetCarrier.currentStarSystem = @event.systemname;
+                FleetCarrier.nextStarSystem = null;
+            }
 
             if ( @event.docked || @event.onFoot )
             {
@@ -1557,20 +1673,22 @@ namespace EddiCore
                         Faction squadronFaction = @event.factions.FirstOrDefault(f =>
                         {
                             var squadronhomesystem = f.presences
-                                .FirstOrDefault(p => p.systemName == CurrentStarSystem.systemname)?.squadronhomesystem;
+                                .FirstOrDefault(p => p.systemAddress == CurrentStarSystem.systemAddress)?.squadronhomesystem;
                             return squadronhomesystem != null && ((bool)squadronhomesystem || f.squadronfaction);
                         });
                         if (squadronFaction != null)
                         {
-                            updateSquadronData(squadronFaction, CurrentStarSystem.systemname);
+                            updateSquadronData(squadronFaction, CurrentStarSystem.systemAddress );
                         }
                     }
 
                     // (When pledged) Powerplay information
-                    CurrentStarSystem.Powers = @event.Powers != null && @event.Powers.Any()
-                        ? @event.Powers
-                        : CurrentStarSystem.Powers;
-                    CurrentStarSystem.powerState = @event.powerState ?? CurrentStarSystem.powerState;
+                    CurrentStarSystem.Powers = @event.Power != null ? new List<Power>() { @event.Power } : new List<Power>();
+                    if ( @event.ContestingPowers.Any() )
+                    {
+                        CurrentStarSystem.Powers.AddRange( @event.ContestingPowers );
+                    }
+                    CurrentStarSystem.powerState = @event.PowerState ?? CurrentStarSystem.powerState;
 
                     // Update to most recent information
                     CurrentStarSystem.visitLog.Add(@event.timestamp);
@@ -1605,6 +1723,15 @@ namespace EddiCore
             return true;
         }
 
+        private bool eventCarrierJumpRequest ( CarrierJumpRequestEvent @event )
+        {
+            if ( FleetCarrier != null )
+            {
+                FleetCarrier.nextStarSystem = @event.systemname;
+            }
+            return true;
+        }
+
         private bool eventPowerVoucherReceived(PowerVoucherReceivedEvent @event)
         {
             if ( Cmdr != null )
@@ -1615,15 +1742,6 @@ namespace EddiCore
         }
 
         private bool eventPowerSalaryClaimed(PowerSalaryClaimedEvent @event)
-        {
-            if ( Cmdr != null )
-            {
-                Cmdr.Power = @event.Power;
-            }
-            return true;
-        }
-
-        private bool eventPowerPreparationVoteCast(PowerPreparationVoteCast @event)
         {
             if ( Cmdr != null )
             {
@@ -1655,47 +1773,7 @@ namespace EddiCore
             {
                 Cmdr.Power = @event.Power;
                 Cmdr.powermerits = 0;
-                Cmdr.powerrating = 1;
-
-                // Store power merits
-                EDDIConfiguration configuration = ConfigService.Instance.eddiConfiguration;
-                configuration.powerMerits = Cmdr.powermerits;
-                ConfigService.Instance.eddiConfiguration = configuration;
-            }
-
-            return true;
-        }
-
-        private bool eventPowerDefected(PowerDefectedEvent @event)
-        {
-            if ( Cmdr != null )
-            {
-                Cmdr.Power = @event.toPower;
-                // Merits are halved upon defection
-                Cmdr.powermerits = (int)Math.Round( (double)( Cmdr.powermerits ?? 0 ) / 2, 0 );
-                if ( Cmdr.powermerits > 10000 )
-                {
-                    Cmdr.powerrating = 4;
-                }
-
-                if ( Cmdr.powermerits > 1500 )
-                {
-                    Cmdr.powerrating = 3;
-                }
-
-                if ( Cmdr.powermerits > 750 )
-                {
-                    Cmdr.powerrating = 2;
-                }
-
-                if ( Cmdr.powermerits > 100 )
-                {
-                    Cmdr.powerrating = 1;
-                }
-                else
-                {
-                    Cmdr.powerrating = 0;
-                }
+                Cmdr.powerrating = 0;
 
                 // Store power merits
                 EDDIConfiguration configuration = ConfigService.Instance.eddiConfiguration;
@@ -1708,10 +1786,8 @@ namespace EddiCore
 
         private bool eventPowerplay(PowerplayEvent @event)
         {
-            if (Cmdr != null && Cmdr.powermerits is null)
+            if (Cmdr != null)
             {
-                // Per the journal, this is written at startup. In actuality, it can also be written whenever switching FSD states
-                // and needs to be filtered to prevent redundant outputs.
                 Cmdr.Power = @event.Power;
                 Cmdr.powerrating = @event.rank;
                 Cmdr.powermerits = @event.merits;
@@ -1729,7 +1805,7 @@ namespace EddiCore
             }
         }
 
-        private bool eventSystemScanComplete(SystemScanComplete @event)
+        internal bool eventSystemScanComplete(SystemScanComplete @event)
         {
             // There is a bug in the player journal output (as of player journal v.25) that can cause the `SystemScanComplete` event to fire multiple times 
             // in rapid succession when performing a system scan of a star system with only stars and no other bodies.
@@ -1778,7 +1854,7 @@ namespace EddiCore
             return true;
         }
 
-        private bool eventFriends(FriendsEvent @event)
+        internal bool eventFriends(FriendsEvent @event)
         {
             var passEvent = false;
             var friend = new Friend
@@ -1881,7 +1957,7 @@ namespace EddiCore
             await Task.WhenAll(monitorTasks.ToArray());
         }
 
-        private bool eventLocation(LocationEvent theEvent)
+        internal bool eventLocation(LocationEvent theEvent)
         {
             Logging.Info("Location StarSystem: " + theEvent.systemname);
 
@@ -1934,10 +2010,9 @@ namespace EddiCore
                     CurrentStarSystem.conflicts = theEvent.conflicts;
 
                     // Update station controlling faction data
-                    foreach ( Station station in CurrentStarSystem.stations )
+                    foreach ( var station in CurrentStarSystem.stations )
                     {
-                        Faction stationFaction =
-                            theEvent.factions.FirstOrDefault( f => f.name == station.Faction.name );
+                        var stationFaction = theEvent.factions.FirstOrDefault( f => f.name == station?.Faction?.name );
                         if ( stationFaction != null )
                         {
                             station.Faction = stationFaction;
@@ -1945,20 +2020,22 @@ namespace EddiCore
                     }
 
                     // Check if current system is inhabited by or HQ for squadron faction
-                    Faction squadronFaction = theEvent.factions.FirstOrDefault( f =>
-                        ( f.presences.FirstOrDefault( p => p.systemName == CurrentStarSystem.systemname )
-                            ?.squadronhomesystem ?? false ) || f.squadronfaction );
+                    var squadronFaction = theEvent.factions.FirstOrDefault( f => ( f.presences
+                        ?.FirstOrDefault( p => p.systemAddress == CurrentStarSystem?.systemAddress )
+                        ?.squadronhomesystem ?? false ) || f.squadronfaction );
                     if ( squadronFaction != null )
                     {
-                        updateSquadronData( squadronFaction, CurrentStarSystem.systemname );
+                        updateSquadronData( squadronFaction, CurrentStarSystem.systemAddress );
                     }
                 }
 
                 // (When pledged) Powerplay information
-                CurrentStarSystem.Powers = theEvent.Powers != null && theEvent.Powers.Any()
-                    ? theEvent.Powers
-                    : CurrentStarSystem.Powers;
-                CurrentStarSystem.powerState = theEvent.powerState ?? CurrentStarSystem.powerState;
+                CurrentStarSystem.Powers = theEvent.Power != null ? new List<Power>() { theEvent.Power } : new List<Power>();
+                if ( theEvent.ContestingPowers.Any() )
+                {
+                    CurrentStarSystem.Powers.AddRange( theEvent.ContestingPowers );
+                }
+                CurrentStarSystem.powerState = theEvent.PowerState ?? CurrentStarSystem.powerState;
 
                 if ( theEvent.docked )
                 {
@@ -2002,6 +2079,14 @@ namespace EddiCore
                         updateThread.Start();
                     }
                 }
+                else if ( theEvent.latitude != null && theEvent.longitude != null )
+                {
+                    Environment = Constants.ENVIRONMENT_LANDED;
+                }
+                else
+                {
+                    Environment = Constants.ENVIRONMENT_NORMAL_SPACE;
+                }
 
                 if ( theEvent.bodyname != null && ( theEvent.bodyType == BodyType.Moon ||
                                                     theEvent.bodyType == BodyType.Planet ) )
@@ -2009,15 +2094,6 @@ namespace EddiCore
                     // Update the body 
                     Logging.Debug( "Now at body " + theEvent.bodyname );
                     updateCurrentStellarBody( theEvent.bodyname, theEvent.systemname, theEvent.systemAddress );
-                }
-
-                if ( theEvent.latitude != null && theEvent.longitude != null )
-                {
-                    Environment = Constants.ENVIRONMENT_LANDED;
-                }
-                else
-                {
-                    Environment = Constants.ENVIRONMENT_NORMAL_SPACE;
                 }
 
                 // Update to most recent information
@@ -2350,9 +2426,9 @@ namespace EddiCore
             return false;
         }
 
-        private void updateCurrentSystem(string systemName, ulong systemAddress)
+        internal void updateCurrentSystem(string systemName, ulong systemAddress)
         {
-            if ( string.IsNullOrEmpty(systemName) || CurrentStarSystem?.systemname == systemName )
+            if ( string.IsNullOrEmpty(systemName) || CurrentStarSystem?.systemAddress == systemAddress )
             {
                 return;
             }
@@ -2381,7 +2457,7 @@ namespace EddiCore
             }
 
             // If we've arrived at our destination system then clear it
-            if (destinationStarSystem?.systemname == currentStarSystem.systemname)
+            if (destinationStarSystem?.systemAddress == currentStarSystem.systemAddress)
             {
                 updateDestinationSystem(null);
             }
@@ -2392,7 +2468,7 @@ namespace EddiCore
         private void updateCurrentStellarBody(string bodyName, string systemName, ulong systemAddress)
         {
             // Make sure our system information is up to date
-            if (CurrentStarSystem == null || CurrentStarSystem.systemname != systemName)
+            if (CurrentStarSystem == null || CurrentStarSystem.systemAddress != systemAddress)
             {
                 updateCurrentSystem(systemName, systemAddress);
             }
@@ -2431,15 +2507,6 @@ namespace EddiCore
             // Remove information about the current station and stellar body 
             CurrentStation = null;
             CurrentStellarBody = null;
-
-            // Set the destination system as the current star system
-            if ( @event.systemAddress != null )
-            {
-                updateCurrentSystem( @event.system, (ulong)@event.systemAddress );
-            }
-
-            // Save a copy of this event for later reference
-            lastEvents[nameof(FSDEngagedEvent)] = @event;;
 
             return true;
         }
@@ -2495,23 +2562,13 @@ namespace EddiCore
             return true;
         }
 
-        private bool eventJumped(JumpedEvent theEvent)
+        internal bool eventJumped(JumpedEvent theEvent)
         {
-            bool passEvent;
-            Logging.Info("Jumped to " + theEvent.system);
-            if (CurrentStarSystem == null || CurrentStarSystem.systemname != theEvent.system)
-            {
-                // The 'StartJump' event must have been missed
-                updateCurrentSystem(theEvent.system, theEvent.systemAddress );
-            }
-
-            passEvent = true;
-
-            if (theEvent.taxi is true)
+            if ( theEvent.taxi is true )
             {
                 Vehicle = Constants.VEHICLE_TAXI;
             }
-            else if (theEvent.multicrew is true)
+            else if ( theEvent.multicrew is true )
             {
                 Vehicle = Constants.VEHICLE_MULTICREW;
             }
@@ -2520,64 +2577,85 @@ namespace EddiCore
                 Vehicle = Constants.VEHICLE_SHIP;
             }
 
-            if (CurrentStarSystem != null)
+            if ( CurrentStarSystem?.systemAddress > 0 && CurrentStarSystem.systemAddress == theEvent.systemAddress )
             {
-                CurrentStarSystem.systemAddress = theEvent.systemAddress;
-                CurrentStarSystem.x = theEvent.x;
-                CurrentStarSystem.y = theEvent.y;
-                CurrentStarSystem.z = theEvent.z;
-                CurrentStarSystem.Faction = theEvent.controllingfaction;
-                CurrentStarSystem.conflicts = theEvent.conflicts;
-                CurrentStarSystem.ThargoidWar = theEvent.ThargoidWar;
-                
-                // Update system faction data if available
-                if ( theEvent.factions != null)
-                {
-                    CurrentStarSystem.factions = theEvent.factions;
+                // Thargoid Hyperdiction
+                Logging.Info( $"Jump Interrupted: Hyperdicted in {theEvent.system}" );
 
-                    // Update station controlling faction data
-                    foreach (Station station in CurrentStarSystem.stations)
+                // After hyperdiction we are in normal space rather than supercruise
+                Environment = Constants.ENVIRONMENT_NORMAL_SPACE;
+
+                // Generate a hyperdiction event
+                enqueueEvent(new HyperdictedEvent( theEvent.timestamp, theEvent.fuelused, theEvent.fuelremaining, theEvent.boostused, theEvent.taxi, theEvent.multicrew, theEvent.ThargoidWar ) { raw = null, fromLoad = theEvent.fromLoad } );
+
+                return false;
+            }
+            else
+            {
+                // Normal FSD jump
+                Logging.Info( "Jumped to " + theEvent.system );
+
+                // After jump has completed we are always in supercruise
+                Environment = Constants.ENVIRONMENT_SUPERCRUISE;
+
+                updateCurrentSystem( theEvent.system, theEvent.systemAddress );
+                if ( CurrentStarSystem != null )
+                {
+                    CurrentStarSystem.systemAddress = theEvent.systemAddress;
+                    CurrentStarSystem.x = theEvent.x;
+                    CurrentStarSystem.y = theEvent.y;
+                    CurrentStarSystem.z = theEvent.z;
+                    CurrentStarSystem.Faction = theEvent.controllingfaction;
+                    CurrentStarSystem.conflicts = theEvent.conflicts;
+                    CurrentStarSystem.ThargoidWar = theEvent.ThargoidWar;
+
+                    // Update system faction data if available
+                    if ( theEvent.factions != null )
                     {
-                        Faction stationFaction = theEvent.factions.Find(f => f.name == station.Faction.name);
-                        if (stationFaction != null)
+                        CurrentStarSystem.factions = theEvent.factions;
+
+                        // Update station controlling faction data
+                        foreach ( var station in CurrentStarSystem.stations )
                         {
-                            station.Faction = stationFaction;
+                            var stationFaction = theEvent.factions.Find(f => f.name == station?.Faction?.name);
+                            if ( stationFaction != null )
+                            {
+                                station.Faction = stationFaction;
+                            }
+                        }
+
+                        // Check if current system is inhabited by or HQ for squadron faction
+                        var squadronFaction = theEvent.factions.Find(f =>
+                        (f.presences?.Find(p => p.systemAddress == CurrentStarSystem?.systemAddress)?.squadronhomesystem ?? false) ||
+                        f.squadronfaction);
+                        if ( squadronFaction != null )
+                        {
+                            updateSquadronData( squadronFaction, CurrentStarSystem.systemAddress );
                         }
                     }
 
-                    // Check if current system is inhabited by or HQ for squadron faction
-                    Faction squadronFaction = theEvent.factions.Find(f =>
-                        (f.presences.Find(p => p.systemName == CurrentStarSystem.systemname)?.squadronhomesystem ?? false) ||
-                        f.squadronfaction);
-                    if (squadronFaction != null)
+                    CurrentStarSystem.Economies = new List<Economy> { theEvent.Economy, theEvent.Economy2 };
+                    CurrentStarSystem.securityLevel = theEvent.securityLevel;
+                    if ( theEvent.population != null )
                     {
-                        updateSquadronData(squadronFaction, CurrentStarSystem.systemname);
+                        CurrentStarSystem.population = theEvent.population;
                     }
+
+                    // (When pledged) Powerplay information
+                    CurrentStarSystem.Powers = theEvent.Power != null ? new List<Power>() { theEvent.Power } : new List<Power>();
+                    if ( theEvent.ContestingPowers.Any() )
+                    {
+                        CurrentStarSystem.Powers.AddRange(theEvent.ContestingPowers);
+                    }
+                    CurrentStarSystem.powerState = theEvent.PowerState ?? CurrentStarSystem.powerState;
+
+                    // Update to most recent information
+                    CurrentStarSystem.visitLog.Add( theEvent.timestamp );
+                    CurrentStarSystem.updatedat = Dates.fromDateTimeToSeconds( theEvent.timestamp );
+                    StarSystemSqLiteRepository.Instance.SaveStarSystem( CurrentStarSystem );
                 }
-
-                CurrentStarSystem.Economies = new List<Economy> { theEvent.Economy, theEvent.Economy2 };
-                CurrentStarSystem.securityLevel = theEvent.securityLevel;
-                if (theEvent.population != null)
-                {
-                    CurrentStarSystem.population = theEvent.population;
-                }
-
-                // (When pledged) Powerplay information
-                CurrentStarSystem.Powers = theEvent.Powers != null && theEvent.Powers.Any()
-                    ? theEvent.Powers
-                    : CurrentStarSystem.Powers;
-                CurrentStarSystem.powerState = theEvent.powerState ?? CurrentStarSystem.powerState;
-
-                // Update to most recent information
-                CurrentStarSystem.visitLog.Add(theEvent.timestamp);
-                CurrentStarSystem.updatedat = Dates.fromDateTimeToSeconds(theEvent.timestamp);
-                StarSystemSqLiteRepository.Instance.SaveStarSystem(CurrentStarSystem);
+                return true;
             }
-
-            // After jump has completed we are always in supercruise
-            Environment = Constants.ENVIRONMENT_SUPERCRUISE;
-
-            return passEvent;
         }
 
         private bool eventEnteredSupercruise(EnteredSupercruiseEvent theEvent)
@@ -2740,7 +2818,7 @@ namespace EddiCore
             ConfigService.Instance.eddiConfiguration = configuration;
 
             // Update the squadron UI data
-            Application.Current?.Dispatcher?.Invoke(() =>
+            Application.Current?.Dispatcher?.InvokeAsync(() =>
             {
                 if (Application.Current?.MainWindow != null)
                 {
@@ -2773,7 +2851,7 @@ namespace EddiCore
                         configuration.SquadronRank = rank;
 
                         // Update the squadron UI data
-                        Application.Current?.Dispatcher?.Invoke(() =>
+                        Application.Current?.Dispatcher?.InvokeAsync( () =>
                         {
                             if (Application.Current?.MainWindow != null)
                             {
@@ -2797,7 +2875,7 @@ namespace EddiCore
                         configuration.SquadronName = theEvent.name;
 
                         // Update the squadron UI data
-                        Application.Current?.Dispatcher?.Invoke(() =>
+                        Application.Current?.Dispatcher?.InvokeAsync( () =>
                         {
                             if (Application.Current?.MainWindow != null)
                             {
@@ -2821,7 +2899,7 @@ namespace EddiCore
                         configuration.SquadronID = null;
 
                         // Update the squadron UI data
-                        Application.Current?.Dispatcher?.Invoke(() =>
+                        Application.Current?.Dispatcher?.InvokeAsync( () =>
                         {
                             if (Application.Current?.MainWindow != null)
                             {
@@ -2854,7 +2932,7 @@ namespace EddiCore
             ConfigService.Instance.eddiConfiguration = configuration;
 
             // Update the squadron UI data
-            Application.Current?.Dispatcher?.Invoke(() =>
+            Application.Current?.Dispatcher?.InvokeAsync( () =>
             {
                 if (Application.Current?.MainWindow != null)
                 {
@@ -2975,10 +3053,17 @@ namespace EddiCore
             return false;
         }
 
-        private bool eventBodyScanned(BodyScannedEvent theEvent)
+        internal bool eventBodyScanned(BodyScannedEvent theEvent)
         {
             // We just scanned a body.  We can only proceed if we know our current star system
             if (CurrentStarSystem == null) { return false; }
+
+            // Suppress repetitious `Body scanned` events generated within 10 seconds after mapping.
+            var systemBody = CurrentStarSystem.bodies.FirstOrDefault( s => s.bodyname == theEvent.bodyname );
+            if ( systemBody?.scannedDateTime != null && systemBody.mappedDateTime < ( theEvent.timestamp + TimeSpan.FromSeconds( 10 ) ) )
+            {
+                return false;
+            }
 
             CurrentStarSystem.AddOrUpdateBody(theEvent.body);
 
@@ -2988,7 +3073,7 @@ namespace EddiCore
             return true;
         }
 
-        private bool eventBodyMapped(BodyMappedEvent theEvent)
+        internal bool eventBodyMapped(BodyMappedEvent theEvent)
         {
             if (CurrentStarSystem != null && theEvent.systemAddress == CurrentStarSystem.systemAddress)
             {
@@ -3003,7 +3088,7 @@ namespace EddiCore
         public bool refreshProfile(bool refreshStation = false)
         {
             bool success = true;
-            if (CompanionAppService.Instance?.CurrentState == CompanionAppService.State.Authorized)
+            if (!CompanionAppService.unitTesting && CompanionAppService.Instance?.CurrentState == CompanionAppService.State.Authorized)
             {
                 try
                 {
@@ -3016,8 +3101,13 @@ namespace EddiCore
                         var updatedCmdr = Commander.FromFrontierApiCmdr(Cmdr, profile.Cmdr, profile.timestamp, JournalTimeStamp, out bool cmdrMatches);
 
                         // Stop if the commander returned from the profile does not match our expected commander name
-                        if (!cmdrMatches) { return false; }
+                        if ( !cmdrMatches )
+                        {
+                            Logging.Debug( "Skipping profile update - Frontier API commander information doesn't match journal information" );
+                            return false;
+                        }
 
+                        Logging.Debug( "Commander information updated from Frontier API; updating local copy" );
                         Cmdr = updatedCmdr;
 
                         bool updatedCurrentStarSystem = false;
@@ -3052,7 +3142,7 @@ namespace EddiCore
 
                         if (updatedCurrentStarSystem)
                         {
-                            Logging.Debug("Star system information updated from remote server; updating local copy");
+                            Logging.Debug( "Star system information updated from Frontier API; updating local copy" );
                             StarSystemSqLiteRepository.Instance.SaveStarSystem(CurrentStarSystem);
                         }
 
@@ -3068,7 +3158,8 @@ namespace EddiCore
                                     }
                                     catch (Exception ex)
                                     {
-                                        Logging.Warn("Monitor failed", ex);
+                                        Logging.Warn($"Monitor {monitor.MonitorName()} failed to handle Frontier API update", ex);
+                                        success = false;
                                     }
                                 })
                                 {
@@ -3081,11 +3172,6 @@ namespace EddiCore
                             {
                                 Thread.ResetAbort();
                                 Logging.Debug("Thread aborted", tax);
-                                success = false;
-                            }
-                            catch (Exception ex)
-                            {
-                                Logging.Error("Monitor " + monitor.MonitorName() + " failed to handle profile.", ex);
                                 success = false;
                             }
                         }
@@ -3111,17 +3197,20 @@ namespace EddiCore
                     var timestamp = frontierApiCarrierJson["timestamp"]?.ToObject<DateTime>() ?? DateTime.MinValue;
 
                     // Update our Fleet Carrier object
-                    LockManager.GetLock(nameof(FleetCarrier), () =>
+                    if ( FleetCarrier is null )
                     {
-                        if (FleetCarrier is null)
+                        LockManager.GetLock( nameof( FleetCarrier ), () =>
                         {
-                            FleetCarrier = new FleetCarrier(frontierApiCarrierJson, timestamp);
-                        }
-                        else
+                            FleetCarrier = new FleetCarrier( frontierApiCarrierJson, timestamp );
+                        } );
+                    }
+                    else
+                    {
+                        LockManager.GetLock( nameof( FleetCarrier ), () =>
                         {
-                            FleetCarrier.UpdateFrom(frontierApiCarrierJson, timestamp);
-                        }
-                    });
+                            FleetCarrier.UpdateFrom( frontierApiCarrierJson, timestamp );
+                        } );
+                    }
                     UpdateFleetCarrierConfig();
                 }
             }
@@ -3326,14 +3415,14 @@ namespace EddiCore
         /// </summary>
         private void conditionallyRefreshStationProfile()
         {
-
             if (CompanionAppService.Instance.CurrentState == CompanionAppService.State.Authorized)
             {
                 try
                 {
                     // Make sure we know where we are
-                    if (CurrentStarSystem is null || string.IsNullOrEmpty(CurrentStarSystem.systemname))
+                    if (CurrentStarSystem is null || CurrentStarSystem.systemAddress == 0)
                     {
+                        Logging.Debug( "Skipping conditional station profile fetch - current location data is incomplete" );
                         return;
                     }
 
@@ -3346,6 +3435,7 @@ namespace EddiCore
                         var mostRecentMarketUpdateSeconds = Math.Max( Math.Max( lastCommodityUpdateSeconds, lastOutfittingUpdateSeconds ), lastShipyardUpdateSeconds );
                         if ( ( Dates.fromDateTimeToSeconds( DateTime.UtcNow ) - mostRecentMarketUpdateSeconds ) < 300 )
                         {
+                            Logging.Debug( "Skipping conditional station profile fetch - data was already very recently updated" );
                             return;
                         }
                     }
@@ -3427,7 +3517,7 @@ namespace EddiCore
                 //Ignore null & empty systems
                 if (system != null)
                 {
-                    if (system.systemname != DestinationStarSystem?.systemname)
+                    if (system.systemAddress != DestinationStarSystem?.systemAddress )
                     {
                         Logging.Debug("Destination star system is " + system.systemname);
                         DestinationStarSystem = system;
@@ -3459,7 +3549,7 @@ namespace EddiCore
                 //Ignore null & empty systems
                 if (system != null && system.bodies?.Count > 0)
                 {
-                    if (system.systemname != HomeStarSystem?.systemname)
+                    if (system.systemAddress != HomeStarSystem?.systemAddress )
                     {
                         HomeStarSystem = system;
                         Logging.Debug("Home star system is " + HomeStarSystem.systemname);
@@ -3502,7 +3592,7 @@ namespace EddiCore
                 //Ignore null & empty systems
                 if (system != null && system?.bodies.Count > 0)
                 {
-                    if (system.systemname != SquadronStarSystem?.systemname)
+                    if (system.systemAddress != SquadronStarSystem?.systemAddress )
                     {
                         SquadronStarSystem = system;
                         if (SquadronStarSystem?.factions != null)
@@ -3520,7 +3610,7 @@ namespace EddiCore
             return configuration;
         }
 
-        public void updateSquadronData(Faction faction, string systemName)
+        public void updateSquadronData(Faction faction, ulong systemAddress )
         {
             if (faction != null)
             {
@@ -3531,7 +3621,7 @@ namespace EddiCore
                 {
                     configuration.SquadronFaction = faction.name;
 
-                    Application.Current?.Dispatcher?.Invoke(() =>
+                    Application.Current?.Dispatcher?.InvokeAsync( () =>
                     {
                         if (Application.Current?.MainWindow != null)
                         {
@@ -3546,7 +3636,7 @@ namespace EddiCore
                 }
 
                 // Update system, allegiance, & power when in squadron home system
-                if ((faction.presences.FirstOrDefault(p => p.systemName == systemName)?.squadronhomesystem ?? false))
+                if ((faction.presences.FirstOrDefault(p => p.systemAddress == systemAddress )?.squadronhomesystem ?? false))
                 {
                     // Update the squadron system data, if changed
                     string system = CurrentStarSystem?.systemname;
@@ -3555,7 +3645,7 @@ namespace EddiCore
                         configuration.SquadronSystem = system;
 
                         var configurationCopy = configuration;
-                        Application.Current?.Dispatcher?.Invoke(() =>
+                        Application.Current?.Dispatcher?.InvokeAsync( () =>
                         {
                             if (Application.Current?.MainWindow != null)
                             {
@@ -3593,7 +3683,7 @@ namespace EddiCore
                         {
                             configuration.SquadronPower = power;
 
-                            Application.Current?.Dispatcher?.Invoke(() =>
+                            Application.Current?.Dispatcher?.InvokeAsync( () =>
                             {
                                 if (Application.Current?.MainWindow != null)
                                 {

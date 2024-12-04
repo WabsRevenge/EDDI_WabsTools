@@ -4,12 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Utilities;
 
+[assembly: InternalsVisibleTo( "Tests" )]
 namespace EddiStatusService
 {
     public class StatusService
@@ -21,20 +23,20 @@ namespace EddiStatusService
         private static readonly string Directory = GetSavedGamesDir();
 
         // Public Read Variables
-        public Status CurrentStatus { get; private set; } = new Status();
-        public Status LastStatus { get; private set; } = new Status();
-        public static event EventHandler StatusUpdatedEvent;
+        private Status CurrentStatus { get; set; } = new Status();
+        private Status LastStatus { get; set; } = new Status();
+        public event EventHandler StatusChanged;
 
         // Public Write variables (set elsewhere to assist with various calculations)
         public Ship CurrentShip;
-        public List<KeyValuePair<DateTime, decimal?>> fuelLog;
+        public readonly List<KeyValuePair<DateTime, decimal?>> fuelLog = new List<KeyValuePair<DateTime, decimal?>>();
         public EnteredNormalSpaceEvent lastEnteredNormalSpaceEvent;
 
         // Other variables used by this service
         private static StatusService instance;
         private static readonly object instanceLock = new object();
         public readonly object statusLock = new object();
-        private bool running;
+        internal bool running;
 
         public static StatusService Instance
         {
@@ -324,24 +326,22 @@ namespace EddiStatusService
             return null;
         }
 
-        public void handleStatus(Status thisStatus)
+        private void handleStatus(Status thisStatus)
         {
             if (thisStatus == null)
             {
                 return;
             }
-
-            lock ( statusLock )
+            if ( CurrentStatus != thisStatus )
             {
-                if ( CurrentStatus != thisStatus )
+                lock ( statusLock )
                 {
                     // Save our last status for reference and update our current status
                     LastStatus = CurrentStatus;
                     CurrentStatus = thisStatus;
-
-                    // Pass the change in status to all subscribed processes
-                    OnStatus( StatusUpdatedEvent, CurrentStatus );
                 }
+                // Pass the change in status to all subscribed processes
+                OnStatus( StatusChanged, CurrentStatus );
             }
         }
 
@@ -365,14 +365,7 @@ namespace EddiStatusService
                 return null;
             }
 
-            if (fuelLog is null)
-            {
-                fuelLog = new List<KeyValuePair<DateTime, decimal?>>();
-            }
-            else
-            {
-                fuelLog.RemoveAll(log => (DateTime.UtcNow - log.Key).TotalMinutes > trackingMinutes);
-            }
+            fuelLog.RemoveAll( log => ( DateTime.UtcNow - log.Key ).TotalMinutes > trackingMinutes );
             fuelLog.Add(new KeyValuePair<DateTime, decimal?>(timestamp, fuel));
             if (fuelLog.Count > 1)
             {

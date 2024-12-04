@@ -83,6 +83,10 @@ namespace EddiShipMonitor
                     uri = ship.CoriolisUri();
                     break;
 
+                case "Coriolis (Beta)":
+                    uri = ship.CoriolisUri(true);
+                    break;
+
                 default:
                     throw new NotImplementedException($"Export target {eddiConfiguration.exporttarget} not recognized.");
             }

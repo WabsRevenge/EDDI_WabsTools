@@ -174,6 +174,7 @@ namespace EddiCompanionAppService
         ///<summary>Log in. Throws an exception if it fails</summary>
         public void Login()
         {
+            Logging.Debug("Request initiated");
             if (CurrentState != State.LoggedOut)
             {
                 // Shouldn't be here
@@ -188,7 +189,16 @@ namespace EddiCompanionAppService
             CurrentState = State.AwaitingCallback;
             string codeChallenge = createAndRememberChallenge();
             string webURL = $"{AUTH_SERVER}{AUTH_URL}" + $"?response_type=code&{AUDIENCE}&{SCOPE}&client_id={clientID}&code_challenge={codeChallenge}&code_challenge_method=S256&state={authSessionID}&redirect_uri={Uri.EscapeDataString(CALLBACK_URL)}";
-            Process.Start(webURL);
+            try
+            {
+                Process.Start( webURL );
+                Logging.Debug( "Awaiting callback" );
+            }
+            catch ( Win32Exception win32Exception )
+            {
+                Logging.Warn("Unable to login: " + win32Exception.Message, win32Exception );
+                Logout();
+            }
         }
 
         private string createAndRememberChallenge()
@@ -219,6 +229,7 @@ namespace EddiCompanionAppService
 
         private void handleCallbackUrl(string url)
         {
+            Logging.Debug("Received callback");
             // NB any user can send an arbitrary URL from the Windows Run dialog, so it must be treated as untrusted
             try
             {
@@ -261,7 +272,6 @@ namespace EddiCompanionAppService
                         throw new EliteDangerousCompanionAppAuthenticationException("Invalid refresh token from authorization server");
                     }
                 }
-
             }
             catch (Exception)
             {
@@ -351,17 +361,25 @@ namespace EddiCompanionAppService
             }
 
             CurrentState = State.TokenRefresh;
-            HttpWebRequest request = GetRequest(AUTH_SERVER + TOKEN_URL);
+            var request = GetRequest(AUTH_SERVER + TOKEN_URL);
             request.ContentType = "application/x-www-form-urlencoded";
             request.Method = "POST";
-            byte[] data = Encoding.UTF8.GetBytes($"grant_type=refresh_token&client_id={clientID}&refresh_token={Credentials.refreshToken}");
+            var data = Encoding.UTF8.GetBytes($"grant_type=refresh_token&client_id={clientID}&refresh_token={Credentials.refreshToken}");
             request.ContentLength = data.Length;
-            using (Stream dataStream = request.GetRequestStream())
+
+            try
             {
-                dataStream.Write(data, 0, data.Length);
+                using ( var dataStream = request.GetRequestStream() )
+                {
+                    dataStream.Write( data, 0, data.Length );
+                }
+            }
+            catch ( WebException webException )
+            {
+                Logging.Warn(webException.Message, webException);
             }
 
-            using (HttpWebResponse response = GetResponse(request))
+            using ( var response = GetResponse(request) )
             {
                 if (response == null)
                 {
@@ -369,8 +387,8 @@ namespace EddiCompanionAppService
                 }
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    string responseData = getResponseData(response);
-                    JObject json = JObject.Parse(responseData);
+                    var responseData = getResponseData(response);
+                    var json = JObject.Parse(responseData);
                     Credentials.refreshToken = (string)json["refresh_token"];
                     Credentials.accessToken = (string)json["access_token"];
                     Credentials.tokenExpiry = DateTime.UtcNow.AddSeconds((double)json["expires_in"]);
@@ -400,6 +418,8 @@ namespace EddiCompanionAppService
             Credentials.Clear();
             Credentials.Save();
             CurrentState = State.LoggedOut;
+
+            Logging.Debug( "Credentials cleared" );
         }
 
         protected internal Tuple<string, DateTime> obtainData(string url)
@@ -421,9 +441,6 @@ namespace EddiCompanionAppService
                     Logout();
                     return null;
                 }
-
-                // Looks like login worked; try again
-                return obtainData(url);
             }
 
             try
@@ -458,6 +475,7 @@ namespace EddiCompanionAppService
         {
             // Need to log in again.
             if (clientID == null) { return; }
+            Logging.Debug("Renewing login.");
             Logout();
             Login();
             if (CurrentState != State.Authorized)
@@ -493,7 +511,7 @@ namespace EddiCompanionAppService
                     Logging.Warn("No data returned");
                     return null;
                 }
-                Logging.Debug("Data is " + data);
+                Logging.Debug("Data is:", data);
                 return data;
             }
         }
@@ -524,8 +542,8 @@ namespace EddiCompanionAppService
             }
             catch (WebException wex)
             {
-                Logging.Warn(wex.Message);
                 response = (HttpWebResponse)wex.Response;
+                Logging.Warn( wex.Message, response );
             }
             Logging.Debug($"Response from {request.Address} is: ", response);
             return response;

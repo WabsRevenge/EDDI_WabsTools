@@ -1,11 +1,13 @@
 ﻿using EddiConfigService;
 using EddiConfigService.Configurations;
 using EddiCore;
+using EddiDataDefinitions;
 using EddiEvents;
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Sockets;
 using System.Threading;
 using Utilities;
@@ -15,7 +17,7 @@ namespace EddiEddpMonitor
     /// <summary>
     /// An EDDI monitor to watch the EDDP feed for changes to the state of systems and stations
     /// </summary>
-    [UsedImplicitly]
+    [UsedImplicitly, ExcludeFromCodeCoverage]
     public class EddpMonitor : IEddiMonitor
     {
         private bool running;
@@ -298,16 +300,16 @@ namespace EddiEddpMonitor
         //}
 
         public void PreHandle(Event @event)
-        {
-        }
+        { }
 
         public void PostHandle(Event @event)
-        {
-        }
+        { }
 
         public void HandleProfile(JObject profile)
-        {
-        }
+        { }
+
+        public void HandleStatus ( Status status )
+        { }
 
         public IDictionary<string, Tuple<Type, object>> GetVariables()
         {

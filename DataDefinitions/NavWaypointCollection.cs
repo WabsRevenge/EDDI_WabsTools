@@ -47,42 +47,47 @@ namespace EddiDataDefinitions
 
         public List<NavWaypoint> UnvisitedWaypoints => Waypoints.Where(wp => !wp.visited).ToList();
 
-        public NavWaypoint NearestUnvisitedWaypoint => currentX is null || currentY is null || currentZ is null 
-            ? null 
-            : UnvisitedWaypoints
-                .OrderBy(wp => Functions.StellarDistanceLy(currentX, currentY, currentZ, wp.x, wp.y, wp.z) )
-                .FirstOrDefault();
+        public NavWaypoint NextWaypoint
+        {
+            get => nextWaypoint ?? ( currentX is null || currentY is null || currentZ is null
+                ? null
+                : FillVisitedGaps
+                    ? UnvisitedWaypoints.OrderBy( wp =>
+                        Functions.StellarDistanceLy( currentX, currentY, currentZ, wp.x, wp.y, wp.z ) ).FirstOrDefault()
+                    : UnvisitedWaypoints.FirstOrDefault() );
+            set => nextWaypoint = value;
+        }
+        private NavWaypoint nextWaypoint;
 
-        public decimal? NearestUnvisitedWaypointDistance => 
-            Functions.StellarDistanceLy( currentX, currentY, currentZ, NearestUnvisitedWaypoint?.x, NearestUnvisitedWaypoint?.y, NearestUnvisitedWaypoint?.z );
+        public decimal? NextWaypointDistance => 
+            Functions.StellarDistanceLy( currentX, currentY, currentZ, NextWaypoint?.x, NextWaypoint?.y, NextWaypoint?.z );
 
         private decimal? currentX;
         private decimal? currentY;
         private decimal? currentZ;
 
         [JsonConstructor]
-        public NavWaypointCollection()
+        public NavWaypointCollection (IEnumerable<NavWaypoint> items = null, bool fillVisitedGaps = false)
         {
-            Waypoints.CollectionChanged += NavWaypointList_CollectionChanged;
-        }
-
-        public NavWaypointCollection(bool fillVisitedGaps = false)
-        {
-            FillVisitedGaps = fillVisitedGaps;
-            Waypoints.CollectionChanged += NavWaypointList_CollectionChanged;
-        }
-
-        public NavWaypointCollection(IEnumerable<NavWaypoint> items, bool fillVisitedGaps = false)
-        {
-            foreach (var item in items)
+            if ( items != null )
             {
-                Waypoints.Add(item);
+                foreach ( var item in items )
+                {
+                    Waypoints.Add( item );
+                }
+                CalculateFuelUsed();
+                CalculateRouteDistances();
             }
 
-            CalculateFuelUsed();
-            CalculateRouteDistances();
-
             FillVisitedGaps = fillVisitedGaps;
+            Waypoints.CollectionChanged += NavWaypointList_CollectionChanged;
+        }
+
+        public NavWaypointCollection ( decimal x, decimal y, decimal z )
+        {
+            currentX = x;
+            currentY = y;
+            currentZ = z;
             Waypoints.CollectionChanged += NavWaypointList_CollectionChanged;
         }
 

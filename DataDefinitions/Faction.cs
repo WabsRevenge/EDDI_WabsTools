@@ -73,6 +73,9 @@ namespace EddiDataDefinitions
         [PublicAPI]
         public string systemName { get; set; }
 
+        [PublicAPI]
+        public ulong systemAddress { get; set; }
+
         /// <summary> The faction's current system state (localized name) </summary>
         [PublicAPI, JsonIgnore, Obsolete("Please use FactionState instead")]
         public string state => (FactionState ?? FactionState.None).localizedName;

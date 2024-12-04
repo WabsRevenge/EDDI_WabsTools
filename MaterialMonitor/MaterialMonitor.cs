@@ -1,5 +1,4 @@
-﻿using Eddi;
-using EddiConfigService;
+﻿using EddiConfigService;
 using EddiConfigService.Configurations;
 using EddiCore;
 using EddiDataDefinitions;
@@ -10,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,6 +17,7 @@ using System.Windows.Data;
 using System.Windows.Threading;
 using Utilities;
 
+[assembly: InternalsVisibleTo( "Tests" )]
 namespace EddiMaterialMonitor
 {
     /// <summary>
@@ -41,12 +42,12 @@ namespace EddiMaterialMonitor
 
         public string LocalizedMonitorName()
         {
-            return EddiMaterialMonitor.Properties.MaterialMonitor.name;
+            return Properties.MaterialMonitor.name;
         }
 
         public string MonitorDescription()
         {
-            return EddiMaterialMonitor.Properties.MaterialMonitor.name;
+            return Properties.MaterialMonitor.name;
         }
 
         public bool IsRequired()
@@ -98,16 +99,6 @@ namespace EddiMaterialMonitor
         public UserControl ConfigurationTabItem()
         {
             return new ConfigurationWindow();
-        }
-
-        public void EnableConfigBinding(MainWindow configWindow)
-        {
-            configWindow.Dispatcher.Invoke(() => { BindingOperations.EnableCollectionSynchronization(inventory, inventoryLock); });
-        }
-
-        public void DisableConfigBinding(MainWindow configWindow)
-        {
-            configWindow.Dispatcher.Invoke(() => { BindingOperations.DisableCollectionSynchronization(inventory); });
         }
 
         public void PreHandle(Event @event)
@@ -288,8 +279,10 @@ namespace EddiMaterialMonitor
         }
 
         public void HandleProfile(JObject profile)
-        {
-        }
+        { }
+
+        public void HandleStatus ( Status status )
+        { }
 
         /// <summary>
         /// Increment the current amount of a material, potentially triggering events as a result
@@ -382,14 +375,14 @@ namespace EddiMaterialMonitor
             }
         }
 
-        private bool incMaterialThreshold(int previous, int amount, int? target)
+        internal bool incMaterialThreshold(int previous, int amount, int? target)
         {
             // For the comparison operators <, >, <=, and >=, if one or both operands are null, the result is false
             // https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/nullable-value-types
             return previous < target && target <= amount;
         }
 
-        private bool decMaterialThreshold(int previous, int amount, int? target)
+        internal bool decMaterialThreshold(int previous, int amount, int? target)
         {
             // For the comparison operators <, >, <=, and >=, if one or both operands are null, the result is false
             // https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/nullable-value-types

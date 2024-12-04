@@ -19,7 +19,7 @@ namespace EddiDataDefinitions.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class PowerplayState {
@@ -70,15 +70,6 @@ namespace EddiDataDefinitions.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Control.
-        /// </summary>
-        public static string Controlled {
-            get {
-                return ResourceManager.GetString("Controlled", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Exploited.
         /// </summary>
         public static string Exploited {
@@ -88,20 +79,20 @@ namespace EddiDataDefinitions.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Home System.
+        ///   Looks up a localized string similar to Fortified.
         /// </summary>
-        public static string HomeSystem {
+        public static string Fortified {
             get {
-                return ResourceManager.GetString("HomeSystem", resourceCulture);
+                return ResourceManager.GetString("Fortified", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to In Prepare Radius.
+        ///   Looks up a localized string similar to Headquarters.
         /// </summary>
-        public static string InPrepareRadius {
+        public static string Headquarters {
             get {
-                return ResourceManager.GetString("InPrepareRadius", resourceCulture);
+                return ResourceManager.GetString("Headquarters", resourceCulture);
             }
         }
         
@@ -115,20 +106,11 @@ namespace EddiDataDefinitions.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Prepared.
+        ///   Looks up a localized string similar to Stronghold.
         /// </summary>
-        public static string Prepared {
+        public static string Stronghold {
             get {
-                return ResourceManager.GetString("Prepared", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Turmoil.
-        /// </summary>
-        public static string Turmoil {
-            get {
-                return ResourceManager.GetString("Turmoil", resourceCulture);
+                return ResourceManager.GetString("Stronghold", resourceCulture);
             }
         }
     }

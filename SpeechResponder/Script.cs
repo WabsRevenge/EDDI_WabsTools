@@ -64,14 +64,17 @@ namespace EddiSpeechResponder
         }
 
         [JsonProperty("defaultValue")]
-
-        public string defaultValue { get; set; }
+        public string defaultValue { get; internal set; }
 
         [JsonProperty("default")]
         // Determine whether the script matches the default, treating empty strings and null values as equal
         public bool Default => string.IsNullOrWhiteSpace(Value)
             ? string.IsNullOrWhiteSpace(defaultValue)
             : string.Equals(Value, defaultValue);
+
+        [ JsonProperty( "includes" ) ]
+        // Other scripts which should be prepended when this script is rendered
+        public string includes { get; set; } = string.Empty;
 
         [JsonIgnore]
         public bool IsResettableOrDeletable
@@ -121,7 +124,7 @@ namespace EddiSpeechResponder
             // Convert from legacy personalities which did not store the default value.
             if (additionalJsonData != null)
             {
-                additionalJsonData.TryGetValue("default", out JToken defaultVal);
+                additionalJsonData.TryGetValue("default", out var defaultVal);
                 if (defaultVal != null)
                 {
                     bool defaultScript = (bool?)defaultVal ?? false;
